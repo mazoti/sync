@@ -1,0 +1,32 @@
+[package]
+authors          = ["Marcos Mazoti <mazoti@gmail.com>"]
+description      = "A Backup tool to keep two folders synchronized with minimum modifications (fast and good for solid state disks and network drives)"
+edition          = "2021"
+license-file     = "License.md"
+name             = "sync"
+readme           = "Readme.md"
+repository       = "https://github.com/mazoti/sync/"
+version          = "0.9.7"
+
+[profile.release]
+codegen-units    = 1
+debug            = false
+debug-assertions = false
+incremental      = false
+lto              = true
+opt-level        = "z"
+overflow-checks  = false
+panic            = "abort"
+rpath            = false
+strip            = "symbols"
+
+[dependencies]
+chrono    = {version = "0.4", optional = true}
+termcolor = {version = "1.1", optional = true}
+
+[features]
+cli = ["dep:termcolor", "dep:chrono"]
+
+# Required for Windows application icon only
+[target.'cfg(windows)'.build-dependencies]
+winres    = "0.1"

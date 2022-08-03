@@ -54,7 +54,7 @@ checksum = "61ea8d54c77f8315140a05f4c7237403bf38b72704d031543aa1d16abbf517d1"
 
 [[package]]
 name = "sync"
-version = "0.9.7"
+version = "0.9.8"
 dependencies = [
  "chrono",
  "termcolor",

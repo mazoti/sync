@@ -51,23 +51,24 @@ fn main() {
         let config = std::env::args().nth(1).unwrap();
 
         #[cfg(feature = "cli")]
-        if config == "--help"
+        {
+            if config == "--help"
             || config == "-h"
             || config == "/?"
             || config == "/help"
             || config == "-help"
             || config == "help"
-        {
-            std::process::exit(processor::cli::help());
-        }
-        #[cfg(feature = "cli")]
-        if config == "--version" || config == "-version" || config == "version" || config == "-v" {
-            println!("{}", option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"));
-            std::process::exit(processor::consts::NO_ERROR);
-        }
+            {
+                std::process::exit(processor::cli::help());
+            }
 
-        #[cfg(feature = "cli")]
-        processor::cli::show_header(true);
+            if config == "--version" || config == "-version" || config == "version" || config == "-v" {
+                println!("{}", option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"));
+                std::process::exit(processor::consts::NO_ERROR);
+            }
+
+            processor::cli::show_header(true);
+        }
 
         if let Err(err) = processor::sync::sync_file(&config) {
             error!(err);

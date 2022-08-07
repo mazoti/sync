@@ -53,16 +53,20 @@ fn main() {
         #[cfg(feature = "cli")]
         {
             if config == "--help"
-            || config == "-h"
-            || config == "/?"
-            || config == "/help"
-            || config == "-help"
-            || config == "help"
+                || config == "-h"
+                || config == "/?"
+                || config == "/help"
+                || config == "-help"
+                || config == "help"
             {
                 std::process::exit(processor::cli::help());
             }
 
-            if config == "--version" || config == "-version" || config == "version" || config == "-v" {
+            if config == "--version"
+                || config == "-version"
+                || config == "version"
+                || config == "-v"
+            {
                 println!("{}", option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"));
                 std::process::exit(processor::consts::NO_ERROR);
             }

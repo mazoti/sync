@@ -184,9 +184,10 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
             let fullpath_destination_copy = String::from(&fullpath_destination);
 
             // Remove files and folders with another thread
-            let handle = std::thread::spawn(move || -> Result<(), crate::processor::error::SyncError> {
-                remove(&fullpath_source, &fullpath_destination)
-            });
+            let handle =
+                std::thread::spawn(move || -> Result<(), crate::processor::error::SyncError> {
+                    remove(&fullpath_source, &fullpath_destination)
+                });
 
             let update_result = update(&fullpath_source_copy, &fullpath_destination_copy);
 
@@ -203,12 +204,10 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
                         destination: None,
                     });
                 }
-                Ok(value) => {
-                    match value {
-                        Err(_) => return value,
-                        Ok(_) => return update_result
-                    }
-                }
+                Ok(value) => match value {
+                    Err(_) => return value,
+                    Ok(_) => return update_result,
+                },
             }
         }
 

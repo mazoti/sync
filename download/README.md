@@ -8,3 +8,5 @@ All you have to do is download and extract. For security you can check the SHA25
 37752ec960a479110d348b2477eaa54a5364dd7b4dd29f07b7b6ad5c45def46a
 - sync0.9.7-freebsd-x64.tar.gz
 d126e95513bd8a00395be8106ff09567e533eb26c549de5a298f1f4b4689a7a2
+- sync0.9.8-openbsd-x64
+d2dbf3398575f9facc02b2ee5a2e6ee32f516b5dd0eb0ca6097aab934770a879

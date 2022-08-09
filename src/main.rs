@@ -37,7 +37,7 @@ fn main() {
         #[cfg(feature = "cli")]
         processor::cli::show_header(true);
         let current_path = std::env::current_dir().unwrap().display().to_string();
-        if let Err(err) = processor::sync::sync_folder(&current_path) {
+        if let Err(err) = processor::sync::folder(&current_path) {
             #[cfg(feature = "cli")]
             if err.code == processor::consts::HELP {
                 std::process::exit(processor::cli::help());
@@ -74,7 +74,7 @@ fn main() {
             processor::cli::show_header(true);
         }
 
-        if let Err(err) = processor::sync::sync_file(&config) {
+        if let Err(err) = processor::sync::file(&config) {
             error!(err);
         }
         no_error!(_start);
@@ -120,6 +120,20 @@ fn main() {
             processor::cli::show_header(false);
 
             processor::force(&dest_folder, &config);
+            no_error!(_start);
+        }
+
+        #[cfg(feature = "cli")]
+        if source_folder == "--simulate"
+            || source_folder == "-simulate"
+            || source_folder == "simulate"
+            || source_folder == "-s"
+        {
+            processor::cli::show_header(false);
+
+            if let Err(err) = processor::sync::simulate(&dest_folder, &config) {
+                error!(err);
+            }
             no_error!(_start);
         }
 

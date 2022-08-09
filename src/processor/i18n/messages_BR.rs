@@ -3,8 +3,12 @@ pub const MSG_HELP: &str = "
 	sync /home/user/data /home/user/backup
 	sync \"C:\\Meu projeto\\arquivo.dat\" \"D:\\Backup\\arquivo.dat\"
 
-O destino será criado caso não exista. Para sincronizar mais arquivos
-ou pastas, crie um arquivo de configuração:
+O destino será criado caso não exista. Para simular a operação sem
+nenhuma modificação, adicione a flag \"--simulate\":
+
+    sync --simulate \"source\" \"destination\"
+
+Para sincronizar mais arquivos ou pastas, crie um arquivo de configuração:
 
 	sync [origem] [destino] [arquivo.config]
 	sync /home/user/pasta /home/user/backup/pasta backups.config
@@ -69,4 +73,5 @@ pub const COMMAND_MSGS: &[&str] = &[
     "  Atualizando",
     "Uso:",
     "ATENÇÃO",
+    "(SIMULAÇÃO)",
 ];

@@ -5,14 +5,14 @@
 //!
 //! Removes, adds and updates files and folders in destination
 //!
-//! - By config file: sync_file(config: &str)
+//! - By config file: file(config: &str)
 //!
 //! A config file is a text file with .config extension
 //! and each line contains the full path to source file or folder,
 //! the terminator "|" and the full path to destination file or folder.
 //! Ex: "/home/user/data|/home/user/backup"
 //!
-//! - By folder: sync_folder(folder: &str)
+//! - By folder: folder(folder: &str)
 //!
 //! Iterates the folder processing each .config file.
 //! To check each byte of the whole process:

@@ -24,7 +24,12 @@ For a simple backup/restore:
 sync "source" "destination" (backup)
 sync "destination" "source" (restore, just invert the order!)
 ```
-If the destination exists, sync will remove files and folders not found in source and add or update existing files and folders. To backup multiple files and folders, create a config file (any filename ending in .config):
+If the destination exists, sync will remove files and folders not found in source and add or update existing files and folders.
+To see what sync would do without any modification, add the "--simulate" parameter first:
+```bash
+sync --simulate "source" "destination"
+```
+To backup multiple files and folders, create a config file (any filename ending in .config):
 ```bash
 sync "source" "destination" "My backup.config" (creates "My backup.config" file)
 sync "another file or folder" "another destination" "My backup.config" (adds to "My backup.config")
@@ -47,32 +52,7 @@ To keep synchronizing and checking until both operations succeed (will retry on 
 ```bash
 sync --force "source" "destination"
 ```
-**You can change the buffer size in the file const.rs for a better performance**
 
-## Building from sources
-Make sure the last [Rust](https://www.rust-lang.org) stable compiler is in your PATH:
-```sh
-rustup self update
-rustup update
-```
-Clone or download the repository and build:
-```bash
-git clone https://github.com/mazoti/sync
-cd sync
-cargo build --features cli --release
-```
-The sync binary will be on target/release folder and ready to use. If you don't need any output you can build without command line interface (CLI) module:
-```sh
-cargo build --release
-```
-## Optional
-To run tests, lint, formatter and generate documentation:
-```sh
-cargo test --features cli -- --test-threads=1
-cargo clippy --features cli
-cargo fmt
-cargo doc --features cli
-```
 ## Translations
 All strings are in the folder i18n (each file is a language) and can be translated. Now sync has two languages:
 
@@ -80,6 +60,8 @@ All strings are in the folder i18n (each file is a language) and can be translat
 - Portuguese
 
 ## Donations
+You can become a sponsor of this project or donate directly:
+
 BTC: 3JpkXivH11xQU37Lwk5TFBqLUo8gytLH84
 
 ## License

@@ -4,6 +4,11 @@ pub const MSG_HELP: &str = "
 	sync \"C:\\My project\\file.dat\" \"D:\\Backup\\file.dat\"
 
 If the destination does not exists, it will be created.
+To see what sync would do without any modification,
+add the \"--simulate\" parameter first:
+
+    sync --simulate \"source\" \"destination\"
+
 To synchronize more files or folders, create a config file:
 
 	sync [source] [destination] [config_file.config]
@@ -54,4 +59,18 @@ pub const ERROR_MSGS: &[&str] = &[
     "cannot join thread",                            //ERROR_THREAD_JOIN
 ];
 
-pub const COMMAND_MSGS: &[&str] = &["Creating", " Copying", "Elapsed", "ERROR",	" Loading", "      Ok", "Removing", "started", "    Sync", "Updating", "Usage:", " WARNING"];
+pub const COMMAND_MSGS: &[&str] = &[
+    "Creating",
+    " Copying",
+    "Elapsed",
+    "ERROR",
+    " Loading",
+    "      Ok",
+    "Removing",
+    "started",
+    "    Sync",
+    "Updating",
+    "Usage:",
+    " WARNING",
+    "(SIMULATION)",
+];

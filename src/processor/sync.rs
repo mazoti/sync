@@ -1,68 +1,414 @@
-//! The core of sync function implementation
+//! The core of sync and simulate functions implementations
 
 use std::{io::BufRead, io::BufReader};
 
-/// Copy source folder to destination and all it's contents recursively
-fn copy_folder(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
-    for path in std::fs::read_dir(source)? {
-        let fullpath = path?.path().display().to_string();
-        let fullpath_destination = fullpath.replace(source, destination);
+/// Synchronizes all sources to destinations found in the config file
+pub fn file(config: &str) -> Result<(), crate::processor::error::SyncError> {
+    #[cfg(feature = "cli")]
+    crate::processor::cli::loading_msg(config);
 
-        // Copy file or symlink
-        let metadata_source = std::fs::metadata(&fullpath)?;
-        if !metadata_source.is_dir() {
-            copy_file(&fullpath, &fullpath_destination)?;
-            continue;
+    // Parse source and destination paths from config file
+    for line in BufReader::new(std::fs::File::open(&config)?).lines() {
+        let data = line?;
+        let path: Vec<&str> = data.split('|').collect();
+        if path.len() != 2 {
+            return Err(crate::processor::error::SyncError {
+                code: crate::processor::consts::ERROR_PARSE_LINE,
+                message: crate::processor::error::error_to_string(
+                    crate::processor::consts::ERROR_PARSE_LINE,
+                ),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
         }
 
-        // Create destination folder and copy directories recursively
-        create_folder(&fullpath_destination)?;
-        copy_folder(&fullpath, &fullpath_destination)?;
+        sync(path[0], path[1])?;
     }
 
     Ok(())
 }
 
-/// Copy a file from source to destination, displays a message and checks for errors
-#[inline]
-fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
-    #[cfg(feature = "cli")]
-    crate::processor::cli::copy_msg(destination);
+/// Synchronizes all config files found in folder
+pub fn folder(folder: &str) -> Result<(), crate::processor::error::SyncError> {
+    let mut thread_pool = Vec::new();
+    let mut exit_code = 0i32;
+    let mut display_help = true;
 
-    if std::fs::copy(&source, &destination)? == std::fs::metadata(&source)?.len() {
-        // Make the modified date the same in source and destination (Unix and Linux only)
-        #[cfg(not(windows))]
-        {
-            let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-            let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-            file_source.set_len(file_source.metadata()?.len())?;
-            file_destination.set_len(file_destination.metadata()?.len())?;
+    for path in std::fs::read_dir(folder)? {
+        let fullpath = path?.path().display().to_string();
+        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
+            display_help = false;
+
+            let handle = std::thread::spawn(move || -> i32 {
+                if let Err(err) = file(&fullpath) {
+                    return err.code;
+                }
+                crate::processor::consts::NO_ERROR
+            });
+
+            thread_pool.push(handle);
+        }
+    }
+
+    for handle in thread_pool {
+        match handle.join() {
+            Err(_) => {
+                return Err(crate::processor::error::SyncError {
+                    code: crate::processor::consts::ERROR_THREAD_JOIN,
+                    message: crate::processor::error::error_to_string(
+                        crate::processor::consts::ERROR_THREAD_JOIN,
+                    ),
+                    file: file!(),
+                    line: line!(),
+                    source: None,
+                    destination: None,
+                });
+            }
+            Ok(value) => {
+                if value != 0 {
+                    exit_code = value;
+                    #[cfg(feature = "cli")]
+                    crate::processor::cli::error_msg(
+                        crate::processor::consts::ERROR_MSGS[value as usize],
+                        0,
+                    );
+                }
+            }
+        }
+    }
+
+    if exit_code == 0 {
+        if display_help {
+            return Err(crate::processor::error::SyncError {
+                code: crate::processor::consts::HELP,
+                message: crate::processor::error::error_to_string(exit_code),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
         }
         return Ok(());
     }
 
     Err(crate::processor::error::SyncError {
-        code: crate::processor::consts::ERROR_COPY_FILE_FOLDER,
-        message: crate::processor::error::error_to_string(
-            crate::processor::consts::ERROR_COPY_FILE_FOLDER,
-        ),
+        code: exit_code,
+        message: crate::processor::error::error_to_string(exit_code),
         file: file!(),
         line: line!(),
-        source: Some(source.to_string()),
-        destination: Some(destination.to_string()),
+        source: None,
+        destination: None,
     })
 }
 
-/// Displays a create message and creates a folder
-#[inline]
-fn create_folder(folder: &str) -> Result<(), std::io::Error> {
-    #[cfg(feature = "cli")]
-    crate::processor::cli::create_msg(folder);
-    std::fs::create_dir(&folder)
+/// Displays what a sync operation would do without any modification
+#[cfg(feature = "cli")]
+pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    fn copy_folder_simulation(source: &str) -> Result<(), crate::processor::error::SyncError> {
+        for path in std::fs::read_dir(source)? {
+            let fullpath = path?.path().display().to_string();
+
+            if !std::fs::metadata(&fullpath)?.is_dir() {
+                crate::processor::cli::copy_msg_simulation(&fullpath);
+                continue;
+            }
+
+            // Create destination folder and copy directories recursively
+            copy_folder_simulation(&fullpath)?;
+        }
+        Ok(())
+    }
+
+    fn update_file_simulation(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        if std::fs::metadata(&source)?.modified()? != std::fs::metadata(&destination)?.modified()? {
+            crate::processor::cli::update_msg_simulation(destination);
+        }
+        Ok(())
+    }
+
+    /// Iterates over source folder adding and updating files and folders in destination
+    /// and removes files and folders from destination not found in source
+    fn update_simulation(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        for path in std::fs::read_dir(source)? {
+            let fullpath_source = path?.path().display().to_string();
+            let fullpath_destination = fullpath_source.replace(source, destination);
+            let file_folder = std::fs::metadata(&fullpath_destination);
+
+            if !std::fs::metadata(&fullpath_source)?.is_dir() {
+                match file_folder {
+                    Err(_) => {
+                        crate::processor::cli::copy_msg_simulation(&fullpath_destination);
+                        return Ok(());
+                    }
+                    Ok(_) => update_file_simulation(&fullpath_source, &fullpath_destination)?,
+                }
+                continue;
+            }
+
+            // Folder does not exist
+            if file_folder.is_err() {
+                crate::processor::cli::create_msg_simulation(&fullpath_destination);
+                copy_folder_simulation(&fullpath_source)?;
+                continue;
+            }
+            update_simulation(&fullpath_source, &fullpath_destination)?;
+        }
+        Ok(())
+    }
+
+    /// Iterate over destination folder and remove files and folders that doesn't exists in source
+    fn remove_simulation(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        for path in std::fs::read_dir(destination)? {
+            let fullpath_destination = path?.path().display().to_string();
+            let fullpath_source = fullpath_destination.replace(destination, source);
+            let not_found = !std::path::Path::new(&fullpath_source).exists();
+
+            // File not found in source, remove in destination
+            if !std::fs::metadata(&fullpath_destination)?.is_dir() {
+                if not_found {
+                    crate::processor::cli::remove_msg_simulation(&fullpath_destination);
+                }
+                continue;
+            }
+
+            // Directory not found in source, remove in destination
+            if not_found {
+                crate::processor::cli::remove_msg_simulation(&fullpath_destination);
+                continue;
+            }
+            remove_simulation(&fullpath_source, &fullpath_destination)?;
+        }
+        Ok(())
+    }
+
+    if !std::path::Path::new(&source).exists() {
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_SOURCE_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_SOURCE_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        });
+    }
+
+    if source == destination {
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_SAME_FILE_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_SAME_FILE_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        });
+    }
+
+    let fullpath_source = std::fs::canonicalize(source)?
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+    if std::path::Path::new(&source).is_dir() {
+        if !std::path::Path::new(&destination).exists() {
+            crate::processor::cli::create_msg_simulation(destination);
+
+            let fullpath_destination = std::fs::canonicalize(source)?
+                .into_os_string()
+                .into_string()
+                .unwrap();
+
+            crate::processor::cli::copy_msg_simulation(&fullpath_destination);
+            return copy_folder_simulation(&fullpath_source);
+        }
+
+        if std::path::Path::new(&destination).is_dir() {
+            let fullpath_destination = std::fs::canonicalize(destination)?
+                .into_os_string()
+                .into_string()
+                .unwrap();
+
+            crate::processor::cli::sync_msg_simulation(&fullpath_destination);
+
+            let fullpath_source_copy = String::from(&fullpath_source);
+            let fullpath_destination_copy = String::from(&fullpath_destination);
+
+            // Remove files and folders with another thread
+            let handle =
+                std::thread::spawn(move || -> Result<(), crate::processor::error::SyncError> {
+                    remove_simulation(&fullpath_source, &fullpath_destination)
+                });
+
+            let update_result =
+                update_simulation(&fullpath_source_copy, &fullpath_destination_copy);
+
+            match handle.join() {
+                Err(_) => {
+                    return Err(crate::processor::error::SyncError {
+                        code: crate::processor::consts::ERROR_THREAD_JOIN,
+                        message: crate::processor::error::error_to_string(
+                            crate::processor::consts::ERROR_THREAD_JOIN,
+                        ),
+                        file: file!(),
+                        line: line!(),
+                        source: None,
+                        destination: None,
+                    });
+                }
+                Ok(value) => match value {
+                    Err(_) => return value,
+                    Ok(_) => return update_result,
+                },
+            }
+        }
+
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_DEST_NOT_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_DEST_NOT_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        });
+    }
+
+    // source is a file or symlink
+    if !std::path::Path::new(&destination).exists() {
+        crate::processor::cli::copy_msg_simulation(destination);
+        return Ok(());
+    }
+
+    if std::path::Path::new(&destination).is_dir() {
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_DEST_NOT_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_DEST_NOT_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        });
+    }
+
+    // destination is a file or symlink
+    update_file_simulation(source, destination)
 }
 
 /// Synchronizes source to destination without read or create a config file
 pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    /// Copy a file from source to destination, displays a message and checks for errors
+    #[inline]
+    fn copy_file(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        #[cfg(feature = "cli")]
+        crate::processor::cli::copy_msg(destination);
+
+        if std::fs::copy(&source, &destination)? == std::fs::metadata(&source)?.len() {
+            // Make the modified date the same in source and destination (Unix and Linux only)
+            #[cfg(not(windows))]
+            {
+                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+                file_source.set_len(file_source.metadata()?.len())?;
+                file_destination.set_len(file_destination.metadata()?.len())?;
+            }
+            return Ok(());
+        }
+
+        Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_COPY_FILE_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_COPY_FILE_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        })
+    }
+
+    /// Copy source folder to destination and all it's contents recursively
+    fn copy_folder(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        for path in std::fs::read_dir(source)? {
+            let fullpath = path?.path().display().to_string();
+            let fullpath_destination = fullpath.replace(source, destination);
+
+            // Copy file or symlink
+            let metadata_source = std::fs::metadata(&fullpath)?;
+            if !metadata_source.is_dir() {
+                copy_file(&fullpath, &fullpath_destination)?;
+                continue;
+            }
+
+            // Create destination folder and copy directories recursively
+            create_folder(&fullpath_destination)?;
+            copy_folder(&fullpath, &fullpath_destination)?;
+        }
+
+        Ok(())
+    }
+
+    /// Displays a create message and creates a folder
+    #[inline]
+    fn create_folder(folder: &str) -> Result<(), std::io::Error> {
+        #[cfg(feature = "cli")]
+        crate::processor::cli::create_msg(folder);
+        std::fs::create_dir(&folder)
+    }
+
+    /// Replaces the destination file if its different from source
+    #[inline]
+    fn update_file(
+        source: &str,
+        destination: &str,
+    ) -> Result<(), crate::processor::error::SyncError> {
+        let metadata_source = std::fs::metadata(&source)?;
+
+        if metadata_source.modified()? == std::fs::metadata(&destination)?.modified()? {
+            return Ok(());
+        }
+
+        #[cfg(feature = "cli")]
+        crate::processor::cli::update_msg(destination);
+
+        if std::fs::copy(&source, &destination)? == metadata_source.len() {
+            return Ok(());
+        }
+
+        Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_COPY_FILE_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_COPY_FILE_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        })
+    }
+
     /// Displays a remove message and removes a file or folder from destination
     #[inline]
     fn remove_all(
@@ -80,10 +426,9 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
         for path in std::fs::read_dir(source)? {
             let fullpath_source = path?.path().display().to_string();
             let fullpath_destination = fullpath_source.replace(source, destination);
-            let metadata_source = std::fs::metadata(&fullpath_source)?;
             let file_folder = std::fs::metadata(&fullpath_destination);
 
-            if !metadata_source.is_dir() {
+            if !std::fs::metadata(&fullpath_source)?.is_dir() {
                 match file_folder {
                     Err(_) => copy_file(&fullpath_source, &fullpath_destination)?,
                     Ok(_) => update_file(&fullpath_source, &fullpath_destination)?, // File exists, update if necessary
@@ -243,135 +588,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
 
     // destination is a file or symlink
     update_file(source, destination)
-}
-
-/// Synchronizes all sources to destinations found in the config file
-pub fn sync_file(config: &str) -> Result<(), crate::processor::error::SyncError> {
-    #[cfg(feature = "cli")]
-    crate::processor::cli::loading_msg(config);
-
-    // Parse source and destination paths from config file
-    for line in BufReader::new(std::fs::File::open(&config)?).lines() {
-        let data = line?;
-        let path: Vec<&str> = data.split('|').collect();
-        if path.len() != 2 {
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::ERROR_PARSE_LINE,
-                message: crate::processor::error::error_to_string(
-                    crate::processor::consts::ERROR_PARSE_LINE,
-                ),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-
-        sync(path[0], path[1])?;
-    }
-
-    Ok(())
-}
-
-/// Synchronizes all config files found in folder
-pub fn sync_folder(folder: &str) -> Result<(), crate::processor::error::SyncError> {
-    let mut thread_pool = Vec::new();
-    let mut exit_code = 0i32;
-    let mut display_help = true;
-
-    for path in std::fs::read_dir(folder)? {
-        let fullpath = path?.path().display().to_string();
-        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
-            display_help = false;
-
-            let handle = std::thread::spawn(move || -> i32 {
-                if let Err(err) = sync_file(&fullpath) {
-                    return err.code;
-                }
-                crate::processor::consts::NO_ERROR
-            });
-
-            thread_pool.push(handle);
-        }
-    }
-
-    for handle in thread_pool {
-        match handle.join() {
-            Err(_) => {
-                return Err(crate::processor::error::SyncError {
-                    code: crate::processor::consts::ERROR_THREAD_JOIN,
-                    message: crate::processor::error::error_to_string(
-                        crate::processor::consts::ERROR_THREAD_JOIN,
-                    ),
-                    file: file!(),
-                    line: line!(),
-                    source: None,
-                    destination: None,
-                });
-            }
-            Ok(value) => {
-                if value != 0 {
-                    exit_code = value;
-                    #[cfg(feature = "cli")]
-                    crate::processor::cli::error_msg(
-                        crate::processor::consts::ERROR_MSGS[value as usize],
-                        0,
-                    );
-                }
-            }
-        }
-    }
-
-    if exit_code == 0 {
-        if display_help {
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::HELP,
-                message: crate::processor::error::error_to_string(exit_code),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-        return Ok(());
-    }
-
-    Err(crate::processor::error::SyncError {
-        code: exit_code,
-        message: crate::processor::error::error_to_string(exit_code),
-        file: file!(),
-        line: line!(),
-        source: None,
-        destination: None,
-    })
-}
-
-/// Replaces the destination file if its different from source
-#[inline]
-fn update_file(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
-    let metadata_source = std::fs::metadata(&source)?;
-
-    if metadata_source.modified()? == std::fs::metadata(&destination)?.modified()? {
-        return Ok(());
-    }
-
-    #[cfg(feature = "cli")]
-    crate::processor::cli::update_msg(destination);
-
-    if std::fs::copy(&source, &destination)? == metadata_source.len() {
-        return Ok(());
-    }
-
-    Err(crate::processor::error::SyncError {
-        code: crate::processor::consts::ERROR_COPY_FILE_FOLDER,
-        message: crate::processor::error::error_to_string(
-            crate::processor::consts::ERROR_COPY_FILE_FOLDER,
-        ),
-        file: file!(),
-        line: line!(),
-        source: Some(source.to_string()),
-        destination: Some(destination.to_string()),
-    })
 }
 
 //====================================== Unit Tests ======================================

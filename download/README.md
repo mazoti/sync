@@ -1,12 +1,12 @@
 All you have to do is download and extract. For security you can check the SHA256 hashes below:
 
-- sync0.9.7-windows-x64.zip
-79370db00e84f8dfd4d94d6d87dc014d174f063be4b60d021a9abe1ad6aa8197
-- sync0.9.7-linux-x64.tar.xz
-9d7c161cc2eab7786174abddfa87102bcdcb7467e1a60f024e1dbddf7c8f1073
-- sync0.9.7-linux-i686.tar.xz
-37752ec960a479110d348b2477eaa54a5364dd7b4dd29f07b7b6ad5c45def46a
-- sync0.9.7-freebsd-x64.tar.gz
-d126e95513bd8a00395be8106ff09567e533eb26c549de5a298f1f4b4689a7a2
-- sync0.9.8-openbsd-x64
-d2dbf3398575f9facc02b2ee5a2e6ee32f516b5dd0eb0ca6097aab934770a879
+- sync0.9.9-windows-x64.zip
+7f17f17d7f4325afb7bfa21e9b323ac5842f9d4e6dd90eab3645b060a4ce2e43
+- sync0.9.9-linux-x64.tar.xz
+SHA256: 7aff53d33de14a21d7bfb6ae9238b6f77abe2fdbab95f3080a985b930bbc9e9f
+- sync0.9.9-linux-i686.tar.xz
+7df0bfcd952f8db700c26f279acbaa832630afd3e5d5c4399c30e06442b623f7
+- sync0.9.7-freebsd-x64.tgz
+5fca4512467714f41dcf9f2609500dda1f6a39108ed452354aaef70165bb6e7b
+- sync0.9.9-openbsd-x64
+8833094733a1ffe265dfc8635ca4edc5d51e36be64182ce095b2ba663238b7bc

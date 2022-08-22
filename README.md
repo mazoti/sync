@@ -10,6 +10,7 @@ After years using [rsync](https://rsync.samba.org), I decided to make a simpler 
 - No compression/cryptography
 - Configuration files are optional
 - Portable, small and easy to use
+- Sustainable: releases are optimized to save power
 - Does the minimum modifications (good for SSDs health and network traffic)
 - Batch friendly: all operations on stdout, errors on stderr and return code to OS
 
@@ -52,6 +53,9 @@ To keep synchronizing and checking until both operations succeed (will retry on 
 ```bash
 sync --force "source" "destination"
 ```
+
+## Build from source
+Instructions to build from source code can be found [here](https://github.com/mazoti/sync/blob/main/BUILD.md). It's easier and faster than you think!
 
 ## Translations
 All strings are in the folder i18n (each file is a language) and can be translated. Now sync has two languages:

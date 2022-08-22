@@ -168,29 +168,6 @@ pub(crate) fn create(
     Ok(())
 }
 
-/// Synchronizes and checks every byte stopping only on success or Ctrl+C
-#[inline]
-pub fn force(source: &str, destination: &str) {
-    loop {
-        if let Err(_err) = sync::sync(source, destination) {
-            #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code);
-            }
-            continue;
-        }
-
-        if let Err(_err) = check::check(source, destination) {
-            #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code);
-            }
-            continue;
-        }
-        break;
-    }
-}
-
 //====================================== Unit Tests ======================================
 #[cfg(test)]
 mod tests {

@@ -1,7 +1,5 @@
 //! The core of sync and simulate functions implementations
 
-use std::{io::BufRead, io::BufReader};
-
 /// Synchronizes source to destination without read or create a config file
 pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
     /// Copy a file from source to destination, displays a message and checks for errors

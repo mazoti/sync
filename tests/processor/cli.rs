@@ -247,6 +247,10 @@ fn message_simulation(ss: &mut StandardStream, color: Color, colored_msg: &str, 
         .write_all(crate::processor::consts::COMMAND_MSGS[12].as_bytes())
         .expect(crate::processor::consts::ERROR_MSGS[12]);
 
+    stdout_locked
+        .write_all(" ".as_bytes())
+        .expect(crate::processor::consts::ERROR_MSGS[12]);
+
     ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
     stdout_locked
         .write_all(colored_msg.as_bytes())
@@ -284,5 +288,11 @@ mod tests {
         crate::processor::cli::help();
         crate::processor::cli::show_header(true);
         crate::processor::cli::show_header(false);
+
+        crate::processor::cli::copy_msg_simulation("a/file/path/file.ext");
+        crate::processor::cli::update_msg_simulation("a/file/path/file.ext");
+        crate::processor::cli::create_msg_simulation("a/file/path/file.ext");
+        crate::processor::cli::remove_msg_simulation("a/file/path/file.ext");
+        crate::processor::cli::sync_msg_simulation("a/file/path/file.ext");
     }
 }

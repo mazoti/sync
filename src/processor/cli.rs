@@ -1,5 +1,5 @@
 //! Command Line Interface, contains all output commands
-use std::io::Write;
+use std::io::{Read, Write};
 
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -27,8 +27,9 @@ pub fn create_msg(folder: &str) {
     );
 }
 
-/// Displays a colored "ERROR", an error message in stderr and exit with the error code
-pub fn error_msg(msg: &str, code: i32) -> i32 {
+/// Displays a colored "ERROR", an error message in stderr and exit with the error code.
+/// If user_input is "true", waits an "enter" from user keyboard
+pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
     message(
         &mut StandardStream::stderr(ColorChoice::Always),
         Color::Red,
@@ -39,6 +40,12 @@ pub fn error_msg(msg: &str, code: i32) -> i32 {
         msg,
         false,
     );
+
+    // Waits user press "Enter"
+    if user_input {
+        let mut buffer = [0; 1];
+        std::io::stdin().read_exact(&mut buffer).unwrap();
+    }
     code
 }
 
@@ -284,7 +291,7 @@ mod tests {
         crate::processor::cli::sync_msg("a/file/path/file.ext");
         crate::processor::cli::loading_msg("a/file/path/file.ext");
         crate::processor::cli::copy_msg("a/file/path/file.ext");
-        crate::processor::cli::error_msg("Error message", 1234);
+        crate::processor::cli::error_msg("Error message", 1234, false);
         crate::processor::cli::help();
         crate::processor::cli::show_header(true);
         crate::processor::cli::show_header(false);

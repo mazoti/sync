@@ -8,7 +8,7 @@ macro_rules! error {
 
         #[cfg(feature = "cli")]
         if let Some(msg) = &$err.message {
-            std::process::exit(processor::cli::error_msg(msg, $err.code));
+            std::process::exit(processor::cli::error_msg(msg, $err.code, true));
         }
 
         #[cfg(not(feature = "cli"))]
@@ -31,6 +31,7 @@ macro_rules! no_error {
 
 /// Process user input from command line
 fn main() {
+    #[cfg(feature = "cli")]
     let _start = std::time::Instant::now();
 
     if std::env::args().len() == 1 {

@@ -175,7 +175,7 @@ pub fn force(source: &str, destination: &str) {
         if let Err(_err) = sync::sync(source, destination) {
             #[cfg(feature = "cli")]
             if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code);
+                cli::error_msg(msg, _err.code, false);
             }
             continue;
         }
@@ -183,7 +183,7 @@ pub fn force(source: &str, destination: &str) {
         if let Err(_err) = check::check(source, destination) {
             #[cfg(feature = "cli")]
             if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code);
+                cli::error_msg(msg, _err.code, false);
             }
             continue;
         }

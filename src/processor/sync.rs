@@ -73,6 +73,7 @@ pub fn folder(folder: &str) -> Result<(), crate::processor::error::SyncError> {
                     crate::processor::cli::error_msg(
                         crate::processor::consts::ERROR_MSGS[value as usize],
                         0,
+                        true,
                     );
                 }
             }

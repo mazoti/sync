@@ -14,7 +14,7 @@ After years using [rsync](https://rsync.samba.org), I decided to make a simpler 
 - Does the minimum modifications (good for SSDs health and network traffic)
 - Batch friendly: all operations on stdout, errors on stderr and return code to OS
 
-## Instalation
+## Installation
 
 All you need is the sync binary file of your architecture and operating system (just decompress and use).
 
@@ -64,7 +64,7 @@ All strings are in the folder i18n (each file is a language) and can be translat
 - Portuguese
 
 ## Donations
-You can become a sponsor of this project or donate directly:
+You can become a [sponsor](https://github.com/sponsors/mazoti) of this project or donate directly:
 
 BTC: 3JpkXivH11xQU37Lwk5TFBqLUo8gytLH84
 

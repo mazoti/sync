@@ -3,6 +3,54 @@ mod processor;
 const FN_ARGS: [fn(&std::time::Instant); 4] =
     [one_argument, two_arguments, three_arguments, four_arguments];
 
+const CHECK_SORTED: &[&str] = &[
+    "--CHECK", "--check", "-C", "-CHECK", "-c", "-check", "/C", "/CHECK", "/c", "/check", "CHECK",
+    "check",
+];
+
+const FORCE_SORTED: &[&str] = &[
+    "--FORCE", "--force", "-F", "-FORCE", "-f", "-force", "/F", "/FORCE", "/f", "/force", "FORCE",
+    "force",
+];
+
+#[cfg(feature = "cli")]
+const HELP_SORTED: &[&str] = &[
+    "--HELP", "--help", "-?", "-H", "-h", "-help", "/?", "/H", "/HELP", "/h", "/help", "HELP",
+    "help",
+];
+
+#[cfg(feature = "cli")]
+const SIMULATE_SORTED: &[&str] = &[
+    "--SIMULATE",
+    "--simulate",
+    "-S",
+    "-SIMULATE",
+    "-s",
+    "-simulate",
+    "/S",
+    "/SIMULATE",
+    "/s",
+    "/simulate",
+    "SIMULATE",
+    "simulate",
+];
+
+#[cfg(feature = "cli")]
+const VERSION_SORTED: &[&str] = &[
+    "--VERSION",
+    "--version",
+    "-V",
+    "-VERSION",
+    "-v",
+    "-version",
+    "/V",
+    "/VERSION",
+    "/v",
+    "/version",
+    "VERSION",
+    "version",
+];
+
 /// Display the error message (optional) and send the error code to operating system
 fn error(err: processor::error::SyncError) {
     #[cfg(debug_assertions)]
@@ -34,7 +82,7 @@ fn four_arguments(_start: &std::time::Instant) {
     let source_folder = std::env::args().nth(2).unwrap();
     let dest_folder = std::env::args().nth(3).unwrap();
 
-    if command == "--check" || command == "-check" || command == "check" || command == "-c" {
+    if CHECK_SORTED.binary_search(&command.as_str()).is_ok() {
         #[cfg(feature = "cli")]
         processor::cli::show_header(false);
 
@@ -44,7 +92,7 @@ fn four_arguments(_start: &std::time::Instant) {
         return no_error(_start);
     }
 
-    if command == "--force" || command == "-force" || command == "force" || command == "-f" {
+    if FORCE_SORTED.binary_search(&command.as_str()).is_ok() {
         #[cfg(feature = "cli")]
         processor::cli::show_header(false);
 
@@ -53,8 +101,7 @@ fn four_arguments(_start: &std::time::Instant) {
     }
 
     #[cfg(feature = "cli")]
-    if command == "--simulate" || command == "-simulate" || command == "simulate" || command == "-s"
-    {
+    if SIMULATE_SORTED.binary_search(&command.as_str()).is_ok() {
         processor::cli::show_header(false);
 
         if let Err(err) = processor::sync::simulate(&source_folder, &dest_folder) {
@@ -89,17 +136,11 @@ fn two_arguments(_start: &std::time::Instant) {
 
     #[cfg(feature = "cli")]
     {
-        if config == "--help"
-            || config == "-h"
-            || config == "/?"
-            || config == "/help"
-            || config == "-help"
-            || config == "help"
-        {
+        if HELP_SORTED.binary_search(&config.as_str()).is_ok() {
             std::process::exit(processor::cli::help());
         }
 
-        if config == "--version" || config == "-version" || config == "version" || config == "-v" {
+        if VERSION_SORTED.binary_search(&config.as_str()).is_ok() {
             println!("{}", option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"));
             std::process::exit(processor::consts::NO_ERROR);
         }

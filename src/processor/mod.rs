@@ -30,9 +30,8 @@ pub mod cli;
 
 pub mod check;
 pub mod consts;
+pub mod error;
 pub mod sync;
-
-mod error;
 
 /// Creates a config file or appends source full path + "|" + destination full path
 pub(crate) fn create(

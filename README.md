@@ -55,7 +55,7 @@ sync --force "source" "destination"
 ```
 
 ## Build from source
-Instructions to build from source code can be found [here](https://github.com/mazoti/sync/blob/main/BUILD.md). It's easier and faster than you think!
+Instructions to build from source code can be found [here](https://github.com/mazoti/sync/blob/main/BUILDING.md). It's easier and faster than you think!
 
 ## Translations
 All strings are in the folder i18n (each file is a language) and can be translated. Now sync has two languages:

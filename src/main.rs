@@ -77,41 +77,76 @@ fn no_error(_start: &std::time::Instant) {
     std::process::exit(processor::consts::NO_ERROR);
 }
 
+fn execute_folder(
+    command: &[&str],
+    argument: &str,
+    to_process: &str,
+    _start: &std::time::Instant,
+    process: fn(&str) -> Result<(), crate::processor::error::SyncError>,
+) {
+    if command.binary_search(&argument).is_ok() {
+        if let Err(err) = process(to_process) {
+            return error(err);
+        }
+        no_error(_start);
+    }
+}
+
+fn execute_file(
+    command: &[&str],
+    argument: &str,
+    source: &str,
+    destination: &str,
+    _start: &std::time::Instant,
+    process: fn(&str, &str) -> Result<(), crate::processor::error::SyncError>,
+) {
+    if command.binary_search(&argument).is_ok() {
+        if let Err(err) = process(source, destination) {
+            return error(err);
+        }
+        no_error(_start);
+    }
+}
+
 fn four_arguments(_start: &std::time::Instant) {
     let command = std::env::args().nth(1).unwrap();
     let source_folder = std::env::args().nth(2).unwrap();
     let dest_folder = std::env::args().nth(3).unwrap();
 
-    if CHECK_SORTED.binary_search(&command.as_str()).is_ok() {
-        #[cfg(feature = "cli")]
-        processor::cli::show_header(false);
+    #[cfg(feature = "cli")]
+    processor::cli::show_header(false);
 
-        if let Err(err) = processor::check::check(&source_folder, &dest_folder) {
-            return error(err);
-        }
-        return no_error(_start);
-    }
+    execute_file(
+        CHECK_SORTED,
+        command.as_str(),
+        &source_folder,
+        &dest_folder,
+        _start,
+        processor::check,
+    );
 
-    if FORCE_SORTED.binary_search(&command.as_str()).is_ok() {
-        #[cfg(feature = "cli")]
-        processor::cli::show_header(false);
-
-        processor::force(&source_folder, &dest_folder);
-        return no_error(_start);
-    }
+    execute_file(
+        FORCE_SORTED,
+        command.as_str(),
+        &source_folder,
+        &dest_folder,
+        _start,
+        processor::force,
+    );
 
     #[cfg(feature = "cli")]
-    if SIMULATE_SORTED.binary_search(&command.as_str()).is_ok() {
-        processor::cli::show_header(false);
+    {
+        execute_file(
+            SIMULATE_SORTED,
+            command.as_str(),
+            &source_folder,
+            &dest_folder,
+            _start,
+            processor::simulate,
+        );
 
-        if let Err(err) = processor::sync::simulate(&source_folder, &dest_folder) {
-            return error(err);
-        }
-        return no_error(_start);
+        processor::cli::show_header(true);
     }
-
-    #[cfg(feature = "cli")]
-    processor::cli::show_header(true);
 
     if let Err(err) = processor::create(&command, &source_folder, &dest_folder) {
         return error(err);
@@ -125,7 +160,32 @@ fn three_arguments(_start: &std::time::Instant) {
 
     #[cfg(feature = "cli")]
     processor::cli::show_header(true);
-    if let Err(err) = processor::sync::sync(&source, &destination) {
+
+    execute_folder(
+        CHECK_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::check_file,
+    );
+    execute_folder(
+        FORCE_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::force_file,
+    );
+
+    #[cfg(feature = "cli")]
+    execute_folder(
+        SIMULATE_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::simulate_file,
+    );
+
+    if let Err(err) = processor::sync(&source, &destination) {
         return error(err);
     }
     no_error(_start);
@@ -133,6 +193,7 @@ fn three_arguments(_start: &std::time::Instant) {
 
 fn two_arguments(_start: &std::time::Instant) {
     let config = std::env::args().nth(1).unwrap();
+    let current_path = std::env::current_dir().unwrap().display().to_string();
 
     #[cfg(feature = "cli")]
     {
@@ -146,9 +207,33 @@ fn two_arguments(_start: &std::time::Instant) {
         }
 
         processor::cli::show_header(true);
+
+        execute_folder(
+            SIMULATE_SORTED,
+            config.as_str(),
+            &current_path,
+            _start,
+            processor::simulate_folder,
+        );
     }
 
-    if let Err(err) = processor::sync::file(&config) {
+    execute_folder(
+        CHECK_SORTED,
+        config.as_str(),
+        &current_path,
+        _start,
+        processor::check_folder,
+    );
+
+    execute_folder(
+        FORCE_SORTED,
+        config.as_str(),
+        &current_path,
+        _start,
+        processor::force_folder,
+    );
+
+    if let Err(err) = processor::sync_file(&config) {
         return error(err);
     }
     no_error(_start);
@@ -159,7 +244,7 @@ fn one_argument(_start: &std::time::Instant) {
     processor::cli::show_header(true);
 
     let current_path = std::env::current_dir().unwrap().display().to_string();
-    if let Err(err) = processor::sync::folder(&current_path) {
+    if let Err(err) = processor::sync_folder(&current_path) {
         #[cfg(feature = "cli")]
         if err.code == processor::consts::HELP {
             std::process::exit(processor::cli::help());

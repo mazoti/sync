@@ -28,10 +28,11 @@ use std::{io::BufRead, io::BufReader, io::Write, path::Path};
 #[cfg(feature = "cli")]
 pub mod cli;
 
-pub mod check;
 pub mod consts;
 pub mod error;
-pub mod sync;
+
+mod check;
+mod sync;
 
 /// Creates a config file or appends source full path + "|" + destination full path
 pub(crate) fn create(
@@ -167,27 +168,175 @@ pub(crate) fn create(
     Ok(())
 }
 
-/// Synchronizes and checks every byte stopping only on success or Ctrl+C
-#[inline]
-pub fn force(source: &str, destination: &str) {
-    loop {
-        if let Err(_err) = sync::sync(source, destination) {
-            #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code, false);
-            }
-            continue;
+/// Process all sources to destinations found in the config file
+fn process_file(
+    process_function: fn(&str, &str) -> Result<(), crate::processor::error::SyncError>,
+    config: &str,
+) -> Result<(), crate::processor::error::SyncError> {
+    #[cfg(feature = "cli")]
+    crate::processor::cli::loading_msg(config);
+
+    // Parse source and destination paths from config file
+    for line in BufReader::new(std::fs::File::open(&config)?).lines() {
+        let data = line?;
+        let path: Vec<&str> = data.split('|').collect();
+        if path.len() != 2 {
+            return Err(crate::processor::error::SyncError {
+                code: crate::processor::consts::ERROR_PARSE_LINE,
+                message: crate::processor::error::error_to_string(
+                    crate::processor::consts::ERROR_PARSE_LINE,
+                ),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
         }
 
-        if let Err(_err) = check::check(source, destination) {
-            #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                cli::error_msg(msg, _err.code, false);
-            }
-            continue;
-        }
-        break;
+        process_function(path[0], path[1])?;
     }
+
+    Ok(())
+}
+
+/// Process all config files found in folder asynchronously
+fn process_folder(
+    process_function: fn(&str, &str) -> Result<(), crate::processor::error::SyncError>,
+    folder: &str,
+) -> Result<(), crate::processor::error::SyncError> {
+    let mut thread_pool = Vec::new();
+    let mut exit_code = 0i32;
+    let mut display_help = true;
+
+    for path in std::fs::read_dir(folder)? {
+        let fullpath = path?.path().display().to_string();
+        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
+            display_help = false;
+
+            let handle = std::thread::spawn(move || -> i32 {
+                if let Err(err) = process_file(process_function, &fullpath) {
+                    return err.code;
+                }
+                crate::processor::consts::NO_ERROR
+            });
+
+            thread_pool.push(handle);
+        }
+    }
+
+    for handle in thread_pool {
+        match handle.join() {
+            Err(_) => {
+                return Err(crate::processor::error::SyncError {
+                    code: crate::processor::consts::ERROR_THREAD_JOIN,
+                    message: crate::processor::error::error_to_string(
+                        crate::processor::consts::ERROR_THREAD_JOIN,
+                    ),
+                    file: file!(),
+                    line: line!(),
+                    source: None,
+                    destination: None,
+                });
+            }
+            Ok(value) => {
+                if value != 0 {
+                    exit_code = value;
+                    #[cfg(feature = "cli")]
+                    crate::processor::cli::error_msg(
+                        crate::processor::consts::ERROR_MSGS[value as usize],
+                        0,
+                        true,
+                    );
+                }
+            }
+        }
+    }
+
+    if exit_code == 0 {
+        if display_help {
+            return Err(crate::processor::error::SyncError {
+                code: crate::processor::consts::HELP,
+                message: crate::processor::error::error_to_string(exit_code),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
+        }
+        return Ok(());
+    }
+
+    Err(crate::processor::error::SyncError {
+        code: exit_code,
+        message: crate::processor::error::error_to_string(exit_code),
+        file: file!(),
+        line: line!(),
+        source: None,
+        destination: None,
+    })
+}
+
+#[inline(always)]
+pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::check::check(source, destination)
+}
+
+#[inline(always)]
+pub fn check_file(file_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_file(crate::processor::check::check, file_path)
+}
+
+#[inline(always)]
+pub fn check_folder(folder_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_folder(crate::processor::check::check, folder_path)
+}
+
+#[inline(always)]
+pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::sync::force(source, destination)
+}
+
+#[inline(always)]
+pub fn force_file(file_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_file(crate::processor::sync::force, file_path)
+}
+
+#[inline(always)]
+pub fn force_folder(folder_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_folder(crate::processor::sync::force, folder_path)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::sync::simulate(source, destination)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn simulate_file(file_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_file(crate::processor::sync::simulate, file_path)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn simulate_folder(config: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_folder(crate::processor::sync::simulate, config)
+}
+
+#[inline(always)]
+pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::sync::sync(source, destination)
+}
+
+#[inline(always)]
+pub fn sync_file(config: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_file(crate::processor::sync::sync, config)
+}
+
+#[inline(always)]
+pub fn sync_folder(folder_path: &str) -> Result<(), crate::processor::error::SyncError> {
+    process_folder(crate::processor::sync::sync, folder_path)
 }
 
 //====================================== Unit Tests ======================================

@@ -1,109 +1,5 @@
 //! The core of sync and simulate functions implementations
 
-use std::{io::BufRead, io::BufReader};
-
-/// Synchronizes all sources to destinations found in the config file
-pub fn file(config: &str) -> Result<(), crate::processor::error::SyncError> {
-    #[cfg(feature = "cli")]
-    crate::processor::cli::loading_msg(config);
-
-    // Parse source and destination paths from config file
-    for line in BufReader::new(std::fs::File::open(&config)?).lines() {
-        let data = line?;
-        let path: Vec<&str> = data.split('|').collect();
-        if path.len() != 2 {
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::ERROR_PARSE_LINE,
-                message: crate::processor::error::error_to_string(
-                    crate::processor::consts::ERROR_PARSE_LINE,
-                ),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-
-        sync(path[0], path[1])?;
-    }
-
-    Ok(())
-}
-
-/// Synchronizes all config files found in folder
-pub fn folder(folder: &str) -> Result<(), crate::processor::error::SyncError> {
-    let mut thread_pool = Vec::new();
-    let mut exit_code = 0i32;
-    let mut display_help = true;
-
-    for path in std::fs::read_dir(folder)? {
-        let fullpath = path?.path().display().to_string();
-        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
-            display_help = false;
-
-            let handle = std::thread::spawn(move || -> i32 {
-                if let Err(err) = file(&fullpath) {
-                    return err.code;
-                }
-                crate::processor::consts::NO_ERROR
-            });
-
-            thread_pool.push(handle);
-        }
-    }
-
-    for handle in thread_pool {
-        match handle.join() {
-            Err(_) => {
-                return Err(crate::processor::error::SyncError {
-                    code: crate::processor::consts::ERROR_THREAD_JOIN,
-                    message: crate::processor::error::error_to_string(
-                        crate::processor::consts::ERROR_THREAD_JOIN,
-                    ),
-                    file: file!(),
-                    line: line!(),
-                    source: None,
-                    destination: None,
-                });
-            }
-            Ok(value) => {
-                if value != 0 {
-                    exit_code = value;
-                    #[cfg(feature = "cli")]
-                    crate::processor::cli::error_msg(
-                        crate::processor::consts::ERROR_MSGS[value as usize],
-                        0,
-                        true,
-                    );
-                }
-            }
-        }
-    }
-
-    if exit_code == 0 {
-        if display_help {
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::HELP,
-                message: crate::processor::error::error_to_string(exit_code),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-        return Ok(());
-    }
-
-    Err(crate::processor::error::SyncError {
-        code: exit_code,
-        message: crate::processor::error::error_to_string(exit_code),
-        file: file!(),
-        line: line!(),
-        source: None,
-        destination: None,
-    })
-}
-
 /// Displays what a sync operation would do without any modification
 #[cfg(feature = "cli")]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
@@ -589,6 +485,30 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
 
     // destination is a file or symlink
     update_file(source, destination)
+}
+
+/// Synchronizes and checks every byte stopping only on success or Ctrl+C
+#[inline]
+pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    loop {
+        if let Err(_err) = sync(source, destination) {
+            #[cfg(feature = "cli")]
+            if let Some(msg) = &_err.message {
+                crate::processor::cli::error_msg(msg, _err.code, false);
+            }
+            continue;
+        }
+
+        if let Err(_err) = crate::processor::check::check(source, destination) {
+            #[cfg(feature = "cli")]
+            if let Some(msg) = &_err.message {
+                crate::processor::cli::error_msg(msg, _err.code, false);
+            }
+            continue;
+        }
+        break;
+    }
+    Ok(())
 }
 
 //====================================== Unit Tests ======================================

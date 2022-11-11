@@ -1,7 +1,10 @@
 name: Rust unit tests
-on: [push]
+on:
+  push:
+    branches:
+      - main
 jobs:
-  test:
+  deploy:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -14,4 +17,4 @@ jobs:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@master
     - name: Run tests
-      run: cargo test --verbose --release
+      run: cargo build --features cli --verbose --release

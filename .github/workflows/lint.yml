@@ -1,11 +1,11 @@
 name: Rust unit tests
 on: [push]
 jobs:
-  test:
+  lint:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
         rust: [stable]
 
     steps:
@@ -14,4 +14,4 @@ jobs:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@master
     - name: Run tests
-      run: cargo test --verbose --release
+      run: cargo clippy --verbose --release

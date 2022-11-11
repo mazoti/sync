@@ -9,9 +9,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
+      - uses: actions/download-artifact@v3
         with:
           toolchain: stable
       - uses: actions-rs/cargo@v1
         with:
           command: build
           args: --release --features cli
+
+        with:
+          name: my-artifact
+          - name: Display structure of downloaded files
+          run: ls -R

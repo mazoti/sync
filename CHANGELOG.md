@@ -10,6 +10,5 @@
 
 ### Changed
 
-- Fixed typos in Italian translation from [@lorenzo-arena](https://github.com/lorenzo-arena).
-- Fixed typos in Indonesian translation from [@ekojs](https://github.com/ekojs).
+- Split added in main
 

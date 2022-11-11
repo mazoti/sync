@@ -13,6 +13,11 @@ const FORCE_SORTED: &[&str] = &[
     "force",
 ];
 
+const SPLIT_SORTED: &[&str] = &[
+    "--SPLIT", "--split", "-S", "-SPLIT", "-s", "-split", "/S", "/SPLIT", "/s", "/split", "SPLIT",
+    "split",
+];
+
 #[cfg(feature = "cli")]
 const HELP_SORTED: &[&str] = &[
     "--HELP", "--help", "-?", "-H", "-h", "-help", "/?", "/H", "/HELP", "/h", "/help", "HELP",
@@ -132,6 +137,15 @@ fn four_arguments(_start: &std::time::Instant) {
         &dest_folder,
         _start,
         processor::force,
+    );
+
+    execute_file(
+        SPLIT_SORTED,
+        command.as_str(),
+        &source_folder,
+        &dest_folder,
+        _start,
+        processor::split,
     );
 
     #[cfg(feature = "cli")]

@@ -32,6 +32,7 @@ pub mod consts;
 pub mod error;
 
 mod check;
+mod splitjoin;
 mod sync;
 
 /// Creates a config file or appends source full path + "|" + destination full path
@@ -337,6 +338,11 @@ pub fn sync_file(config: &str) -> Result<(), crate::processor::error::SyncError>
 #[inline(always)]
 pub fn sync_folder(folder_path: &str) -> Result<(), crate::processor::error::SyncError> {
     process_folder(crate::processor::sync::sync, folder_path)
+}
+
+#[inline(always)]
+pub fn split(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::splitjoin::split(source, destination)
 }
 
 //====================================== Unit Tests ======================================

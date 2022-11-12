@@ -77,7 +77,7 @@ jobs:
           asset_name="sync-$ver-${{ matrix.target }}.${{ matrix.archive }}"
           ASSET_PATH="$src/$asset_name"
           CHECKSUM_PATH="$ASSET_PATH.sha256"
-          cp target/${{ matrix.target }}/release/sync $stage/
+          cp target/${{ matrix.target }}/release/ $stage/
           cd $stage
           ${{ matrix.archive-cmd }} $ASSET_PATH *
           cd $src

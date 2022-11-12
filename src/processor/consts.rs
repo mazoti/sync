@@ -22,7 +22,6 @@ pub const ERROR_SOURCE_FOLDER: i32 = 11;
 pub const ERROR_SYSTEM_TIME: i32 = 12;
 pub const ERROR_THREAD_JOIN: i32 = 13;
 
-
 pub const NO_ERROR: i32 = 0;
 pub const HELP: i32 = -1;
 

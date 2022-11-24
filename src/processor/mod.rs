@@ -115,7 +115,7 @@ pub(crate) fn create(
             .write(true)
             .append(true)
             .create(true)
-            .open(&config)?;
+            .open(config)?;
         writeln!(file, "{}|{}", &source, &destination)?;
         return Ok(());
     }
@@ -125,7 +125,7 @@ pub(crate) fn create(
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
-        .open(&config)?;
+        .open(config)?;
     for line in BufReader::new(&file).lines() {
         let data = line?;
         let path: Vec<&str> = data.split('|').collect();
@@ -178,7 +178,7 @@ fn process_file(
     crate::processor::cli::loading_msg(config);
 
     // Parse source and destination paths from config file
-    for line in BufReader::new(std::fs::File::open(&config)?).lines() {
+    for line in BufReader::new(std::fs::File::open(config)?).lines() {
         let data = line?;
         let path: Vec<&str> = data.split('|').collect();
         if path.len() != 2 {
@@ -207,12 +207,17 @@ fn process_folder(
 ) -> Result<(), crate::processor::error::SyncError> {
     let mut thread_pool = Vec::new();
     let mut exit_code = 0i32;
+
+    #[cfg(feature = "cli")]
     let mut display_help = true;
 
     for path in std::fs::read_dir(folder)? {
         let fullpath = path?.path().display().to_string();
         if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
-            display_help = false;
+            #[cfg(feature = "cli")]
+            {
+                display_help = false;
+            }
 
             let handle = std::thread::spawn(move || -> i32 {
                 if let Err(err) = process_file(process_function, &fullpath) {
@@ -254,6 +259,7 @@ fn process_folder(
     }
 
     if exit_code == 0 {
+        #[cfg(feature = "cli")]
         if display_help {
             return Err(crate::processor::error::SyncError {
                 code: crate::processor::consts::HELP,

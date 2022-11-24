@@ -22,7 +22,7 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         source: &str,
         destination: &str,
     ) -> Result<(), crate::processor::error::SyncError> {
-        if std::fs::metadata(&source)?.modified()? != std::fs::metadata(&destination)?.modified()? {
+        if std::fs::metadata(source)?.modified()? != std::fs::metadata(destination)?.modified()? {
             crate::processor::cli::update_msg_simulation(destination);
         }
         Ok(())
@@ -219,7 +219,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
         #[cfg(feature = "cli")]
         crate::processor::cli::copy_msg(destination);
 
-        if std::fs::copy(&source, &destination)? == std::fs::metadata(&source)?.len() {
+        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
             // Make the modified date the same in source and destination (Unix and Linux only)
             #[cfg(not(windows))]
             {
@@ -272,7 +272,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
     fn create_folder(folder: &str) -> Result<(), std::io::Error> {
         #[cfg(feature = "cli")]
         crate::processor::cli::create_msg(folder);
-        std::fs::create_dir(&folder)
+        std::fs::create_dir(folder)
     }
 
     /// Replaces the destination file if its different from source
@@ -281,16 +281,16 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::err
         source: &str,
         destination: &str,
     ) -> Result<(), crate::processor::error::SyncError> {
-        let metadata_source = std::fs::metadata(&source)?;
+        let metadata_source = std::fs::metadata(source)?;
 
-        if metadata_source.modified()? == std::fs::metadata(&destination)?.modified()? {
+        if metadata_source.modified()? == std::fs::metadata(destination)?.modified()? {
             return Ok(());
         }
 
         #[cfg(feature = "cli")]
         crate::processor::cli::update_msg(destination);
 
-        if std::fs::copy(&source, &destination)? == metadata_source.len() {
+        if std::fs::copy(source, destination)? == metadata_source.len() {
             return Ok(());
         }
 

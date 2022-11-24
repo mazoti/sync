@@ -90,3 +90,16 @@ impl std::fmt::Debug for SyncError {
         Ok(())
     }
 }
+
+impl From<std::num::ParseIntError> for SyncError {
+    fn from(error: std::num::ParseIntError) -> Self {
+        SyncError {
+            code: crate::processor::consts::PARSE_INT_ERROR,
+            message: Some(error.to_string()),
+            file: file!(),
+            line: line!(),
+            source: None,
+            destination: None,
+        }
+    }
+}

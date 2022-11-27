@@ -313,6 +313,11 @@ pub fn force_folder(folder_path: &str) -> Result<(), crate::processor::error::Sy
     process_folder(crate::processor::sync::force, folder_path)
 }
 
+#[inline(always)]
+pub fn join_folder(folderpath: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::splitjoin::join(folderpath)
+}
+
 #[cfg(feature = "cli")]
 #[inline(always)]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
@@ -347,8 +352,8 @@ pub fn sync_folder(folder_path: &str) -> Result<(), crate::processor::error::Syn
 }
 
 #[inline(always)]
-pub fn split(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
-    crate::processor::splitjoin::split(source, destination)
+pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::error::SyncError> {
+    crate::processor::splitjoin::split(size_bytes, filepath)
 }
 
 //====================================== Unit Tests ======================================

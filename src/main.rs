@@ -13,6 +13,10 @@ const FORCE_SORTED: &[&str] = &[
     "force",
 ];
 
+const JOIN_SORTED: &[&str] = &[
+    "--JOIN", "--join", "-J", "-JOIN", "-j", "-join", "/J", "/JOIN", "/j", "/join", "JOIN", "join",
+];
+
 const SPLIT_SORTED: &[&str] = &[
     "--SPLIT", "--split", "-S", "-SPLIT", "-s", "-split", "/S", "/SPLIT", "/s", "/split", "SPLIT",
     "split",
@@ -190,6 +194,14 @@ fn three_arguments(_start: &std::time::Instant) {
         processor::force_file,
     );
 
+    execute_folder(
+        JOIN_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::join_folder,
+    );
+
     #[cfg(feature = "cli")]
     execute_folder(
         SIMULATE_SORTED,
@@ -247,12 +259,21 @@ fn two_arguments(_start: &std::time::Instant) {
         processor::force_folder,
     );
 
+    execute_folder(
+        JOIN_SORTED,
+        config.as_str(),
+        &current_path,
+        _start,
+        processor::join_folder,
+    );
+
     if let Err(err) = processor::sync_file(&config) {
         return error(err);
     }
     no_error(_start);
 }
 
+/// User only enter "sync", could display help or process all configs
 fn one_argument(_start: &std::time::Instant) {
     #[cfg(feature = "cli")]
     processor::cli::show_header(true);

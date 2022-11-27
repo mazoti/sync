@@ -1,5 +1,8 @@
 fn main() {
-    let mut a = ["split", "SPLIT", "/split", "/s", "/SPLIT", "/S", "-split", "-s", "-SPLIT", "-S", "--split", "--SPLIT"];
+    let mut a = [
+	    "--JOIN", "--join", "-J", "-JOIN", "-j", "-join", "/J", "/JOIN", "/j", "/join", "JOIN",
+    "join",
+	];
     a.sort();
 
     println!("{:?}", a);

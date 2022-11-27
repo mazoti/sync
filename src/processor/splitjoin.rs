@@ -1,11 +1,92 @@
 //! Splits a file in n files of x bytes or
-//! Join two files (append destination in source).
+//! Join files of a folder: looks for a ".0" termination, creates a new file and appends all ".n" files
 
 use std::io::{Read, Write};
 
+// Joins all ".n" files of the folderpath
+pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> {
+    let mut tmp: String;
+    let mut read_bytes: usize;
+    let mut destination_file: std::fs::File;
+    let mut source_file: std::fs::File;
+
+    let mut count: usize = 0;
+    let mut destination: String = "".to_string();
+    let mut buffer = vec![0; crate::processor::consts::BUFFER_SIZE];
+
+    if !std::fs::metadata(folderpath)?.is_dir() {
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_SOURCE_FOLDER,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_SOURCE_FOLDER,
+            ),
+            file: file!(),
+            line: line!(),
+            source: Some(folderpath.to_string()),
+            destination: None,
+        });
+    }
+
+    // Look for the first file, it ends with ".0"
+    for path in std::fs::read_dir(folderpath)? {
+        tmp = path?.path().display().to_string();
+        if tmp.ends_with(".0") {
+            destination = tmp[..tmp.len() - 2].to_string();
+            break;
+        }
+    }
+
+    // First file not found
+    if destination.is_empty() {
+        return Err(crate::processor::error::SyncError {
+            code: crate::processor::consts::ERROR_SOURCE_FILE,
+            message: crate::processor::error::error_to_string(
+                crate::processor::consts::ERROR_SOURCE_FILE,
+            ),
+            file: file!(),
+            line: line!(),
+            source: None,
+            destination: None,
+        });
+    }
+
+    #[cfg(feature = "cli")]
+    crate::processor::cli::create_msg(&destination);
+
+    destination_file = std::fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(&destination)?;
+
+    loop {
+        tmp = String::from(&destination) + "." + &count.to_string();
+        if !std::path::Path::new(&tmp).exists() {
+            break;
+        }
+
+        // Append opened file to destination
+        source_file = std::fs::File::open(&tmp)?;
+        loop {
+            read_bytes = source_file.read(&mut buffer)?;
+
+            // Last block
+            if read_bytes < crate::processor::consts::BUFFER_SIZE {
+                buffer.truncate(read_bytes);
+                destination_file.write_all(&buffer)?;
+                buffer.resize(crate::processor::consts::BUFFER_SIZE, 0);
+                break;
+            }
+
+            destination_file.write_all(&buffer)?;
+        }
+        count += 1;
+    }
+
+    Ok(())
+}
+
 /// Split file in n bytes each
 pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::error::SyncError> {
-    let metadata_file: std::fs::Metadata;
     let remainder_size: usize;
 
     let mut bytes_read: usize;
@@ -45,20 +126,7 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
         });
     }
 
-    if !std::path::Path::new(&filepath).exists() {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FILE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FILE,
-            ),
-            file: file!(),
-            line: line!(),
-            source: Some(size_bytes.to_string()),
-            destination: Some(filepath.to_string()),
-        });
-    }
-
-    metadata_file = std::fs::metadata(filepath)?;
+    let metadata_file = std::fs::metadata(filepath)?;
 
     if !metadata_file.is_file() {
         return Err(crate::processor::error::SyncError {

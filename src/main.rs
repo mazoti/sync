@@ -61,13 +61,13 @@ const VERSION_SORTED: &[&str] = &[
 ];
 
 /// Display the error message (optional) and send the error code to operating system
-fn error(err: processor::error::SyncError) {
+fn error(err: processor::SyncError) {
     #[cfg(debug_assertions)]
     println!("{:?}", err);
 
     #[cfg(feature = "cli")]
     if let Some(msg) = err.message {
-        std::process::exit(processor::cli::error_msg(&msg, err.code, true));
+        std::process::exit(processor::error_msg(&msg, err.code, true));
     }
 
     #[cfg(not(feature = "cli"))]
@@ -77,13 +77,9 @@ fn error(err: processor::error::SyncError) {
 /// Display elapsed time (optional) and send a zero code (NO_ERROR) to operating system
 fn no_error(_start: &std::time::Instant) {
     #[cfg(feature = "cli")]
-    println!(
-        "\n{} {:#?}",
-        crate::processor::consts::COMMAND_MSGS[2],
-        _start.elapsed()
-    );
+    println!("\n{} {:#?}", processor::command_msgs(2), _start.elapsed());
 
-    std::process::exit(processor::consts::NO_ERROR);
+    std::process::exit(processor::no_error());
 }
 
 fn execute_folder(
@@ -91,7 +87,7 @@ fn execute_folder(
     argument: &str,
     to_process: &str,
     _start: &std::time::Instant,
-    process: fn(&str) -> Result<(), crate::processor::error::SyncError>,
+    process: fn(&str) -> Result<(), processor::SyncError>,
 ) {
     if command.binary_search(&argument).is_ok() {
         if let Err(err) = process(to_process) {
@@ -107,7 +103,7 @@ fn execute_file(
     source: &str,
     destination: &str,
     _start: &std::time::Instant,
-    process: fn(&str, &str) -> Result<(), crate::processor::error::SyncError>,
+    process: fn(&str, &str) -> Result<(), processor::SyncError>,
 ) {
     if command.binary_search(&argument).is_ok() {
         if let Err(err) = process(source, destination) {
@@ -123,7 +119,7 @@ fn four_arguments(_start: &std::time::Instant) {
     let dest_folder = std::env::args().nth(3).unwrap();
 
     #[cfg(feature = "cli")]
-    processor::cli::show_header(false);
+    processor::show_header(false);
 
     execute_file(
         CHECK_SORTED,
@@ -163,7 +159,7 @@ fn four_arguments(_start: &std::time::Instant) {
             processor::simulate,
         );
 
-        processor::cli::show_header(true);
+        processor::show_header(true);
     }
 
     if let Err(err) = processor::create(&command, &source_folder, &dest_folder) {
@@ -177,7 +173,7 @@ fn three_arguments(_start: &std::time::Instant) {
     let destination = std::env::args().nth(2).unwrap();
 
     #[cfg(feature = "cli")]
-    processor::cli::show_header(true);
+    processor::show_header(true);
 
     execute_folder(
         CHECK_SORTED,
@@ -224,15 +220,15 @@ fn two_arguments(_start: &std::time::Instant) {
     #[cfg(feature = "cli")]
     {
         if HELP_SORTED.binary_search(&config.as_str()).is_ok() {
-            std::process::exit(processor::cli::help());
+            std::process::exit(processor::help());
         }
 
         if VERSION_SORTED.binary_search(&config.as_str()).is_ok() {
             println!("{}", option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"));
-            std::process::exit(processor::consts::NO_ERROR);
+            std::process::exit(processor::no_error());
         }
 
-        processor::cli::show_header(true);
+        processor::show_header(true);
 
         execute_folder(
             SIMULATE_SORTED,
@@ -276,13 +272,13 @@ fn two_arguments(_start: &std::time::Instant) {
 /// User only enter "sync", could display help or process all configs
 fn one_argument(_start: &std::time::Instant) {
     #[cfg(feature = "cli")]
-    processor::cli::show_header(true);
+    processor::show_header(true);
 
     let current_path = std::env::current_dir().unwrap().display().to_string();
     if let Err(err) = processor::sync_folder(&current_path) {
         #[cfg(feature = "cli")]
-        if err.code == processor::consts::HELP {
-            std::process::exit(processor::cli::help());
+        if err.code == processor::help_code() {
+            std::process::exit(processor::help());
         }
         return error(err);
     }
@@ -299,8 +295,8 @@ fn main() {
     }
 
     #[cfg(feature = "cli")]
-    std::process::exit(processor::cli::help());
+    std::process::exit(processor::help());
 
     #[cfg(not(feature = "cli"))]
-    std::process::exit(processor::consts::NO_ERROR);
+    std::process::exit(processor::no_error());
 }

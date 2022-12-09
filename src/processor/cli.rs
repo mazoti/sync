@@ -4,24 +4,24 @@ use std::io::{Read, Write};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 /// Displays a colored "Copy" and the file path
-#[inline]
+#[inline(always)]
 pub fn copy_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Green,
-        crate::processor::consts::COMMAND_MSGS[1],
+        crate::processor::command_msgs(1),
         file,
         true,
     );
 }
 
 /// Displays a colored "Create" and the folder path
-#[inline]
+#[inline(always)]
 pub fn create_msg(folder: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Green,
-        crate::processor::consts::COMMAND_MSGS[0],
+        crate::processor::command_msgs(0),
         folder,
         true,
     );
@@ -36,7 +36,7 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
         &("[".to_owned()
             + &chrono::Local::now().format("%Y-%m-%d %T").to_string()
             + "] "
-            + crate::processor::consts::COMMAND_MSGS[3]),
+            + crate::processor::command_msgs(3)),
         msg,
         false,
     );
@@ -50,24 +50,25 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
 }
 
 /// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
+#[inline(always)]
 pub fn help() -> i32 {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Yellow,
-        crate::processor::consts::COMMAND_MSGS[10],
-        crate::processor::consts::MSG_HELP,
+        crate::processor::command_msgs(10),
+        crate::processor::msg_help(),
         true,
     );
-    crate::processor::consts::NO_ERROR
+    crate::processor::no_error()
 }
 
 /// Displays a colored "Loading" and the file path
-#[inline]
+#[inline(always)]
 pub fn loading_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Cyan,
-        crate::processor::consts::COMMAND_MSGS[4],
+        crate::processor::command_msgs(4),
         file,
         true,
     );
@@ -82,7 +83,7 @@ fn message(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str, 
         ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
         stdout_locked
             .write_all(colored_msg.as_bytes())
-            .expect(crate::processor::consts::ERROR_MSGS[12]);
+            .expect(crate::processor::error_msgs()[12]);
         ss.reset().unwrap();
 
         #[cfg(windows)]
@@ -93,14 +94,14 @@ fn message(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str, 
 
         stdout_locked
             .write_all(str.as_bytes())
-            .expect(crate::processor::consts::ERROR_MSGS[12]);
+            .expect(crate::processor::error_msgs()[12]);
         return;
     }
 
     ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
     stderr_locked
         .write_all(colored_msg.as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .expect(crate::processor::error_msgs()[12]);
     ss.reset().unwrap();
 
     #[cfg(windows)]
@@ -111,16 +112,16 @@ fn message(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str, 
 
     stderr_locked
         .write_all(str.as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .expect(crate::processor::error_msgs()[12]);
 }
 
 /// Displays a colored "Ok" and the file path
-#[inline]
+#[inline(always)]
 pub fn ok_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Blue,
-        crate::processor::consts::COMMAND_MSGS[5],
+        crate::processor::command_msgs(5),
         file,
         true,
     );
@@ -132,7 +133,7 @@ pub fn remove_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Red,
-        crate::processor::consts::COMMAND_MSGS[6],
+        crate::processor::command_msgs(6),
         file,
         true,
     );
@@ -148,97 +149,97 @@ pub fn show_header(datetime: bool) {
     println!(
         "sync version {} (https://github.com/mazoti/sync) {}\n",
         option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"),
-        crate::processor::consts::COMMAND_MSGS[7]
+        crate::processor::command_msgs(7),
     );
 }
 
 /// Displays a colored "Sync" and the file path
-#[inline]
+#[inline(always)]
 pub fn sync_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Magenta,
-        crate::processor::consts::COMMAND_MSGS[8],
+        crate::processor::command_msgs(8),
         file,
         true,
     );
 }
 
 /// Displays a colored "Update" and the file path
-#[inline]
+#[inline(always)]
 pub fn update_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Yellow,
-        crate::processor::consts::COMMAND_MSGS[9],
+        crate::processor::command_msgs(9),
         file,
         true,
     );
 }
 
 /// Displays a colored "Warning", the file path and a message in stdout
-#[inline]
+#[inline(always)]
 pub fn warning_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Yellow,
-        crate::processor::consts::ERROR_MSGS[11],
-        &(file.to_owned() + " " + crate::processor::consts::ERROR_MSGS[13]),
+        crate::processor::error_msgs()[11],
+        &(file.to_owned() + " " + crate::processor::error_msgs()[13]),
         true,
     );
 }
 
 /// Displays a colored "(SIMULATION) Copying" and the file path
-#[inline]
+#[inline(always)]
 pub fn copy_msg_simulation(file: &str) {
     message_simulation(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Green,
-        crate::processor::consts::COMMAND_MSGS[1],
+        crate::processor::command_msgs(1),
         file,
     );
 }
 
 /// Displays a colored "(SIMULATION) Update" and the file path
-#[inline]
+#[inline(always)]
 pub fn update_msg_simulation(file: &str) {
     message_simulation(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Yellow,
-        crate::processor::consts::COMMAND_MSGS[9],
+        crate::processor::command_msgs(9),
         file,
     );
 }
 
 /// Displays a colored "(SIMULATION) Create" and the folder path
-#[inline]
+#[inline(always)]
 pub fn create_msg_simulation(folder: &str) {
     message_simulation(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Green,
-        crate::processor::consts::COMMAND_MSGS[0],
+        crate::processor::command_msgs(0),
         folder,
     );
 }
 
 /// Displays a colored "(SIMULATION) Remove" and the file path
-#[inline]
+#[inline(always)]
 pub fn remove_msg_simulation(file: &str) {
     message_simulation(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Red,
-        crate::processor::consts::COMMAND_MSGS[6],
+        crate::processor::command_msgs(6),
         file,
     );
 }
 
 /// Displays a colored "(SIMULATION) Sync" and the file path
-#[inline]
+#[inline(always)]
 pub fn sync_msg_simulation(file: &str) {
     message_simulation(
         &mut StandardStream::stdout(ColorChoice::Always),
         Color::Magenta,
-        crate::processor::consts::COMMAND_MSGS[8],
+        crate::processor::command_msgs(8),
         file,
     );
 }
@@ -251,17 +252,17 @@ fn message_simulation(ss: &mut StandardStream, color: Color, colored_msg: &str, 
     ss.set_color(ColorSpec::new().set_fg(Some(Color::Red)))
         .unwrap();
     stdout_locked
-        .write_all(crate::processor::consts::COMMAND_MSGS[12].as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .write_all(crate::processor::command_msgs(12).as_bytes())
+        .expect(crate::processor::error_msgs()[12]);
 
     stdout_locked
         .write_all(" ".as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .expect(crate::processor::error_msgs()[12]);
 
     ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
     stdout_locked
         .write_all(colored_msg.as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .expect(crate::processor::error_msgs()[12]);
 
     ss.reset().unwrap();
 
@@ -273,7 +274,7 @@ fn message_simulation(ss: &mut StandardStream, color: Color, colored_msg: &str, 
 
     stdout_locked
         .write_all(str.as_bytes())
-        .expect(crate::processor::consts::ERROR_MSGS[12]);
+        .expect(crate::processor::error_msgs()[12]);
 }
 
 //====================================== Unit Tests ======================================

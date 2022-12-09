@@ -6,7 +6,7 @@ license-file     = "License.md"
 name             = "sync"
 readme           = "Readme.md"
 repository       = "https://github.com/mazoti/sync/"
-version          = "1.0.9"
+version          = "1.0.10"
 
 [profile.release]
 codegen-units    = 1
@@ -14,7 +14,7 @@ debug            = false
 debug-assertions = false
 incremental      = false
 lto              = true
-opt-level        = "z"
+opt-level        = 3
 overflow-checks  = false
 panic            = "abort"
 rpath            = false

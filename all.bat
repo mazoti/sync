@@ -7,7 +7,7 @@ cargo clippy
 cargo clippy --features cli
 cargo audit
 cargo fmt
-cargo build --features cli --release
+cargo build --features cli --release --verbose
 cargo doc --features cli
 cargo tarpaulin -v
 cargo tarpaulin -v --features cli

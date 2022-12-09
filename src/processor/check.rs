@@ -2,25 +2,28 @@
 //! Both source and destination must be the same type
 //! (files or folders).
 
-use std::io::Read;
-use std::path::Path;
+use std::{io::Read, path::Path};
 
 /// Compares every folder, file and byte
-pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::error::SyncError> {
+pub fn check(
+    source: &str,
+    destination: &str,
+    buffer_size: usize,
+) -> Result<(), crate::processor::SyncError> {
     /// Look for removed files or folders in source
     fn check_file_folder_add_removed(
         source: &str,
         destination: &str,
-    ) -> Result<(), crate::processor::error::SyncError> {
+    ) -> Result<(), crate::processor::SyncError> {
         // Check for empty folder
         if std::fs::read_dir(source)?.next().is_none() {
             if std::fs::read_dir(destination)?.next().is_none() {
                 return Ok(());
             }
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-                message: crate::processor::error::error_to_string(
-                    crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
+            return Err(crate::processor::SyncError {
+                code: crate::processor::error_diff_file_folder(),
+                message: crate::processor::error_to_string(
+                    crate::processor::error_diff_file_folder(),
                 ),
                 file: file!(),
                 line: line!(),
@@ -36,10 +39,10 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
             // Check file or symlink
             if !Path::new(&fullpath).is_dir() {
                 if !Path::new(&fullpath_destination).exists() {
-                    return Err(crate::processor::error::SyncError {
-                        code: crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-                        message: crate::processor::error::error_to_string(
-                            crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
+                    return Err(crate::processor::SyncError {
+                        code: crate::processor::error_diff_file_folder(),
+                        message: crate::processor::error_to_string(
+                            crate::processor::error_diff_file_folder(),
                         ),
                         file: file!(),
                         line: line!(),
@@ -58,18 +61,19 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
     fn check_file_folder(
         source: &str,
         destination: &str,
-    ) -> Result<(), crate::processor::error::SyncError> {
+        buffer_size: usize,
+    ) -> Result<(), crate::processor::SyncError> {
         // Check for empty folder
         if std::fs::read_dir(source)?.next().is_none() {
             if std::fs::read_dir(destination)?.next().is_none() {
                 #[cfg(feature = "cli")]
-                crate::processor::cli::ok_msg(destination);
+                crate::processor::ok_msg(destination);
                 return Ok(());
             }
-            return Err(crate::processor::error::SyncError {
-                code: crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-                message: crate::processor::error::error_to_string(
-                    crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
+            return Err(crate::processor::SyncError {
+                code: crate::processor::error_diff_file_folder(),
+                message: crate::processor::error_to_string(
+                    crate::processor::error_diff_file_folder(),
                 ),
                 file: file!(),
                 line: line!(),
@@ -84,10 +88,10 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
 
             // Check file or symlink
             if !Path::new(&fullpath).is_dir() {
-                check_file(&fullpath, &fullpath_destination)?;
+                check_file(&fullpath, &fullpath_destination, buffer_size)?;
                 continue;
             }
-            check_file_folder(&fullpath, &fullpath_destination)?;
+            check_file_folder(&fullpath, &fullpath_destination, buffer_size)?;
         }
         Ok(())
     }
@@ -96,22 +100,23 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
     fn check_file(
         source: &str,
         destination: &str,
-    ) -> Result<(), crate::processor::error::SyncError> {
+        buffer_size: usize,
+    ) -> Result<(), crate::processor::SyncError> {
         let mut src_file = std::fs::File::open(source)?;
         let mut dest_file = std::fs::File::open(destination)?;
 
-        let mut src_buffer = vec![0; crate::processor::consts::BUFFER_SIZE];
-        let mut dest_buffer = vec![0; crate::processor::consts::BUFFER_SIZE];
+        let mut src_buffer = vec![0; buffer_size];
+        let mut dest_buffer = vec![0; buffer_size];
 
         loop {
             let src_bytes = src_file.read(&mut src_buffer)?;
             let dest_bytes = dest_file.read(&mut dest_buffer)?;
 
             if src_bytes != dest_bytes {
-                return Err(crate::processor::error::SyncError {
-                    code: crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-                    message: crate::processor::error::error_to_string(
-                        crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
+                return Err(crate::processor::SyncError {
+                    code: crate::processor::error_diff_file_folder(),
+                    message: crate::processor::error_to_string(
+                        crate::processor::error_diff_file_folder(),
                     ),
                     file: file!(),
                     line: line!(),
@@ -122,10 +127,10 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
 
             for i in 0..src_bytes {
                 if src_buffer[i] != dest_buffer[i] {
-                    return Err(crate::processor::error::SyncError {
-                        code: crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-                        message: crate::processor::error::error_to_string(
-                            crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
+                    return Err(crate::processor::SyncError {
+                        code: crate::processor::error_diff_file_folder(),
+                        message: crate::processor::error_to_string(
+                            crate::processor::error_diff_file_folder(),
                         ),
                         file: file!(),
                         line: line!(),
@@ -135,23 +140,21 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
                 }
             }
 
-            if src_bytes < crate::processor::consts::BUFFER_SIZE {
+            if src_bytes < buffer_size {
                 break;
             }
         }
 
         #[cfg(feature = "cli")]
-        crate::processor::cli::ok_msg(destination);
+        crate::processor::ok_msg(destination);
 
         Ok(())
     }
 
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FOLDER,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FOLDER,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_source_folder(),
+            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -160,11 +163,9 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
     }
 
     if source == destination {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SAME_FILE_FOLDER,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SAME_FILE_FOLDER,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_same_file_folder(),
+            message: crate::processor::error_to_string(crate::processor::error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -177,15 +178,13 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
         if Path::new(&destination).is_dir() {
             check_file_folder_add_removed(destination, source)?;
             check_file_folder_add_removed(source, destination)?;
-            return check_file_folder(source, destination);
+            return check_file_folder(source, destination, buffer_size);
         }
 
         // source is a directory but destination not
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_DEST_NOT_FOLDER,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_DEST_NOT_FOLDER,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_dest_not_folder(),
+            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -195,11 +194,9 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
 
     // source is a file or symlink
     if Path::new(&destination).is_dir() {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_DEST_NOT_FILE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_DEST_NOT_FILE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_dest_not_file(),
+            message: crate::processor::error_to_string(crate::processor::error_dest_not_file()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -207,7 +204,7 @@ pub fn check(source: &str, destination: &str) -> Result<(), crate::processor::er
         });
     }
 
-    check_file(source, destination)
+    check_file(source, destination, buffer_size)
 }
 
 //====================================== Unit Tests ======================================

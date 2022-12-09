@@ -1,41 +1,31 @@
 //! SyncError class implementations
 
+use crate::processor::SyncError;
+
 /// Returns a String given an error code
 #[cfg(feature = "cli")]
 #[inline]
 pub fn error_to_string(code: i32) -> Option<String> {
-    if (code < 1) || (code as usize) >= (crate::processor::consts::ERROR_MSGS.len() - 1) {
+    if (code < 1) || (code as usize) >= (crate::processor::error_msgs().len() - 1) {
         return None;
     }
 
     Some(String::from(
-        crate::processor::consts::ERROR_MSGS[(code as usize) - 1],
+        crate::processor::error_msgs()[(code as usize) - 1],
     ))
 }
 
 /// Returns a String given an error code
 #[cfg(not(feature = "cli"))]
-#[inline]
+#[inline(always)]
 pub fn error_to_string(_code: i32) -> Option<String> {
     None
-}
-
-/// Error class with the message and code defined in consts.rs.
-/// "code" is the number returned to operating system, "message" is the error displayed in stderr,
-/// "file" is the source code file and "line" is the line number of the error
-pub struct SyncError {
-    pub code: i32,
-    pub message: Option<String>,
-    pub file: &'static str,
-    pub line: u32,
-    pub source: Option<String>,
-    pub destination: Option<String>,
 }
 
 impl From<std::io::Error> for SyncError {
     fn from(error: std::io::Error) -> Self {
         SyncError {
-            code: crate::processor::consts::ERROR_IO,
+            code: crate::processor::error_io(),
             message: Some(error.to_string()),
             file: file!(),
             line: line!(),
@@ -48,7 +38,7 @@ impl From<std::io::Error> for SyncError {
 impl From<std::time::SystemTimeError> for SyncError {
     fn from(error: std::time::SystemTimeError) -> Self {
         SyncError {
-            code: crate::processor::consts::ERROR_SYSTEM_TIME,
+            code: crate::processor::error_system_time(),
             message: Some(error.to_string()),
             file: file!(),
             line: line!(),
@@ -94,7 +84,7 @@ impl std::fmt::Debug for SyncError {
 impl From<std::num::ParseIntError> for SyncError {
     fn from(error: std::num::ParseIntError) -> Self {
         SyncError {
-            code: crate::processor::consts::PARSE_INT_ERROR,
+            code: crate::processor::parse_int_error(),
             message: Some(error.to_string()),
             file: file!(),
             line: line!(),

@@ -4,7 +4,7 @@
 use std::io::{Read, Write};
 
 // Joins all ".n" files of the folderpath
-pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> {
+pub fn join(folderpath: &str, buffer_size: usize) -> Result<(), crate::processor::SyncError> {
     let mut tmp: String;
     let mut read_bytes: usize;
     let mut destination_file: std::fs::File;
@@ -12,14 +12,12 @@ pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> 
 
     let mut count: usize = 0;
     let mut destination: String = "".to_string();
-    let mut buffer = vec![0; crate::processor::consts::BUFFER_SIZE];
+    let mut buffer = vec![0; buffer_size];
 
     if !std::fs::metadata(folderpath)?.is_dir() {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FOLDER,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FOLDER,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_source_folder(),
+            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(folderpath.to_string()),
@@ -38,11 +36,9 @@ pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> 
 
     // First file not found
     if destination.is_empty() {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FILE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FILE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_source_file(),
+            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: None,
@@ -51,7 +47,7 @@ pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> 
     }
 
     #[cfg(feature = "cli")]
-    crate::processor::cli::create_msg(&destination);
+    crate::processor::create_msg(&destination);
 
     destination_file = std::fs::OpenOptions::new()
         .append(true)
@@ -70,10 +66,10 @@ pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> 
             read_bytes = source_file.read(&mut buffer)?;
 
             // Last block
-            if read_bytes < crate::processor::consts::BUFFER_SIZE {
+            if read_bytes < buffer_size {
                 buffer.truncate(read_bytes);
                 destination_file.write_all(&buffer)?;
-                buffer.resize(crate::processor::consts::BUFFER_SIZE, 0);
+                buffer.resize(buffer_size, 0);
                 break;
             }
 
@@ -86,7 +82,11 @@ pub fn join(folderpath: &str) -> Result<(), crate::processor::error::SyncError> 
 }
 
 /// Split file in n bytes each
-pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::error::SyncError> {
+pub fn split(
+    size_bytes: &str,
+    filepath: &str,
+    buffer_size: usize,
+) -> Result<(), crate::processor::SyncError> {
     let remainder_size: usize;
 
     let mut bytes_read: usize;
@@ -96,7 +96,7 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     let mut destination_file: std::fs::File;
 
     let mut file_count: usize = 0;
-    let mut buffer = vec![0; crate::processor::consts::BUFFER_SIZE];
+    let mut buffer = vec![0; buffer_size];
 
     let size = size_bytes.parse::<usize>()?;
 
@@ -104,21 +104,19 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     fn create_file(
         filepath: &str,
         count: usize,
-    ) -> Result<std::fs::File, crate::processor::error::SyncError> {
+    ) -> Result<std::fs::File, crate::processor::SyncError> {
         let destination = filepath.to_owned() + "." + &count.to_string();
 
         #[cfg(feature = "cli")]
-        crate::processor::cli::create_msg(&destination);
+        crate::processor::create_msg(&destination);
 
         Ok(std::fs::File::create(destination)?)
     }
 
     if size < 1 {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_FILE_SIZE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_FILE_SIZE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_file_size(),
+            message: crate::processor::error_to_string(crate::processor::error_file_size()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -129,11 +127,9 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     let metadata_file = std::fs::metadata(filepath)?;
 
     if !metadata_file.is_file() {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FILE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FILE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_source_file(),
+            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -142,11 +138,9 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     }
 
     if metadata_file.len() < 1 {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SOURCE_FILE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SOURCE_FILE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_source_file(),
+            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -155,11 +149,9 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     }
 
     if metadata_file.len() <= size_bytes.parse::<u64>()? {
-        return Err(crate::processor::error::SyncError {
-            code: crate::processor::consts::ERROR_SPLIT_SIZE,
-            message: crate::processor::error::error_to_string(
-                crate::processor::consts::ERROR_SPLIT_SIZE,
-            ),
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_split_size(),
+            message: crate::processor::error_to_string(crate::processor::error_split_size()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -170,17 +162,17 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     split_file = std::fs::File::open(filepath)?;
 
     // Each file will not fit in buffer
-    if size > crate::processor::consts::BUFFER_SIZE {
-        blocks_files = size / crate::processor::consts::BUFFER_SIZE;
-        remainder_size = size % crate::processor::consts::BUFFER_SIZE;
+    if size > buffer_size {
+        blocks_files = size / buffer_size;
+        remainder_size = size % buffer_size;
 
         loop {
             destination_file = create_file(filepath, file_count)?;
-            buffer.resize(crate::processor::consts::BUFFER_SIZE, 0);
+            buffer.resize(buffer_size, 0);
 
             for _ in 0..blocks_files {
                 bytes_read = split_file.read(&mut buffer)?;
-                if bytes_read < crate::processor::consts::BUFFER_SIZE {
+                if bytes_read < buffer_size {
                     buffer.truncate(bytes_read);
                     destination_file.write_all(&buffer)?;
                     return Ok(());
@@ -200,9 +192,8 @@ pub fn split(size_bytes: &str, filepath: &str) -> Result<(), crate::processor::e
     }
 
     // Each file fits n times in buffer
-    remainder_size =
-        crate::processor::consts::BUFFER_SIZE - (crate::processor::consts::BUFFER_SIZE % size);
-    blocks_files = crate::processor::consts::BUFFER_SIZE / size;
+    remainder_size = buffer_size - (buffer_size % size);
+    blocks_files = buffer_size / size;
     buffer.truncate(remainder_size);
 
     loop {

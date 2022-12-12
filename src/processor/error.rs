@@ -4,7 +4,6 @@ use crate::processor::SyncError;
 
 /// Returns a String given an error code
 #[cfg(feature = "cli")]
-#[inline]
 pub fn error_to_string(code: i32) -> Option<String> {
     if (code < 1) || (code as usize) >= (crate::processor::error_msgs().len() - 1) {
         return None;

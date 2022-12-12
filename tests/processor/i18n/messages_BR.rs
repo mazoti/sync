@@ -44,20 +44,24 @@ entrar com ctrl+C), use a flag \"--force\":
 ";
 
 pub const ERROR_MSGS: &[&str] = &[
-    "origem e destino já estão no arquivo de configuração",           //ERROR_CONFIG_DUPLICATED
-    "arquivo de configuração deve terminar com .config",              //ERROR_CONFIG_EXT_CODE
-    "configuração deve ser um arquivo de texto terminado em .config", //ERROR_CONFIG_FOLDER_CODE
-    "não foi possível copiar o arquivo para a pasta de destinor",     //ERROR_COPY_FILE_FOLDER
-    "origem é um arquivo e destino uma pasta",                        //ERROR_DEST_NOT_FILE
-    "origem é uma pasta e destino um arquivo",                        //ERROR_DEST_NOT_FOLDER
-    "arquivos ou pastas são diferentes",                              //ERROR_DIFF_FILE_FOLDER
-    "erro de entrada ou saída",                                       //ERROR_IO
-    "não foi possível processar registro do arquivo de configuração", //ERROR_PARSE_LINE
-    "origem e destino são os mesmos",                                 //ERROR_SAME_FILE_FOLDER
-    "arquivo ou pasta de destino não encontrado",                     //ERROR_SOURCE_FOLDER
-    "não foi possível gerar a saída",                                 //ERROR_OUTPUT
-    "já está no arquivo de configuração",                             //ERROR_SOURCE_DUP
-	"não foi possível parar a thread",                                //ERROR_THREAD_JOIN
+    "origem e destino já estão no arquivo de configuração",           // ERROR_CONFIG_DUPLICATED
+    "arquivo de configuração deve terminar com .config",              // ERROR_CONFIG_EXT_CODE
+    "configuração deve ser um arquivo de texto terminado em .config", // ERROR_CONFIG_FOLDER_CODE
+    "não foi possível copiar o arquivo para a pasta de destinor",     // ERROR_COPY_FILE_FOLDER
+    "origem é um arquivo e destino uma pasta",                        // ERROR_DEST_NOT_FILE
+    "origem é uma pasta e destino um arquivo",                        // ERROR_DEST_NOT_FOLDER
+    "arquivos ou pastas são diferentes",                              // ERROR_DIFF_FILE_FOLDER
+	"tamanho do arquivo deve ser positivo",                           // ERROR_FILE_SIZE
+    "erro de entrada ou saída",                                       // ERROR_IO
+    "não foi possível processar registro do arquivo de configuração", // ERROR_PARSE_LINE
+    "origem e destino são os mesmos",                                 // ERROR_SAME_FILE_FOLDER
+    "arquivo de origem não encontrado",                               // ERROR_SOURCE_FILE
+    "pasta de destino não encontrada",                                // ERROR_SOURCE_FOLDER
+    "não é necessário dividir o arquivo",                             // ERROR_SPLIT_SIZE
+    
+    "não foi possível gerar a saída",                                 // ERROR_OUTPUT
+    "já está no arquivo de configuração",                             // ERROR_SOURCE_DUP
+	"não foi possível parar a thread",                                // ERROR_THREAD_JOIN
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

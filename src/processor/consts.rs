@@ -39,31 +39,31 @@ mod tests {
     #[test]
     #[cfg(feature = "cli")]
     fn consts_tests() {
-        for s in crate::processor::consts::ERROR_MSGS {
+        for s in crate::processor::error_msgs() {
             println!("{}", s);
         }
 
-        for s in crate::processor::consts::COMMAND_MSGS {
-            println!("{}", s);
+        for s in 0..13 {
+            println!("{}", crate::processor::command_msgs(s));
         }
 
-        println!("{}", crate::processor::consts::MSG_HELP);
+        println!("{}", crate::processor::msg_help());
 
         for n in [
-            crate::processor::consts::ERROR_CONFIG_DUPLICATED,
-            crate::processor::consts::ERROR_CONFIG_EXT_CODE,
-            crate::processor::consts::ERROR_CONFIG_FOLDER_CODE,
-            crate::processor::consts::ERROR_COPY_FILE_FOLDER,
-            crate::processor::consts::ERROR_DEST_NOT_FILE,
-            crate::processor::consts::ERROR_DEST_NOT_FOLDER,
-            crate::processor::consts::ERROR_DIFF_FILE_FOLDER,
-            crate::processor::consts::ERROR_IO,
-            crate::processor::consts::ERROR_PARSE_LINE,
-            crate::processor::consts::ERROR_SAME_FILE_FOLDER,
-            crate::processor::consts::ERROR_SOURCE_FOLDER,
-            crate::processor::consts::ERROR_SYSTEM_TIME,
-            crate::processor::consts::NO_ERROR,
-            crate::processor::consts::HELP,
+            crate::processor::error_config_duplicated(),
+            crate::processor::error_config_ext_code(),
+            crate::processor::error_config_folder_code(),
+            crate::processor::error_copy_file_folder(),
+            crate::processor::error_dest_not_file(),
+            crate::processor::error_dest_not_folder(),
+            crate::processor::error_diff_file_folder(),
+            crate::processor::error_io(),
+            crate::processor::error_parse_line(),
+            crate::processor::error_same_file_folder(),
+            crate::processor::error_source_folder(),
+            crate::processor::error_system_time(),
+            crate::processor::no_error(),
+            crate::processor::help(),
         ] {
             println!("{}", n);
         }

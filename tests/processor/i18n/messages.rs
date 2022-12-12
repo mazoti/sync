@@ -43,20 +43,24 @@ To keep synchronizing and checking until both operations succeed, use the \"--fo
 ";
 
 pub const ERROR_MSGS: &[&str] = &[
-    "source and destination already in config file", //ERROR_CONFIG_DUPLICATED
-    "config file not ended in .config",              //ERROR_CONFIG_EXT_CODE
-    "config must be a .config text file",            //ERROR_CONFIG_FOLDER_CODE
-    "cannot copy file to destination folder",        //ERROR_COPY_FILE_FOLDER
-    "source is a file and destination is a folder",  //ERROR_DEST_NOT_FILE
-    "source is a folder and destination is a file",  //ERROR_DEST_NOT_FOLDER
-    "files or folders are different",                //ERROR_DIFF_FILE_FOLDER
-    "Input or output error",                         //ERROR_IO
-    "cannot parse line from config file",            //ERROR_PARSE_LINE
-    "source and destination are the same",           //ERROR_SAME_FILE_FOLDER
-    "source file or folder not found",               //ERROR_SOURCE_FOLDER
-    "cannot print to output",                        //ERROR_OUTPUT
-    "already in config file",                        //ERROR_SOURCE_DUP
-    "cannot join thread",                            //ERROR_THREAD_JOIN
+    "source and destination already in config file", // ERROR_CONFIG_DUPLICATED
+    "config file not ended in .config",              // ERROR_CONFIG_EXT_CODE
+    "config must be a .config text file",            // ERROR_CONFIG_FOLDER_CODE
+    "cannot copy file to destination folder",        // ERROR_COPY_FILE_FOLDER
+    "source is a file and destination is a folder",  // ERROR_DEST_NOT_FILE
+    "source is a folder and destination is a file",  // ERROR_DEST_NOT_FOLDER
+    "files or folders are different",                // ERROR_DIFF_FILE_FOLDER
+    "file size must be positive",                    // ERROR_FILE_SIZE
+    "Input or output error",                         // ERROR_IO
+    "cannot parse line from config file",            // ERROR_PARSE_LINE
+    "source and destination are the same",           // ERROR_SAME_FILE_FOLDER
+    "source file not found",                         // ERROR_SOURCE_FILE
+    "source folder not found",                       // ERROR_SOURCE_FOLDER
+    "file does not need to split",                   // ERROR_SPLIT_SIZE
+
+    "cannot print to output",                        // ERROR_OUTPUT
+    "already in config file",                        // ERROR_SOURCE_DUP
+    "cannot join thread",                            // ERROR_THREAD_JOIN
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

@@ -34,7 +34,7 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
         &mut StandardStream::stderr(ColorChoice::Always),
         Color::Red,
         &("[".to_owned()
-            + &chrono::Local::now().format("%Y-%m-%d %T").to_string()
+            + &crate::processor::datetime()
             + "] "
             + crate::processor::command_msgs(3)),
         msg,
@@ -128,7 +128,7 @@ pub fn ok_msg(file: &str) {
 }
 
 /// Displays a colored "Remove" and the file path
-#[inline]
+#[inline(always)]
 pub fn remove_msg(file: &str) {
     message(
         &mut StandardStream::stdout(ColorChoice::Always),
@@ -140,10 +140,10 @@ pub fn remove_msg(file: &str) {
 }
 
 /// Displays the program name, version, URL and date/time (optional)
-#[inline]
+#[inline(always)]
 pub fn show_header(datetime: bool) {
     if datetime {
-        print!("[{}] ", chrono::Local::now().format("%Y-%m-%d %T"));
+        print!("[{}] ", crate::processor::datetime());
     }
 
     println!(
@@ -284,23 +284,23 @@ mod tests {
     #[test]
     #[cfg(feature = "cli")]
     fn cli_tests() {
-        crate::processor::cli::warning_msg("a/file/path/file.ext");
-        crate::processor::cli::ok_msg("a/file/path/file.ext");
-        crate::processor::cli::update_msg("a/file/path/file.ext");
-        crate::processor::cli::create_msg("a/file/path/file.ext");
-        crate::processor::cli::remove_msg("a/file/path/file.ext");
-        crate::processor::cli::sync_msg("a/file/path/file.ext");
-        crate::processor::cli::loading_msg("a/file/path/file.ext");
-        crate::processor::cli::copy_msg("a/file/path/file.ext");
-        crate::processor::cli::error_msg("Error message", 1234, false);
-        crate::processor::cli::help();
-        crate::processor::cli::show_header(true);
-        crate::processor::cli::show_header(false);
+        crate::processor::warning_msg("a/file/path/file.ext");
+        crate::processor::ok_msg("a/file/path/file.ext");
+        crate::processor::update_msg("a/file/path/file.ext");
+        crate::processor::create_msg("a/file/path/file.ext");
+        crate::processor::remove_msg("a/file/path/file.ext");
+        crate::processor::sync_msg("a/file/path/file.ext");
+        crate::processor::loading_msg("a/file/path/file.ext");
+        crate::processor::copy_msg("a/file/path/file.ext");
+        crate::processor::error_msg("Error message", 1234, false);
+        crate::processor::help();
+        crate::processor::show_header(true);
+        crate::processor::show_header(false);
 
-        crate::processor::cli::copy_msg_simulation("a/file/path/file.ext");
-        crate::processor::cli::update_msg_simulation("a/file/path/file.ext");
-        crate::processor::cli::create_msg_simulation("a/file/path/file.ext");
-        crate::processor::cli::remove_msg_simulation("a/file/path/file.ext");
-        crate::processor::cli::sync_msg_simulation("a/file/path/file.ext");
+        crate::processor::copy_msg_simulation("a/file/path/file.ext");
+        crate::processor::update_msg_simulation("a/file/path/file.ext");
+        crate::processor::create_msg_simulation("a/file/path/file.ext");
+        crate::processor::remove_msg_simulation("a/file/path/file.ext");
+        crate::processor::sync_msg_simulation("a/file/path/file.ext");
     }
 }

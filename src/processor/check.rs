@@ -216,8 +216,8 @@ mod tests {
 
     #[test]
     fn src_inexistent_dest_inexistent() {
-        match crate::processor::check::check("none", "nothing") {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::check("none", "nothing") {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent"),
         }
     }
@@ -226,8 +226,8 @@ mod tests {
     fn src_folder_dest_folder_same() {
         let src_folder = Folder::new("src_folder_dest_folder_same");
 
-        match crate::processor::check::check(&src_folder.path, &src_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SAME_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &src_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same"),
         }
     }
@@ -235,11 +235,11 @@ mod tests {
     #[test]
     fn src_folder_empty_dest_folder_inexistent() {
         let src_folder = Folder::new("src_folder_empty_dest_folder_inexistent_SOURCE");
-        match crate::processor::check::check(
+        match crate::processor::check(
             &src_folder.path,
             "src_folder_empty_dest_folder_inexistent_DESTINATION",
         ) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_folder_empty_dest_folder_inexistent"),
         }
     }
@@ -249,8 +249,8 @@ mod tests {
         let src_folder = Folder::new("src_folder_dest_file");
         let dest_file = TextFile::new("src_folder_dest_file/file.txt", b"data\n");
 
-        match crate::processor::check::check(&src_folder.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DEST_NOT_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_file.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_file"),
         }
     }
@@ -260,8 +260,8 @@ mod tests {
         let dest_folder = Folder::new("src_file_dest_folder");
         let src_file = TextFile::new("src_file_dest_folder/file.txt", b"data\n");
 
-        match crate::processor::check::check(&src_file.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DEST_NOT_FILE),
+        match crate::processor::check(&src_file.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_file()),
             Ok(_) => panic!("ERROR => src_file_dest_folder"),
         }
     }
@@ -269,18 +269,18 @@ mod tests {
     #[test]
     fn src_inexistent_dest_folder() {
         let dest_folder = Folder::new("src_inexistent_dest_folder");
-        match crate::processor::check::check("none", &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::check("none", &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_inexistent_dest_folder"),
         }
     }
 
     #[test]
-    fn src_file_empty_dest_file_empty() -> Result<(), crate::processor::error::SyncError> {
+    fn src_file_empty_dest_file_empty() -> Result<(), crate::processor::SyncError> {
         let src_file = TextFile::new("src_file_empty_dest_file_empty_SOURCE.txt", b"");
         let dest_file = TextFile::new("src_file_empty_dest_file_empty_DESTINATION.txt", b"");
 
-        crate::processor::check::check(&src_file.path, &dest_file.path)
+        crate::processor::check(&src_file.path, &dest_file.path)
     }
 
     #[test]
@@ -288,36 +288,36 @@ mod tests {
         let src_file = TextFile::new("src_file_dest_file_different_SOURCE.txt", b"data");
         let dest_file = TextFile::new("src_file_dest_file_different_DESTINATION.txt", b"data\n");
 
-        match crate::processor::check::check(&src_file.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_file.path, &dest_file.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => panic!("ERROR => src_file_dest_file_different"),
         }
     }
 
     #[test]
-    fn src_file_dest_file_equals() -> Result<(), crate::processor::error::SyncError> {
+    fn src_file_dest_file_equals() -> Result<(), crate::processor::SyncError> {
         let src_file = TextFile::new("src_file_dest_file_equals_SOURCE.txt", b"data\n");
         let dest_file = TextFile::new("src_file_dest_file_equals_DESTINATION.txt", b"data\n");
 
-        crate::processor::check::check(&src_file.path, &dest_file.path)
+        crate::processor::check(&src_file.path, &dest_file.path)
     }
 
     #[test]
     fn src_folder_dest_inexistent() {
         let src_folder = Folder::new("src_folder_dest_inexistent");
 
-        match crate::processor::check::check(&src_folder.path, "none") {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::check(&src_folder.path, "none") {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_inexistent"),
         }
     }
 
     #[test]
-    fn src_folder_empty_dest_folder_empty() -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_folder_empty() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_empty_dest_folder_empty_SOURCE");
         let dest_folder = Folder::new("src_folder_empty_dest_folder_empty_DESTINATION");
 
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
@@ -339,8 +339,8 @@ mod tests {
             b"data",
         );
 
-        match crate::processor::check::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_folder_2_files"),
         }
     }
@@ -349,8 +349,8 @@ mod tests {
     fn src_inexistent_dest_file() {
         let dest_file = TextFile::new("src_inexistent_dest_file.txt", b"data");
 
-        match crate::processor::check::check("none", &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::check("none", &dest_file.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_inexistent_dest_file"),
         }
     }
@@ -358,8 +358,8 @@ mod tests {
     #[test]
     fn src_file_dest_inexistent() {
         let src_file = TextFile::new("src_file_dest_inexistent.txt", b"data");
-        match crate::processor::check::check(&src_file.path, "none") {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::check(&src_file.path, "none") {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_file_dest_inexistent"),
         }
     }
@@ -367,8 +367,8 @@ mod tests {
     #[test]
     fn src_file_dest_file_same() {
         let src_file = TextFile::new("src_file_dest_file_same.txt", b"data");
-        match crate::processor::check::check(&src_file.path, &src_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SAME_FILE_FOLDER),
+        match crate::processor::check(&src_file.path, &src_file.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
             Ok(_) => panic!("ERROR => src_file_dest_file_same"),
         }
     }
@@ -384,8 +384,8 @@ mod tests {
             b"data",
         );
 
-        match crate::processor::check::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_folder_empty"),
         }
     }
@@ -398,8 +398,8 @@ mod tests {
         let _dest_file =
             TextFile::new("src_empty_dest_folder_1_file_DESTINATION/file.txt", b"data");
 
-        match crate::processor::check::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => panic!("ERROR => src_empty_dest_folder_1_file"),
         }
     }
@@ -418,14 +418,14 @@ mod tests {
             b"data\n",
         );
 
-        match crate::processor::check::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_1_file_different"),
         }
     }
 
     #[test]
-    fn src_folder_1_file_dest_1_file_equals() -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_1_file_dest_1_file_equals() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_1_file_dest_1_file_equals_SOURCE");
         let dest_folder = Folder::new("src_folder_1_file_dest_1_file_equals_DESTINATION");
 
@@ -438,7 +438,7 @@ mod tests {
             b"data",
         );
 
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
@@ -473,8 +473,8 @@ mod tests {
             b"data\n",
         );
 
-        match crate::processor::check::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DIFF_FILE_FOLDER),
+        match crate::processor::check(&src_folder.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
             Ok(_) => {
                 panic!("ERROR => src_2_folders_2_files_dest_2_folders_2_files_1_file_different")
             }
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn src_2_folders_2_files_dest_2_folders_2_files_equals(
-    ) -> Result<(), crate::processor::error::SyncError> {
+    ) -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_2_folders_2_files_dest_2_folders_2_files_equals_SOURCE");
         let dest_folder =
             Folder::new("src_2_folders_2_files_dest_2_folders_2_files_equals_DESTINATION");
@@ -511,6 +511,6 @@ mod tests {
             b"data",
         );
 
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 }

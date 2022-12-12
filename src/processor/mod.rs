@@ -48,11 +48,11 @@ pub struct SyncError {
 }
 
 /// Creates a config file or appends source full path + "|" + destination full path
-pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncError> {
+pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncError> {
     if !Path::new(&source).exists() {
         return Err(SyncError {
-            code: consts::ERROR_SOURCE_FOLDER,
-            message: error::error_to_string(consts::ERROR_SOURCE_FOLDER),
+            code: error_source_folder(),
+            message: error_to_string(error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -62,8 +62,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
 
     if source == destination {
         return Err(SyncError {
-            code: consts::ERROR_SAME_FILE_FOLDER,
-            message: error::error_to_string(consts::ERROR_SAME_FILE_FOLDER),
+            code: error_same_file_folder(),
+            message: error::error_to_string(error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -74,8 +74,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
     if Path::new(&destination).exists() {
         if Path::new(&source).is_dir() && !Path::new(&destination).is_dir() {
             return Err(SyncError {
-                code: consts::ERROR_DEST_NOT_FOLDER,
-                message: error::error_to_string(consts::ERROR_DEST_NOT_FOLDER),
+                code: error_dest_not_folder(),
+                message: error::error_to_string(error_dest_not_folder()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -85,8 +85,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
 
         if Path::new(&source).is_file() && !Path::new(&destination).is_file() {
             return Err(SyncError {
-                code: consts::ERROR_DEST_NOT_FILE,
-                message: error::error_to_string(consts::ERROR_DEST_NOT_FILE),
+                code: error_dest_not_file(),
+                message: error::error_to_string(error_dest_not_file()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -97,8 +97,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
     // Config files must end with .config
     if !config.ends_with(".config") {
         return Err(SyncError {
-            code: consts::ERROR_CONFIG_EXT_CODE,
-            message: error::error_to_string(consts::ERROR_CONFIG_EXT_CODE),
+            code: error_config_ext_code(),
+            message: error::error_to_string(error_config_ext_code()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -108,8 +108,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
 
     if Path::new(&config).is_dir() {
         return Err(SyncError {
-            code: consts::ERROR_CONFIG_FOLDER_CODE,
-            message: error::error_to_string(consts::ERROR_CONFIG_FOLDER_CODE),
+            code: error_config_folder_code(),
+            message: error::error_to_string(error_config_folder_code()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -139,8 +139,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
         let path: Vec<&str> = data.split('|').collect();
         if path.len() != 2 {
             return Err(SyncError {
-                code: consts::ERROR_PARSE_LINE,
-                message: error::error_to_string(consts::ERROR_PARSE_LINE),
+                code: error_parse_line(),
+                message: error::error_to_string(error_parse_line()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -152,8 +152,8 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
             || path[0] == destination && path[1] == source
         {
             return Err(SyncError {
-                code: consts::ERROR_CONFIG_DUPLICATED,
-                message: error::error_to_string(consts::ERROR_CONFIG_DUPLICATED),
+                code: error_config_duplicated(),
+                message: error::error_to_string(error_config_duplicated()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -164,10 +164,10 @@ pub(crate) fn create(source: &str, destination: &str, config: &str) -> Result<()
         #[cfg(feature = "cli")]
         {
             if path[0] == source || path[1] == source {
-                cli::warning_msg(source);
+                warning_msg(source);
             }
             if path[0] == destination || path[1] == destination {
-                cli::warning_msg(destination);
+                warning_msg(destination);
             }
         }
     }
@@ -183,7 +183,7 @@ fn process_file(
     config: &str,
 ) -> Result<(), SyncError> {
     #[cfg(feature = "cli")]
-    cli::loading_msg(config);
+    loading_msg(config);
 
     // Parse source and destination paths from config file
     for line in BufReader::new(std::fs::File::open(config)?).lines() {
@@ -191,8 +191,8 @@ fn process_file(
         let path: Vec<&str> = data.split('|').collect();
         if path.len() != 2 {
             return Err(SyncError {
-                code: consts::ERROR_PARSE_LINE,
-                message: error::error_to_string(consts::ERROR_PARSE_LINE),
+                code: error_parse_line(),
+                message: error::error_to_string(error_parse_line()),
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -229,7 +229,7 @@ fn process_folder(
                 if let Err(err) = process_file(process_function, &fullpath) {
                     return err.code;
                 }
-                consts::NO_ERROR
+                no_error()
             });
 
             thread_pool.push(handle);
@@ -240,8 +240,8 @@ fn process_folder(
         match handle.join() {
             Err(_) => {
                 return Err(SyncError {
-                    code: consts::ERROR_THREAD_JOIN,
-                    message: error::error_to_string(consts::ERROR_THREAD_JOIN),
+                    code: error_thread_join(),
+                    message: error_to_string(error_thread_join()),
                     file: file!(),
                     line: line!(),
                     source: None,
@@ -252,7 +252,7 @@ fn process_folder(
                 if value != 0 {
                     exit_code = value;
                     #[cfg(feature = "cli")]
-                    cli::error_msg(consts::ERROR_MSGS[value as usize], 0, true);
+                    error_msg(error_msgs()[value as usize], 0, true);
                 }
             }
         }
@@ -262,8 +262,8 @@ fn process_folder(
         #[cfg(feature = "cli")]
         if display_help {
             return Err(SyncError {
-                code: consts::HELP,
-                message: error::error_to_string(exit_code),
+                code: help(),
+                message: error_to_string(exit_code),
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -275,7 +275,7 @@ fn process_folder(
 
     Err(SyncError {
         code: exit_code,
-        message: error::error_to_string(exit_code),
+        message: error_to_string(exit_code),
         file: file!(),
         line: line!(),
         source: None,
@@ -283,7 +283,11 @@ fn process_folder(
     })
 }
 
-//====================================== Redirect only ======================================
+#[cfg(feature = "cli")]
+#[inline(always)]
+fn datetime() -> String {
+    chrono::Local::now().format("%Y-%m-%d %T").to_string()
+}
 
 /// Compares every folder, file and byte
 #[inline(always)]
@@ -310,58 +314,73 @@ pub fn command_msgs(code: usize) -> &'static str {
 /// Displays a colored "Copy" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn copy_msg(file: &str) {
+fn copy_msg(file: &str) {
     cli::copy_msg(file);
 }
 
 /// Displays a colored "(SIMULATION) Copying" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn copy_msg_simulation(file: &str) {
+fn copy_msg_simulation(file: &str) {
     cli::copy_msg_simulation(file);
 }
 
 /// Displays a colored "Create" and the folder path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn create_msg(folder: &str) {
+fn create_msg(folder: &str) {
     cli::create_msg(folder);
 }
 
 /// Displays a colored "(SIMULATION) Create" and the folder path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn create_msg_simulation(folder: &str) {
+fn create_msg_simulation(folder: &str) {
     cli::create_msg_simulation(folder);
 }
 
 #[inline(always)]
-pub fn error_copy_file_folder() -> i32 {
+fn error_config_duplicated() -> i32 {
+    consts::ERROR_CONFIG_DUPLICATED
+}
+
+#[inline(always)]
+fn error_config_ext_code() -> i32 {
+    consts::ERROR_CONFIG_EXT_CODE
+}
+
+#[inline(always)]
+fn error_config_folder_code() -> i32 {
+    consts::ERROR_CONFIG_FOLDER_CODE
+}
+
+#[inline(always)]
+fn error_copy_file_folder() -> i32 {
     consts::ERROR_COPY_FILE_FOLDER
 }
 
 #[inline(always)]
-pub fn error_dest_not_file() -> i32 {
+fn error_dest_not_file() -> i32 {
     consts::ERROR_DEST_NOT_FILE
 }
 
 #[inline(always)]
-pub fn error_dest_not_folder() -> i32 {
+fn error_dest_not_folder() -> i32 {
     consts::ERROR_DEST_NOT_FOLDER
 }
 
 #[inline(always)]
-pub fn error_diff_file_folder() -> i32 {
+fn error_diff_file_folder() -> i32 {
     consts::ERROR_DIFF_FILE_FOLDER
 }
 
 #[inline(always)]
-pub fn error_file_size() -> i32 {
+fn error_file_size() -> i32 {
     consts::ERROR_FILE_SIZE
 }
 
 #[inline(always)]
-pub fn error_io() -> i32 {
+fn error_io() -> i32 {
     consts::ERROR_IO
 }
 
@@ -375,43 +394,48 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
 
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn error_msgs() -> &'static [&'static str] {
+fn error_msgs() -> &'static [&'static str] {
     consts::ERROR_MSGS
 }
 
 #[inline(always)]
-pub fn error_same_file_folder() -> i32 {
+fn error_parse_line() -> i32 {
+    consts::ERROR_PARSE_LINE
+}
+
+#[inline(always)]
+fn error_same_file_folder() -> i32 {
     consts::ERROR_SAME_FILE_FOLDER
 }
 
 #[inline(always)]
-pub fn error_source_file() -> i32 {
+fn error_source_file() -> i32 {
     consts::ERROR_SOURCE_FILE
 }
 
 #[inline(always)]
-pub fn error_source_folder() -> i32 {
+fn error_source_folder() -> i32 {
     consts::ERROR_SOURCE_FOLDER
 }
 
 #[inline(always)]
-pub fn error_split_size() -> i32 {
+fn error_split_size() -> i32 {
     consts::ERROR_SPLIT_SIZE
 }
 
 #[inline(always)]
-pub fn error_system_time() -> i32 {
+fn error_system_time() -> i32 {
     consts::ERROR_SYSTEM_TIME
 }
 
 #[inline(always)]
-pub fn error_thread_join() -> i32 {
+fn error_thread_join() -> i32 {
     consts::ERROR_THREAD_JOIN
 }
 
 /// Returns a String given an error code
 #[inline(always)]
-pub fn error_to_string(code: i32) -> Option<String> {
+fn error_to_string(code: i32) -> Option<String> {
     error::error_to_string(code)
 }
 
@@ -448,9 +472,16 @@ pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
     splitjoin::join(folderpath, consts::BUFFER_SIZE)
 }
 
+/// Displays a colored "Loading" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn msg_help() -> &'static str {
+fn loading_msg(file: &str) {
+    cli::loading_msg(file);
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+fn msg_help() -> &'static str {
     consts::MSG_HELP
 }
 
@@ -462,26 +493,26 @@ pub fn no_error() -> i32 {
 /// Displays a colored "Remove" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn ok_msg(file: &str) {
+fn ok_msg(file: &str) {
     cli::ok_msg(file)
 }
 
 #[inline(always)]
-pub fn parse_int_error() -> i32 {
+fn parse_int_error() -> i32 {
     consts::PARSE_INT_ERROR
 }
 
 /// Displays a colored "Remove" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn remove_msg(file: &str) {
+fn remove_msg(file: &str) {
     cli::remove_msg(file);
 }
 
 /// Displays a colored "(SIMULATION) Remove" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn remove_msg_simulation(file: &str) {
+fn remove_msg_simulation(file: &str) {
     cli::remove_msg_simulation(file);
 }
 
@@ -533,31 +564,37 @@ pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
 /// Displays a colored "Sync" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn sync_msg(file: &str) {
+fn sync_msg(file: &str) {
     cli::sync_msg(file);
 }
 
 /// Displays a colored "(SIMULATION) Sync" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn sync_msg_simulation(file: &str) {
+fn sync_msg_simulation(file: &str) {
     cli::sync_msg_simulation(file);
 }
 
 /// Displays a colored "Update" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn update_msg(file: &str) {
+fn update_msg(file: &str) {
     cli::update_msg(file);
 }
 
 /// Displays a colored "(SIMULATION) Update" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn update_msg_simulation(file: &str) {
+fn update_msg_simulation(file: &str) {
     cli::update_msg_simulation(file);
 }
 
+/// Displays a colored "Warning", the file path and a message in stdout
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn warning_msg(file: &str) {
+    cli::warning_msg(file);
+}
 //====================================== Unit Tests ======================================
 #[cfg(test)]
 mod tests {
@@ -612,7 +649,7 @@ mod tests {
     #[test]
     fn src_inexistent_dest_inexistent_config_inexistent() {
         match crate::processor::create("none", "nothing", "empty.config") {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_SOURCE_FOLDER),
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent_config_inexistent"),
         }
     }
@@ -622,7 +659,7 @@ mod tests {
         let folder = Folder::new("src_folder_dest_folder_same_config_any");
 
         match crate::processor::create(&folder.path, &folder.path, "empty.config") {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_SAME_FILE_FOLDER),
+            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same_config_any"),
         }
     }
@@ -637,7 +674,7 @@ mod tests {
             &dest_file.path,
             "src_folder_dest_file_config_any/config.config",
         ) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_DEST_NOT_FOLDER),
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_file_config_any"),
         }
     }
@@ -652,7 +689,7 @@ mod tests {
             &dest_folder.path,
             "src_file_dest_folder_config_any/config.config",
         ) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_DEST_NOT_FILE),
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_file()),
             Ok(_) => panic!("ERROR => src_file_dest_folder_config_any"),
         }
     }
@@ -667,7 +704,7 @@ mod tests {
             &dest_folder.path,
             "src_folder_dest_folder_config_ext_error/config.conf",
         ) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_CONFIG_EXT_CODE),
+            Err(err) => assert_eq!(err.code, crate::processor::error_config_ext_code()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_ext_error"),
         }
     }
@@ -678,13 +715,13 @@ mod tests {
         let dest_folder = Folder::new("src_folder_dest_folder_config_folder.config");
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_CONFIG_FOLDER_CODE),
+            Err(err) => assert_eq!(err.code, crate::processor::error_config_folder_code()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_folder"),
         }
     }
 
     #[test]
-    fn src_folder_dest_folder_config_new() -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_dest_folder_config_new() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_dest_folder_config_new");
         let dest_folder = Folder::new("src_folder_dest_folder_config_new/destination");
 
@@ -720,7 +757,7 @@ mod tests {
         );
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &config_file.path) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_PARSE_LINE),
+            Err(err) => assert_eq!(err.code, crate::processor::error_parse_line()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_error_data"),
         }
     }
@@ -733,14 +770,13 @@ mod tests {
         let config_file = TextFile::new("src_folder_dest_folder_config_exists_src_dest/config.config", b"target/src_folder_dest_folder_config_exists_src_dest|target/src_folder_dest_folder_config_exists_src_dest/destination\nsource|destination");
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &config_file.path) {
-            Err(err) => assert_eq!(err.code, super::consts::ERROR_CONFIG_DUPLICATED),
+            Err(err) => assert_eq!(err.code, crate::processor::error_config_duplicated()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_exists_src_dest"),
         }
     }
 
     #[test]
-    fn src_folder_dest_folder_config_append_data() -> Result<(), crate::processor::error::SyncError>
-    {
+    fn src_folder_dest_folder_config_append_data() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_dest_folder_config_append_data");
         let dest_folder = Folder::new("src_folder_dest_folder_config_append_data/destination");
         let config_file = TextFile::new(

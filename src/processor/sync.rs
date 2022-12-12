@@ -152,7 +152,7 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
                 Err(_) => {
                     return Err(crate::processor::SyncError {
                         code: crate::processor::error_thread_join(),
-                        message: crate::processor::error::error_to_string(
+                        message: crate::processor::error_to_string(
                             crate::processor::error_thread_join(),
                         ),
                         file: file!(),
@@ -170,9 +170,7 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error::error_to_string(
-                crate::processor::error_dest_not_folder(),
-            ),
+            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -204,7 +202,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 /// Synchronizes source to destination without read or create a config file
 pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     /// Copy a file from source to destination, displays a message and checks for errors
-    #[inline]
     fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
         #[cfg(feature = "cli")]
         crate::processor::copy_msg(destination);
@@ -253,7 +250,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     }
 
     /// Displays a create message and creates a folder
-    #[inline]
+    #[inline(always)]
     fn create_folder(folder: &str) -> Result<(), std::io::Error> {
         #[cfg(feature = "cli")]
         crate::processor::create_msg(folder);
@@ -261,7 +258,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     }
 
     /// Replaces the destination file if its different from source
-    #[inline]
     fn update_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
         let metadata_source = std::fs::metadata(source)?;
 
@@ -287,7 +283,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     }
 
     /// Displays a remove message and removes a file or folder from destination
-    #[inline]
+    #[inline(always)]
     fn remove_all(
         file_folder: &str,
         remove_file_folder: fn(String) -> Result<(), std::io::Error>,
@@ -354,9 +350,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error::error_to_string(
-                crate::processor::error_source_folder(),
-            ),
+            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -461,7 +455,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 }
 
 /// Synchronizes and checks every byte stopping only on success or Ctrl+C
-#[inline]
 pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     loop {
         if let Err(_err) = sync(source, destination) {
@@ -492,8 +485,8 @@ mod tests {
 
     #[test]
     fn src_inexistent_dest_inexistent() {
-        match crate::processor::sync::sync("none", "nothing") {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SOURCE_FOLDER),
+        match crate::processor::sync("none", "nothing") {
+            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent"),
         }
     }
@@ -501,29 +494,29 @@ mod tests {
     #[test]
     fn src_folder_dest_folder_same() {
         let folder = Folder::new("src_folder_dest_folder_same");
-        match crate::processor::sync::sync(&folder.path, &folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_SAME_FILE_FOLDER),
+        match crate::processor::sync(&folder.path, &folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same"),
         }
     }
 
     #[test]
-    fn src_folder_empty_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_folder_empty_dest_inexistent");
         let folder_src = Folder::new("src_folder_empty_dest_inexistent/source");
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &folder_src.path,
             "target/src_folder_empty_dest_inexistent/destination",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &folder_src.path,
             "target/src_folder_empty_dest_inexistent/destination",
         )
     }
 
     #[test]
-    fn src_1_folder_1_file_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_1_folder_1_file_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_1_folder_1_file_dest_inexistent");
         let src_folder = Folder::new("src_1_folder_1_file_dest_inexistent/source");
         let _file = TextFile::new(
@@ -531,18 +524,18 @@ mod tests {
             b"data",
         );
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &src_folder.path,
             "target/src_1_folder_1_file_dest_inexistent/destination",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &src_folder.path,
             "target/src_1_folder_1_file_dest_inexistent/destination",
         )
     }
 
     #[test]
-    fn src_2_folders_2_files_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_2_folders_2_files_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_2_folders_2_files_dest_inexistent");
         let src_folder = Folder::new("src_2_folders_2_files_dest_inexistent/source");
         let _src_folder2 = Folder::new("src_2_folders_2_files_dest_inexistent/source/2");
@@ -556,18 +549,18 @@ mod tests {
             b"data2",
         );
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &src_folder.path,
             "target/src_2_folders_2_files_dest_inexistent/destination",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &src_folder.path,
             "target/src_2_folders_2_files_dest_inexistent/destination",
         )
     }
 
     #[test]
-    fn src_2_folders_4_files_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_2_folders_4_files_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_2_folders_4_files_dest_inexistent");
         let src_folder = Folder::new("src_2_folders_4_files_dest_inexistent/source");
         let _src_folder2 = Folder::new("src_2_folders_4_files_dest_inexistent/source/2");
@@ -589,18 +582,18 @@ mod tests {
             b"data4",
         );
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &src_folder.path,
             "target/src_2_folders_4_files_dest_inexistent/destination",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &src_folder.path,
             "target/src_2_folders_4_files_dest_inexistent/destination",
         )
     }
 
     #[test]
-    fn src_folder_empty_dest_folder_1_file() -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_folder_1_file() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_empty_dest_folder_1_file_SOURCE");
         let dest_folder = Folder::new("src_folder_empty_dest_folder_1_file_DESTINATION");
 
@@ -609,25 +602,23 @@ mod tests {
             b"data",
         );
 
-        crate::processor::sync::sync(&src_folder.path, &dest_folder.path)?;
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::sync(&src_folder.path, &dest_folder.path)?;
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
-    fn src_folder_empty_dest_folder_1_folder_empty(
-    ) -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_folder_1_folder_empty() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_empty_dest_folder_1_folder_empty_SOURCE");
         let dest_folder = Folder::new("src_folder_empty_dest_folder_1_folder_empty_DESTINATION");
         let _dest_empty_folder =
             Folder::new("src_folder_empty_dest_folder_1_folder_empty_DESTINATION/empty_folder");
 
-        crate::processor::sync::sync(&src_folder.path, &dest_folder.path)?;
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::sync(&src_folder.path, &dest_folder.path)?;
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
-    fn src_folder_empty_dest_folder_1_folder_2_files(
-    ) -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_folder_1_folder_2_files() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_empty_dest_folder_1_folder_2_files_SOURCE");
         let dest_folder = Folder::new("src_folder_empty_dest_folder_1_folder_2_files_DESTINATION");
         let _dest_folder2 =
@@ -642,13 +633,12 @@ mod tests {
             b"data",
         );
 
-        crate::processor::sync::sync(&src_folder.path, &dest_folder.path)?;
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::sync(&src_folder.path, &dest_folder.path)?;
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
-    fn src_folder_empty_dest_folder_2_folders_2_files(
-    ) -> Result<(), crate::processor::error::SyncError> {
+    fn src_folder_empty_dest_folder_2_folders_2_files() -> Result<(), crate::processor::SyncError> {
         let src_folder = Folder::new("src_folder_empty_dest_folder_2_folders_2_files_SOURCE");
         let dest_folder = Folder::new("src_folder_empty_dest_folder_2_folders_2_files_DESTINATION");
         let _dest_folder2_3 =
@@ -679,8 +669,8 @@ mod tests {
             b"data",
         );
 
-        crate::processor::sync::sync(&src_folder.path, &dest_folder.path)?;
-        crate::processor::check::check(&src_folder.path, &dest_folder.path)
+        crate::processor::sync(&src_folder.path, &dest_folder.path)?;
+        crate::processor::check(&src_folder.path, &dest_folder.path)
     }
 
     #[test]
@@ -688,8 +678,8 @@ mod tests {
         let src_folder = Folder::new("src_folder_dest_file");
         let dest_file = TextFile::new("src_folder_dest_file.txt", b"data");
 
-        match crate::processor::sync::sync(&src_folder.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DEST_NOT_FOLDER),
+        match crate::processor::sync(&src_folder.path, &dest_file.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
             Ok(_) => panic!("ERROR => src_folder_dest_file"),
         }
     }
@@ -699,49 +689,49 @@ mod tests {
         let src_file = TextFile::new("src_file_dest_folder.txt", b"data");
         let dest_folder = Folder::new("src_file_dest_folder");
 
-        match crate::processor::sync::sync(&src_file.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::consts::ERROR_DEST_NOT_FOLDER),
+        match crate::processor::sync(&src_file.path, &dest_folder.path) {
+            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
             Ok(_) => panic!("ERROR => src_file_dest_folder"),
         }
     }
 
     #[test]
-    fn src_file_empty_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_file_empty_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_file_empty_dest_inexistent");
         let src_file = TextFile::new("src_file_empty_dest_inexistent/source.txt", b"");
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &src_file.path,
             "target/src_file_empty_dest_inexistent/destination.txt",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &src_file.path,
             "target/src_file_empty_dest_inexistent/destination.txt",
         )
     }
 
     #[test]
-    fn src_file_dest_inexistent() -> Result<(), crate::processor::error::SyncError> {
+    fn src_file_dest_inexistent() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_file_dest_inexistent");
         let src_file = TextFile::new("src_file_dest_inexistent/source.txt", b"data");
 
-        crate::processor::sync::sync(
+        crate::processor::sync(
             &src_file.path,
             "target/src_file_dest_inexistent/destination.txt",
         )?;
-        crate::processor::check::check(
+        crate::processor::check(
             &src_file.path,
             "target/src_file_dest_inexistent/destination.txt",
         )
     }
 
     #[test]
-    fn src_file_dest_different() -> Result<(), crate::processor::error::SyncError> {
+    fn src_file_dest_different() -> Result<(), crate::processor::SyncError> {
         let _root = Folder::new("src_file_dest_different");
         let src_file = TextFile::new("src_file_dest_different/source.txt", b"data");
         let dest_file = TextFile::new("src_file_dest_different/destination.txt", b"data\n");
 
-        crate::processor::sync::sync(&src_file.path, &dest_file.path)?;
-        crate::processor::check::check(&src_file.path, &dest_file.path)
+        crate::processor::sync(&src_file.path, &dest_file.path)?;
+        crate::processor::check(&src_file.path, &dest_file.path)
     }
 }

@@ -13,19 +13,18 @@ const FORCE_SORTED: &[&str] = &[
     "force",
 ];
 
-const JOIN_SORTED: &[&str] = &[
-    "--JOIN", "--join", "-J", "-JOIN", "-j", "-join", "/J", "/JOIN", "/j", "/join", "JOIN", "join",
-];
-
-const SPLIT_SORTED: &[&str] = &[
-    "--SPLIT", "--split", "-S", "-SPLIT", "-s", "-split", "/S", "/SPLIT", "/s", "/split", "SPLIT",
-    "split",
-];
-
 #[cfg(feature = "cli")]
 const HELP_SORTED: &[&str] = &[
     "--HELP", "--help", "-?", "-H", "-h", "-help", "/?", "/H", "/HELP", "/h", "/help", "HELP",
     "help",
+];
+
+const JOIN_SORTED: &[&str] = &[
+    "--JOIN", "--join", "-J", "-JOIN", "-j", "-join", "/J", "/JOIN", "/j", "/join", "JOIN", "join",
+];
+
+const MOVE_SORTED: &[&str] = &[
+    "--MOVE", "--move", "-M", "-MOVE", "-m", "-move", "/M", "/MOVE", "/m", "/move", "MOVE", "move",
 ];
 
 #[cfg(feature = "cli")]
@@ -42,6 +41,11 @@ const SIMULATE_SORTED: &[&str] = &[
     "/simulate",
     "SIMULATE",
     "simulate",
+];
+
+const SPLIT_SORTED: &[&str] = &[
+    "--SPLIT", "--split", "-S", "-SPLIT", "-s", "-split", "/S", "/SPLIT", "/s", "/split", "SPLIT",
+    "split",
 ];
 
 #[cfg(feature = "cli")]
@@ -137,6 +141,15 @@ fn four_arguments(_start: &std::time::Instant) {
         &dest_folder,
         _start,
         processor::force,
+    );
+
+    execute_file(
+        MOVE_SORTED,
+        command.as_str(),
+        &source_folder,
+        &dest_folder,
+        _start,
+        processor::mv,
     );
 
     execute_file(

@@ -1,10 +1,12 @@
 //! Contains all strings and error codes
 
-pub const BUFFER_SIZE: usize = 1024 * 512; // 512KB, it will use 2 buffers, so 1MB
+pub const BUFFER_SIZE: usize = 1024 * 512; // 512KB, but it will use 2 buffers
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "br")]
+include!("i18n/messages_BR.rs");
+
+#[cfg(feature = "en")]
 include!("i18n/messages.rs");
-//include!("i18n/messages_BR.rs");
 
 //====================================== Exit codes to Operating System ======================================
 #[cfg(feature = "cli")]

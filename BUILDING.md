@@ -16,7 +16,7 @@ Clone or download the repository and build:
 ```bash
 git clone https://github.com/mazoti/sync
 cd sync
-cargo build --features cli --release
+cargo build --features en --release (or br for portuguese)
 ```
 The sync binary will be on *target/release* folder and ready to use. If you don't need any output you can build without command line interface (CLI) module:
 ```sh
@@ -25,7 +25,7 @@ cargo build --release
 
 ## Translation
 To create a translation, use the file *src/processor/i18n/messages.rs* as a template and
-change the **include!("i18n/messages.rs")** to your file in *consts.rs*.
+add a **include!("i18n/messages_XX.rs")** to your file in *consts.rs*.
 
 ## Buffer size
 When comparing files, *sync* will use 1MB of RAM. To change this, open the file *consts.rs*

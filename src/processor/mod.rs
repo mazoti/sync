@@ -479,6 +479,22 @@ fn loading_msg(file: &str) {
     cli::loading_msg(file);
 }
 
+pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
+    sync(&source, &destination)?;
+    check(&source, &destination)?;
+
+    if std::fs::metadata(&source)?.is_file() {
+        std::fs::remove_file(&source)?;
+    } else {
+        std::fs::remove_dir_all(&source)?;
+    }
+
+    #[cfg(feature = "cli")]
+    crate::processor::remove_msg(source);
+
+    Ok(())
+}
+
 #[cfg(feature = "cli")]
 #[inline(always)]
 fn msg_help() -> &'static str {

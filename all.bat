@@ -1,13 +1,13 @@
 cargo clean
 cargo test
-cargo test --features cli
+cargo test --features en
 cargo bench
-cargo bench --features cli
+cargo bench --features en
 cargo clippy
-cargo clippy --features cli
+cargo clippy --features en
 cargo audit
 cargo fmt
-cargo build --features cli --release --verbose
-cargo doc --features cli
+cargo build --features en --release --verbose
+cargo doc --features en
 cargo tarpaulin -v
-cargo tarpaulin -v --features cli
+cargo tarpaulin -v --features en

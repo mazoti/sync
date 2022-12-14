@@ -35,6 +35,9 @@ mod error;
 mod splitjoin;
 mod sync;
 
+#[cfg(feature = "cli")]
+mod validate;
+
 /// Error class with the message and code defined in consts.rs.
 /// "code" is the number returned to operating system, "message" is the error displayed in stderr,
 /// "file" is the source code file and "line" is the line number of the error
@@ -339,6 +342,19 @@ fn create_msg_simulation(folder: &str) {
     cli::create_msg_simulation(folder);
 }
 
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn empty(folder: &str) -> Result<(), SyncError> {
+    validate::empty(folder)
+}
+
+/// Displays a colored "Empty", the file path and a message in stdout
+#[cfg(feature = "cli")]
+#[inline(always)]
+fn empty_msg(file_folder: &str) {
+    cli::empty_msg(file_folder);
+}
+
 #[inline(always)]
 fn error_config_duplicated() -> i32 {
     consts::ERROR_CONFIG_DUPLICATED
@@ -480,13 +496,13 @@ fn loading_msg(file: &str) {
 }
 
 pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync(&source, &destination)?;
-    check(&source, &destination)?;
+    sync(source, destination)?;
+    check(source, destination)?;
 
-    if std::fs::metadata(&source)?.is_file() {
-        std::fs::remove_file(&source)?;
+    if std::fs::metadata(source)?.is_file() {
+        std::fs::remove_file(source)?;
     } else {
-        std::fs::remove_dir_all(&source)?;
+        std::fs::remove_dir_all(source)?;
     }
 
     #[cfg(feature = "cli")]
@@ -511,6 +527,13 @@ pub fn no_error() -> i32 {
 #[inline(always)]
 fn ok_msg(file: &str) {
     cli::ok_msg(file)
+}
+
+/// Displays a colored "1 item" and the file or folder path
+#[cfg(feature = "cli")]
+#[inline(always)]
+fn one_item(folder: &str) {
+    cli::one_item(folder);
 }
 
 #[inline(always)]

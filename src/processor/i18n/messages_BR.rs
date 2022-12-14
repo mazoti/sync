@@ -78,4 +78,6 @@ pub const COMMAND_MSGS: &[&str] = &[
     "Uso:",
     "ATENÇÃO",
     "(SIMULAÇÃO)",
+    "(VAZIO)",
+    "(UM ITEM)",
 ];

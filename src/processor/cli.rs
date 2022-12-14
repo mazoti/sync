@@ -27,6 +27,18 @@ pub fn create_msg(folder: &str) {
     );
 }
 
+/// Displays a colored "Empty" and the file or folder path
+#[inline(always)]
+pub fn empty_msg(file_folder: &str) {
+    message(
+        &mut StandardStream::stderr(ColorChoice::Always),
+        Color::Red,
+        crate::processor::command_msgs(13),
+        file_folder,
+        false,
+    );
+}
+
 /// Displays a colored "ERROR", an error message in stderr and exit with the error code.
 /// If user_input is "true", waits an "enter" from user keyboard
 pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
@@ -124,6 +136,18 @@ pub fn ok_msg(file: &str) {
         crate::processor::command_msgs(5),
         file,
         true,
+    );
+}
+
+/// Displays a colored "Empty" and the file or folder path
+#[inline(always)]
+pub fn one_item(folder: &str) {
+    message(
+        &mut StandardStream::stderr(ColorChoice::Always),
+        Color::Red,
+        crate::processor::command_msgs(14),
+        folder,
+        false,
     );
 }
 

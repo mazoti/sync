@@ -8,6 +8,12 @@ const CHECK_SORTED: &[&str] = &[
     "check",
 ];
 
+#[cfg(feature = "cli")]
+const EMPTY_SORTED: &[&str] = &[
+    "--EMPTY", "--empty", "-E", "-EMPTY", "-e", "-empty", "/E", "/EMPTY", "/e", "/empty", "EMPTY",
+    "empty",
+];
+
 const FORCE_SORTED: &[&str] = &[
     "--FORCE", "--force", "-F", "-FORCE", "-f", "-force", "/F", "/FORCE", "/f", "/force", "FORCE",
     "force",
@@ -195,6 +201,16 @@ fn three_arguments(_start: &std::time::Instant) {
         _start,
         processor::check_file,
     );
+
+    #[cfg(feature = "cli")]
+    execute_folder(
+        EMPTY_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::empty,
+    );
+
     execute_folder(
         FORCE_SORTED,
         source.as_str(),

@@ -77,4 +77,6 @@ pub const COMMAND_MSGS: &[&str] = &[
     "Usage:",
     " WARNING",
     "(SIMULATION)",
+    "(EMPTY)",
+    "(ONE ITEM)",
 ];

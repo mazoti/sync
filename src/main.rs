@@ -76,9 +76,7 @@ fn error(err: processor::SyncError) {
     println!("{:?}", err);
 
     #[cfg(feature = "cli")]
-    if let Some(msg) = err.message {
-        std::process::exit(processor::error_msg(&msg, err.code, true));
-    }
+    std::process::exit(processor::error_msg(&err.to_string(), err.code, true));
 
     #[cfg(not(feature = "cli"))]
     std::process::exit(err.code);

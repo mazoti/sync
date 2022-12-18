@@ -17,7 +17,6 @@ pub fn join(folderpath: &str, buffer_size: usize) -> Result<(), crate::processor
     if !std::fs::metadata(folderpath)?.is_dir() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(folderpath.to_string()),
@@ -38,7 +37,6 @@ pub fn join(folderpath: &str, buffer_size: usize) -> Result<(), crate::processor
     if destination.is_empty() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
-            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: None,
@@ -116,7 +114,6 @@ pub fn split(
     if size < 1 {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_file_size(),
-            message: crate::processor::error_to_string(crate::processor::error_file_size()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -129,7 +126,6 @@ pub fn split(
     if !metadata_file.is_file() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
-            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -140,7 +136,6 @@ pub fn split(
     if metadata_file.len() < 1 {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
-            message: crate::processor::error_to_string(crate::processor::error_source_file()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -151,7 +146,6 @@ pub fn split(
     if metadata_file.len() <= size_bytes.parse::<u64>()? {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_split_size(),
-            message: crate::processor::error_to_string(crate::processor::error_split_size()),
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),

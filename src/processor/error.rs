@@ -4,6 +4,7 @@ use crate::processor::SyncError;
 
 /// Returns a String given an error code
 #[cfg(feature = "cli")]
+#[inline(always)]
 pub fn error_to_string(code: i32) -> Option<String> {
     if (code < 1) || (code as usize) >= (crate::processor::error_msgs().len() - 1) {
         return None;
@@ -22,10 +23,9 @@ pub fn error_to_string(_code: i32) -> Option<String> {
 }
 
 impl From<std::io::Error> for SyncError {
-    fn from(error: std::io::Error) -> Self {
+    fn from(_error: std::io::Error) -> Self {
         SyncError {
             code: crate::processor::error_io(),
-            message: Some(error.to_string()),
             file: file!(),
             line: line!(),
             source: None,
@@ -35,10 +35,9 @@ impl From<std::io::Error> for SyncError {
 }
 
 impl From<std::time::SystemTimeError> for SyncError {
-    fn from(error: std::time::SystemTimeError) -> Self {
+    fn from(_error: std::time::SystemTimeError) -> Self {
         SyncError {
             code: crate::processor::error_system_time(),
-            message: Some(error.to_string()),
             file: file!(),
             line: line!(),
             source: None,
@@ -49,7 +48,7 @@ impl From<std::time::SystemTimeError> for SyncError {
 
 impl std::fmt::Display for SyncError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(msg) = &self.message {
+        if let Some(msg) = error_to_string(self.code) {
             write!(f, "{}", msg)?;
         }
         Ok(())
@@ -64,7 +63,7 @@ impl std::fmt::Debug for SyncError {
             self.code, self.file, self.line
         )?;
 
-        if let Some(msg) = &self.message {
+        if let Some(msg) = error_to_string(self.code) {
             writeln!(f, "Message: {}", msg)?;
         }
 
@@ -81,10 +80,9 @@ impl std::fmt::Debug for SyncError {
 }
 
 impl From<std::num::ParseIntError> for SyncError {
-    fn from(error: std::num::ParseIntError) -> Self {
+    fn from(_error: std::num::ParseIntError) -> Self {
         SyncError {
             code: crate::processor::parse_int_error(),
-            message: Some(error.to_string()),
             file: file!(),
             line: line!(),
             source: None,

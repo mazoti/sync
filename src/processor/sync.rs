@@ -92,7 +92,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -103,7 +102,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
     if source == destination {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_same_file_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -152,9 +150,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
                 Err(_) => {
                     return Err(crate::processor::SyncError {
                         code: crate::processor::error_thread_join(),
-                        message: crate::processor::error_to_string(
-                            crate::processor::error_thread_join(),
-                        ),
                         file: file!(),
                         line: line!(),
                         source: None,
@@ -170,7 +165,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -187,7 +181,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
     if std::path::Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -220,7 +213,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
         Err(crate::processor::SyncError {
             code: crate::processor::error_copy_file_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_copy_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -274,7 +266,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
         Err(crate::processor::SyncError {
             code: crate::processor::error_copy_file_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_copy_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -350,7 +341,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -361,7 +351,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     if source == destination {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_same_file_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -408,9 +397,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
                 Err(_) => {
                     return Err(crate::processor::SyncError {
                         code: crate::processor::error_thread_join(),
-                        message: crate::processor::error_to_string(
-                            crate::processor::error_thread_join(),
-                        ),
                         file: file!(),
                         line: line!(),
                         source: None,
@@ -426,7 +412,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -442,7 +427,6 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     if std::path::Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -459,17 +443,13 @@ pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::Sy
     loop {
         if let Err(_err) = sync(source, destination) {
             #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                crate::processor::error_msg(msg, _err.code, false);
-            }
+            crate::processor::error_msg(&_err.to_string(), _err.code, false);
             continue;
         }
 
         if let Err(_err) = crate::processor::check(source, destination) {
             #[cfg(feature = "cli")]
-            if let Some(msg) = &_err.message {
-                crate::processor::error_msg(msg, _err.code, false);
-            }
+            crate::processor::error_msg(&_err.to_string(), _err.code, false);
             continue;
         }
         break;

@@ -43,7 +43,6 @@ mod validate;
 /// "file" is the source code file and "line" is the line number of the error
 pub struct SyncError {
     pub code: i32,
-    pub message: Option<String>,
     pub file: &'static str,
     pub line: u32,
     pub source: Option<String>,
@@ -55,7 +54,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
     if !Path::new(&source).exists() {
         return Err(SyncError {
             code: error_source_folder(),
-            message: error_to_string(error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -66,7 +64,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
     if source == destination {
         return Err(SyncError {
             code: error_same_file_folder(),
-            message: error::error_to_string(error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -78,7 +75,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
         if Path::new(&source).is_dir() && !Path::new(&destination).is_dir() {
             return Err(SyncError {
                 code: error_dest_not_folder(),
-                message: error::error_to_string(error_dest_not_folder()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -89,7 +85,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
         if Path::new(&source).is_file() && !Path::new(&destination).is_file() {
             return Err(SyncError {
                 code: error_dest_not_file(),
-                message: error::error_to_string(error_dest_not_file()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -101,7 +96,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
     if !config.ends_with(".config") {
         return Err(SyncError {
             code: error_config_ext_code(),
-            message: error::error_to_string(error_config_ext_code()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -112,7 +106,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
     if Path::new(&config).is_dir() {
         return Err(SyncError {
             code: error_config_folder_code(),
-            message: error::error_to_string(error_config_folder_code()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -143,7 +136,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
         if path.len() != 2 {
             return Err(SyncError {
                 code: error_parse_line(),
-                message: error::error_to_string(error_parse_line()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -156,7 +148,6 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
         {
             return Err(SyncError {
                 code: error_config_duplicated(),
-                message: error::error_to_string(error_config_duplicated()),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -195,7 +186,6 @@ fn process_file(
         if path.len() != 2 {
             return Err(SyncError {
                 code: error_parse_line(),
-                message: error::error_to_string(error_parse_line()),
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -244,7 +234,6 @@ fn process_folder(
             Err(_) => {
                 return Err(SyncError {
                     code: error_thread_join(),
-                    message: error_to_string(error_thread_join()),
                     file: file!(),
                     line: line!(),
                     source: None,
@@ -266,7 +255,6 @@ fn process_folder(
         if display_help {
             return Err(SyncError {
                 code: help(),
-                message: error_to_string(exit_code),
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -278,7 +266,6 @@ fn process_folder(
 
     Err(SyncError {
         code: exit_code,
-        message: error_to_string(exit_code),
         file: file!(),
         line: line!(),
         source: None,
@@ -447,12 +434,6 @@ fn error_system_time() -> i32 {
 #[inline(always)]
 fn error_thread_join() -> i32 {
     consts::ERROR_THREAD_JOIN
-}
-
-/// Returns a String given an error code
-#[inline(always)]
-fn error_to_string(code: i32) -> Option<String> {
-    error::error_to_string(code)
 }
 
 #[inline(always)]

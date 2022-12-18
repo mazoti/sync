@@ -22,9 +22,6 @@ pub fn check(
             }
             return Err(crate::processor::SyncError {
                 code: crate::processor::error_diff_file_folder(),
-                message: crate::processor::error_to_string(
-                    crate::processor::error_diff_file_folder(),
-                ),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -41,9 +38,6 @@ pub fn check(
                 if !Path::new(&fullpath_destination).exists() {
                     return Err(crate::processor::SyncError {
                         code: crate::processor::error_diff_file_folder(),
-                        message: crate::processor::error_to_string(
-                            crate::processor::error_diff_file_folder(),
-                        ),
                         file: file!(),
                         line: line!(),
                         source: Some(source.to_string()),
@@ -72,9 +66,6 @@ pub fn check(
             }
             return Err(crate::processor::SyncError {
                 code: crate::processor::error_diff_file_folder(),
-                message: crate::processor::error_to_string(
-                    crate::processor::error_diff_file_folder(),
-                ),
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -115,9 +106,6 @@ pub fn check(
             if src_bytes != dest_bytes {
                 return Err(crate::processor::SyncError {
                     code: crate::processor::error_diff_file_folder(),
-                    message: crate::processor::error_to_string(
-                        crate::processor::error_diff_file_folder(),
-                    ),
                     file: file!(),
                     line: line!(),
                     source: Some(source.to_string()),
@@ -129,9 +117,6 @@ pub fn check(
                 if src_buffer[i] != dest_buffer[i] {
                     return Err(crate::processor::SyncError {
                         code: crate::processor::error_diff_file_folder(),
-                        message: crate::processor::error_to_string(
-                            crate::processor::error_diff_file_folder(),
-                        ),
                         file: file!(),
                         line: line!(),
                         source: Some(source.to_string()),
@@ -154,7 +139,6 @@ pub fn check(
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -165,7 +149,6 @@ pub fn check(
     if source == destination {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_same_file_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_same_file_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -184,7 +167,6 @@ pub fn check(
         // source is a directory but destination not
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_folder()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -196,7 +178,6 @@ pub fn check(
     if Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_dest_not_file(),
-            message: crate::processor::error_to_string(crate::processor::error_dest_not_file()),
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),

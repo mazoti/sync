@@ -7,7 +7,6 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
     if !folder_path.exists() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(folder.to_string()),
@@ -19,7 +18,6 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
     if !folder_path.is_dir() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
-            message: crate::processor::error_to_string(crate::processor::error_source_folder()),
             file: file!(),
             line: line!(),
             source: Some(folder.to_string()),

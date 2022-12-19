@@ -47,6 +47,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "config file not ended in .config",              // ERROR_CONFIG_EXT_CODE
     "config must be a .config text file",            // ERROR_CONFIG_FOLDER_CODE
     "cannot copy file to destination folder",        // ERROR_COPY_FILE_FOLDER
+    "destination file exists",                       // ERROR_DEST_FILE
     "source is a file and destination is a folder",  // ERROR_DEST_NOT_FILE
     "source is a folder and destination is a file",  // ERROR_DEST_NOT_FOLDER
     "files or folders are different",                // ERROR_DIFF_FILE_FOLDER

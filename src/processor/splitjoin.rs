@@ -47,6 +47,16 @@ pub fn join(folderpath: &str, buffer_size: usize) -> Result<(), crate::processor
     #[cfg(feature = "cli")]
     crate::processor::create_msg(&destination);
 
+    if std::path::Path::new(&destination).exists() {
+        return Err(crate::processor::SyncError {
+            code: crate::processor::error_dest_file(),
+            file: file!(),
+            line: line!(),
+            source: None,
+            destination: Some(destination),
+        });
+    }
+
     destination_file = std::fs::OpenOptions::new()
         .append(true)
         .create(true)
@@ -57,6 +67,9 @@ pub fn join(folderpath: &str, buffer_size: usize) -> Result<(), crate::processor
         if !std::path::Path::new(&tmp).exists() {
             break;
         }
+
+        #[cfg(feature = "cli")]
+        crate::processor::loading_msg(&tmp);
 
         // Append opened file to destination
         source_file = std::fs::File::open(&tmp)?;
@@ -107,6 +120,16 @@ pub fn split(
 
         #[cfg(feature = "cli")]
         crate::processor::create_msg(&destination);
+
+        if std::path::Path::new(&destination).exists() {
+            return Err(crate::processor::SyncError {
+                code: crate::processor::error_dest_file(),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: Some(destination),
+            });
+        }
 
         Ok(std::fs::File::create(destination)?)
     }

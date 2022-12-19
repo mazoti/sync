@@ -48,6 +48,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "arquivo de configuração deve terminar com .config",              // ERROR_CONFIG_EXT_CODE
     "configuração deve ser um arquivo de texto terminado em .config", // ERROR_CONFIG_FOLDER_CODE
     "não foi possível copiar o arquivo para a pasta de destinor",     // ERROR_COPY_FILE_FOLDER
+    "arquivo de destino existe",                                      // ERROR_DEST_FILE
     "origem é um arquivo e destino uma pasta",                        // ERROR_DEST_NOT_FILE
     "origem é uma pasta e destino um arquivo",                        // ERROR_DEST_NOT_FOLDER
     "arquivos ou pastas são diferentes",                              // ERROR_DIFF_FILE_FOLDER

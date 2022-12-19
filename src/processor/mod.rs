@@ -363,6 +363,11 @@ fn error_copy_file_folder() -> i32 {
 }
 
 #[inline(always)]
+fn error_dest_file() -> i32 {
+    consts::ERROR_DEST_FILE
+}
+
+#[inline(always)]
 fn error_dest_not_file() -> i32 {
     consts::ERROR_DEST_NOT_FILE
 }

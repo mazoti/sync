@@ -44,6 +44,7 @@ entrar com ctrl+C), use a flag \"--force\":
 ";
 
 pub const ERROR_MSGS: &[&str] = &[
+    "",                                                               // NO_ERROR
     "origem e destino já estão no arquivo de configuração",           // ERROR_CONFIG_DUPLICATED
     "arquivo de configuração deve terminar com .config",              // ERROR_CONFIG_EXT_CODE
     "configuração deve ser um arquivo de texto terminado em .config", // ERROR_CONFIG_FOLDER_CODE
@@ -59,10 +60,9 @@ pub const ERROR_MSGS: &[&str] = &[
     "arquivo de origem não encontrado",                               // ERROR_SOURCE_FILE
     "pasta de destino não encontrada",                                // ERROR_SOURCE_FOLDER
     "não é necessário dividir o arquivo",                             // ERROR_SPLIT_SIZE
-    
-    "não foi possível gerar a saída",                                 // ERROR_OUTPUT
-    "já está no arquivo de configuração",                             // ERROR_SOURCE_DUP
+    "erro na hora do sistema",                                        // ERROR_SYSTEM_TIME
 	"não foi possível parar a thread",                                // ERROR_THREAD_JOIN
+    "não foi possível converter número para inteiro",                 // PARSE_INT_ERROR
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

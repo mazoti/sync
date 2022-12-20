@@ -6,12 +6,12 @@ use crate::processor::SyncError;
 #[cfg(feature = "cli")]
 #[inline(always)]
 pub fn error_to_string(code: i32) -> Option<String> {
-    if (code < 1) || (code as usize) >= (crate::processor::error_msgs().len() - 1) {
+    if (code < 0) || (code as usize) >= (crate::processor::error_msgs().len()) {
         return None;
     }
 
     Some(String::from(
-        crate::processor::error_msgs()[(code as usize) - 1],
+        crate::processor::error_msgs()[(code as usize)],
     ))
 }
 

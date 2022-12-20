@@ -43,6 +43,7 @@ To keep synchronizing and checking until both operations succeed, use the \"--fo
 ";
 
 pub const ERROR_MSGS: &[&str] = &[
+    "",                                              // NO_ERROR
     "source and destination already in config file", // ERROR_CONFIG_DUPLICATED
     "config file not ended in .config",              // ERROR_CONFIG_EXT_CODE
     "config must be a .config text file",            // ERROR_CONFIG_FOLDER_CODE
@@ -58,10 +59,9 @@ pub const ERROR_MSGS: &[&str] = &[
     "source file not found",                         // ERROR_SOURCE_FILE
     "source folder not found",                       // ERROR_SOURCE_FOLDER
     "file does not need to split",                   // ERROR_SPLIT_SIZE
-
-    "cannot print to output",                        // ERROR_OUTPUT
-    "already in config file",                        // ERROR_SOURCE_DUP
+    "system time error",                             // ERROR_SYSTEM_TIME
     "cannot join thread",                            // ERROR_THREAD_JOIN
+    "cannot convert number to integer",              // PARSE_INT_ERROR
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

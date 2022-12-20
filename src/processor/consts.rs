@@ -31,7 +31,6 @@ pub const ERROR_SOURCE_FOLDER: i32 = 14;
 pub const ERROR_SPLIT_SIZE: i32 = 15;
 pub const ERROR_SYSTEM_TIME: i32 = 16;
 pub const ERROR_THREAD_JOIN: i32 = 17;
-
 pub const PARSE_INT_ERROR: i32 = 18;
 
 //====================================== Unit Tests ======================================

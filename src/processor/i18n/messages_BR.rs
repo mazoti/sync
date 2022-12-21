@@ -44,25 +44,25 @@ entrar com ctrl+C), use a flag \"--force\":
 ";
 
 pub const ERROR_MSGS: &[&str] = &[
-    "",                                                               // NO_ERROR
+    "",                                                                   // NO_ERROR
     "origem e destino já estão no arquivo de configuração",           // ERROR_CONFIG_DUPLICATED
-    "arquivo de configuração deve terminar com .config",              // ERROR_CONFIG_EXT_CODE
-    "configuração deve ser um arquivo de texto terminado em .config", // ERROR_CONFIG_FOLDER_CODE
-    "não foi possível copiar o arquivo para a pasta de destinor",     // ERROR_COPY_FILE_FOLDER
-    "arquivo de destino existe",                                      // ERROR_DEST_FILE
-    "origem é um arquivo e destino uma pasta",                        // ERROR_DEST_NOT_FILE
-    "origem é uma pasta e destino um arquivo",                        // ERROR_DEST_NOT_FOLDER
-    "arquivos ou pastas são diferentes",                              // ERROR_DIFF_FILE_FOLDER
-	"tamanho do arquivo deve ser positivo",                           // ERROR_FILE_SIZE
-    "erro de entrada ou saída",                                       // ERROR_IO
+    "arquivo de configuração deve terminar com .config",                // ERROR_CONFIG_EXT_CODE
+    "configuração deve ser um arquivo de texto terminado em .config",   // ERROR_CONFIG_FOLDER_CODE
+    "não foi possível copiar o arquivo para a pasta de destinor",       // ERROR_COPY_FILE_FOLDER
+    "arquivo de destino existe",                                          // ERROR_DEST_FILE
+    "origem é um arquivo e destino uma pasta",                           // ERROR_DEST_NOT_FILE
+    "origem é uma pasta e destino um arquivo",                           // ERROR_DEST_NOT_FOLDER
+    "arquivos ou pastas são diferentes",                                 // ERROR_DIFF_FILE_FOLDER
+    "tamanho do arquivo deve ser positivo",                               // ERROR_FILE_SIZE
+    "erro de entrada ou saída",                                          // ERROR_IO
     "não foi possível processar registro do arquivo de configuração", // ERROR_PARSE_LINE
-    "origem e destino são os mesmos",                                 // ERROR_SAME_FILE_FOLDER
-    "arquivo de origem não encontrado",                               // ERROR_SOURCE_FILE
-    "pasta de destino não encontrada",                                // ERROR_SOURCE_FOLDER
-    "não é necessário dividir o arquivo",                             // ERROR_SPLIT_SIZE
-    "erro na hora do sistema",                                        // ERROR_SYSTEM_TIME
-	"não foi possível parar a thread",                                // ERROR_THREAD_JOIN
-    "não foi possível converter número para inteiro",                 // PARSE_INT_ERROR
+    "origem e destino são os mesmos",                                    // ERROR_SAME_FILE_FOLDER
+    "arquivo de origem não encontrado",                                  // ERROR_SOURCE_FILE
+    "pasta de destino não encontrada",                                   // ERROR_SOURCE_FOLDER
+    "não é necessário dividir o arquivo",                              // ERROR_SPLIT_SIZE
+    "erro na hora do sistema",                                            // ERROR_SYSTEM_TIME
+    "não foi possível parar a thread",                                  // ERROR_THREAD_JOIN
+    "não foi possível converter número para inteiro",                  // PARSE_INT_ERROR
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

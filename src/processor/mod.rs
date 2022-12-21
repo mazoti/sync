@@ -32,6 +32,10 @@ mod cli;
 
 mod consts;
 mod error;
+
+#[cfg(feature = "cli")]
+mod i18n;
+
 mod splitjoin;
 mod sync;
 
@@ -298,7 +302,7 @@ pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
 #[cfg(feature = "cli")]
 #[inline(always)]
 pub fn command_msgs(code: usize) -> &'static str {
-    consts::COMMAND_MSGS[code]
+    i18n::command_msgs(code)
 }
 
 /// Displays a colored "Copy" and the file path
@@ -403,7 +407,7 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
 #[cfg(feature = "cli")]
 #[inline(always)]
 fn error_msgs() -> &'static [&'static str] {
-    consts::ERROR_MSGS
+    i18n::error_msgs()
 }
 
 #[inline(always)]
@@ -500,7 +504,7 @@ pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
 #[cfg(feature = "cli")]
 #[inline(always)]
 fn msg_help() -> &'static str {
-    consts::MSG_HELP
+    i18n::msg_help()
 }
 
 #[inline(always)]

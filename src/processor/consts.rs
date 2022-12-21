@@ -2,12 +2,6 @@
 
 pub const BUFFER_SIZE: usize = 1024 * 512; // 512KB, but it will use 2 buffers
 
-#[cfg(feature = "br")]
-include!("i18n/messages_BR.rs");
-
-#[cfg(feature = "en")]
-include!("i18n/messages.rs");
-
 //====================================== Exit codes to Operating System ======================================
 #[cfg(feature = "cli")]
 pub const HELP: i32 = -1;

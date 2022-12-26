@@ -55,6 +55,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "arquivos ou pastas são diferentes",                                 // ERROR_DIFF_FILE_FOLDER
     "tamanho do arquivo deve ser positivo",                               // ERROR_FILE_SIZE
     "erro de entrada ou saída",                                          // ERROR_IO
+    "não foi possível converter número para inteiro",                  // ERROR_PARSE_INT
     "não foi possível processar registro do arquivo de configuração", // ERROR_PARSE_LINE
     "origem e destino são os mesmos",                                    // ERROR_SAME_FILE_FOLDER
     "arquivo de origem não encontrado",                                  // ERROR_SOURCE_FILE
@@ -62,7 +63,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "não é necessário dividir o arquivo",                              // ERROR_SPLIT_SIZE
     "erro na hora do sistema",                                            // ERROR_SYSTEM_TIME
     "não foi possível parar a thread",                                  // ERROR_THREAD_JOIN
-    "não foi possível converter número para inteiro",                  // PARSE_INT_ERROR
+    "não foi possível converter número para usize",                    // ERROR_TRY_FROM_INT
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

@@ -90,3 +90,15 @@ impl From<std::num::ParseIntError> for SyncError {
         }
     }
 }
+
+impl From<std::num::TryFromIntError> for SyncError {
+    fn from(_error: std::num::TryFromIntError) -> Self {
+        SyncError {
+            code: crate::processor::try_from_int_error(),
+            file: file!(),
+            line: line!(),
+            source: None,
+            destination: None,
+        }
+    }
+}

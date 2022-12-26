@@ -199,25 +199,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         #[cfg(feature = "cli")]
         crate::processor::copy_msg(destination);
 
-        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
-            // Make the modified date the same in source and destination (Unix and Linux only)
-            #[cfg(not(windows))]
-            {
-                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-                file_source.set_len(file_source.metadata()?.len())?;
-                file_destination.set_len(file_destination.metadata()?.len())?;
-            }
-            return Ok(());
-        }
-
-        Err(crate::processor::SyncError {
-            code: crate::processor::error_copy_file_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        })
+        crate::processor::copy(source, destination)
     }
 
     /// Copy source folder to destination and all it's contents recursively
@@ -260,17 +242,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         #[cfg(feature = "cli")]
         crate::processor::update_msg(destination);
 
-        if std::fs::copy(source, destination)? == metadata_source.len() {
-            return Ok(());
-        }
-
-        Err(crate::processor::SyncError {
-            code: crate::processor::error_copy_file_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        })
+        crate::processor::copy(source, destination)
     }
 
     /// Displays a remove message and removes a file or folder from destination

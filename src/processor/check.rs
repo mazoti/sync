@@ -8,7 +8,7 @@ use std::{io::Read, path::Path};
 pub fn check(
     source: &str,
     destination: &str,
-    buffer_size: usize,
+    buffer_size: u64,
 ) -> Result<(), crate::processor::SyncError> {
     /// Look for removed files or folders in source
     fn check_file_folder_add_removed(
@@ -55,7 +55,7 @@ pub fn check(
     fn check_file_folder(
         source: &str,
         destination: &str,
-        buffer_size: usize,
+        buffer_size: u64,
     ) -> Result<(), crate::processor::SyncError> {
         // Check for empty folder
         if std::fs::read_dir(source)?.next().is_none() {
@@ -91,13 +91,15 @@ pub fn check(
     fn check_file(
         source: &str,
         destination: &str,
-        buffer_size: usize,
+        buffer_size: u64,
     ) -> Result<(), crate::processor::SyncError> {
         let mut src_file = std::fs::File::open(source)?;
         let mut dest_file = std::fs::File::open(destination)?;
 
-        let mut src_buffer = vec![0; buffer_size];
-        let mut dest_buffer = vec![0; buffer_size];
+        let buffer_usize = buffer_size.try_into()?;
+
+        let mut src_buffer = vec![0; buffer_usize];
+        let mut dest_buffer = vec![0; buffer_usize];
 
         loop {
             let src_bytes = src_file.read(&mut src_buffer)?;
@@ -125,7 +127,7 @@ pub fn check(
                 }
             }
 
-            if src_bytes < buffer_size {
+            if src_bytes < buffer_usize {
                 break;
             }
         }

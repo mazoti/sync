@@ -1,6 +1,6 @@
 //! Contains all strings and error codes
 
-pub const BUFFER_SIZE: usize = 1024 * 512; // 512KB, but it will use 2 buffers
+pub const BUFFER_SIZE: u64 = 1024 * 512; // 512KB, but it will use 2 buffers
 
 //====================================== Exit codes to Operating System ======================================
 #[cfg(feature = "cli")]
@@ -11,21 +11,25 @@ pub const NO_ERROR: i32 = 0;
 pub const ERROR_CONFIG_DUPLICATED: i32 = 1;
 pub const ERROR_CONFIG_EXT_CODE: i32 = 2;
 pub const ERROR_CONFIG_FOLDER_CODE: i32 = 3;
+
+#[cfg(not(feature = "copy"))]
 pub const ERROR_COPY_FILE_FOLDER: i32 = 4;
+
 pub const ERROR_DEST_FILE: i32 = 5;
 pub const ERROR_DEST_NOT_FILE: i32 = 6;
 pub const ERROR_DEST_NOT_FOLDER: i32 = 7;
 pub const ERROR_DIFF_FILE_FOLDER: i32 = 8;
 pub const ERROR_FILE_SIZE: i32 = 9;
 pub const ERROR_IO: i32 = 10;
-pub const ERROR_PARSE_LINE: i32 = 11;
-pub const ERROR_SAME_FILE_FOLDER: i32 = 12;
-pub const ERROR_SOURCE_FILE: i32 = 13;
-pub const ERROR_SOURCE_FOLDER: i32 = 14;
-pub const ERROR_SPLIT_SIZE: i32 = 15;
-pub const ERROR_SYSTEM_TIME: i32 = 16;
-pub const ERROR_THREAD_JOIN: i32 = 17;
-pub const PARSE_INT_ERROR: i32 = 18;
+pub const ERROR_PARSE_INT: i32 = 11;
+pub const ERROR_PARSE_LINE: i32 = 12;
+pub const ERROR_SAME_FILE_FOLDER: i32 = 13;
+pub const ERROR_SOURCE_FILE: i32 = 14;
+pub const ERROR_SOURCE_FOLDER: i32 = 15;
+pub const ERROR_SPLIT_SIZE: i32 = 16;
+pub const ERROR_SYSTEM_TIME: i32 = 17;
+pub const ERROR_THREAD_JOIN: i32 = 18;
+pub const ERROR_TRY_FROM_INT: i32 = 19;
 
 //====================================== Unit Tests ======================================
 

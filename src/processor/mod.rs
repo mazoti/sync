@@ -30,13 +30,17 @@ mod check;
 #[cfg(feature = "cli")]
 mod cli;
 
+#[cfg(feature = "copy")]
+mod copy;
+
 mod consts;
 mod error;
 
 #[cfg(feature = "cli")]
 mod i18n;
 
-mod splitjoin;
+mod join;
+mod split;
 mod sync;
 
 #[cfg(feature = "cli")]
@@ -305,6 +309,41 @@ pub fn command_msgs(code: usize) -> &'static str {
     i18n::command_msgs(code)
 }
 
+pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
+    #[cfg(feature = "copy")]
+    {
+        copy::copy(source, destination, consts::BUFFER_SIZE)?;
+        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+        file_source.set_len(file_source.metadata()?.len())?;
+        file_destination.set_len(file_destination.metadata()?.len())?;
+        Ok(())
+    }
+
+    #[cfg(not(feature = "copy"))]
+    {
+        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
+            // Make the modified date the same in source and destination (Unix and Linux only)
+            #[cfg(not(windows))]
+            {
+                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+                file_source.set_len(file_source.metadata()?.len())?;
+                file_destination.set_len(file_destination.metadata()?.len())?;
+            }
+            return Ok(());
+        }
+
+        Err(crate::processor::SyncError {
+            code: crate::processor::error_copy_file_folder(),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        })
+    }
+}
+
 /// Displays a colored "Copy" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
@@ -361,6 +400,7 @@ fn error_config_folder_code() -> i32 {
     consts::ERROR_CONFIG_FOLDER_CODE
 }
 
+#[cfg(not(feature = "copy"))]
 #[inline(always)]
 fn error_copy_file_folder() -> i32 {
     consts::ERROR_COPY_FILE_FOLDER
@@ -475,7 +515,7 @@ pub fn help_code() -> i32 {
 
 #[inline(always)]
 pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
-    splitjoin::join(folderpath, consts::BUFFER_SIZE)
+    join::join(folderpath, consts::BUFFER_SIZE)
 }
 
 /// Displays a colored "Loading" and the file path
@@ -528,7 +568,7 @@ fn one_item(folder: &str) {
 
 #[inline(always)]
 fn parse_int_error() -> i32 {
-    consts::PARSE_INT_ERROR
+    consts::ERROR_PARSE_INT
 }
 
 /// Displays a colored "Remove" and the file path
@@ -572,7 +612,7 @@ pub fn simulate_folder(config: &str) -> Result<(), SyncError> {
 
 #[inline(always)]
 pub fn split(size_bytes: &str, filepath: &str) -> Result<(), SyncError> {
-    splitjoin::split(size_bytes, filepath, consts::BUFFER_SIZE)
+    split::split(size_bytes, filepath, consts::BUFFER_SIZE)
 }
 
 #[inline(always)]
@@ -609,6 +649,11 @@ fn sync_msg_simulation(file: &str) {
 #[inline(always)]
 fn update_msg(file: &str) {
     cli::update_msg(file);
+}
+
+#[inline(always)]
+fn try_from_int_error() -> i32 {
+    consts::ERROR_TRY_FROM_INT
 }
 
 /// Displays a colored "(SIMULATION) Update" and the file path

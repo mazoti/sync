@@ -54,6 +54,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "files or folders are different",                // ERROR_DIFF_FILE_FOLDER
     "file size must be positive",                    // ERROR_FILE_SIZE
     "Input or output error",                         // ERROR_IO
+    "cannot convert number to integer",              // ERROR_PARSE_INT
     "cannot parse line from config file",            // ERROR_PARSE_LINE
     "source and destination are the same",           // ERROR_SAME_FILE_FOLDER
     "source file not found",                         // ERROR_SOURCE_FILE
@@ -61,7 +62,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "file does not need to split",                   // ERROR_SPLIT_SIZE
     "system time error",                             // ERROR_SYSTEM_TIME
     "cannot join thread",                            // ERROR_THREAD_JOIN
-    "cannot convert number to integer",              // PARSE_INT_ERROR
+    "cannot convert number to usize",                // ERROR_TRY_FROM_INT
 ];
 
 pub const COMMAND_MSGS: &[&str] = &[

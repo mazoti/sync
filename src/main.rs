@@ -9,6 +9,22 @@ const CHECK_SORTED: &[&str] = &[
 ];
 
 #[cfg(feature = "cli")]
+const DUPLICATE_SORTED: &[&str] = &[
+    "--DUPLICATE",
+    "--duplicate",
+    "-D",
+    "-DUPLICATE",
+    "-d",
+    "-duplicate",
+    "/D",
+    "/DUPLICATE",
+    "/d",
+    "/duplicate",
+    "DUPLICATE",
+    "duplicate",
+];
+
+#[cfg(feature = "cli")]
 const EMPTY_SORTED: &[&str] = &[
     "--EMPTY", "--empty", "-E", "-EMPTY", "-e", "-empty", "/E", "/EMPTY", "/e", "/empty", "EMPTY",
     "empty",
@@ -17,6 +33,10 @@ const EMPTY_SORTED: &[&str] = &[
 const FORCE_SORTED: &[&str] = &[
     "--FORCE", "--force", "-F", "-FORCE", "-f", "-force", "/F", "/FORCE", "/f", "/force", "FORCE",
     "force",
+];
+
+const HASH_SORTED: &[&str] = &[
+    "--HASH", "--hash", "-HASH", "-hash", "/HASH", "/hash", "HASH", "hash",
 ];
 
 #[cfg(feature = "cli")]
@@ -148,6 +168,15 @@ fn four_arguments(_start: &std::time::Instant) {
     );
 
     execute_file(
+        HASH_SORTED,
+        command.as_str(),
+        &source_folder,
+        &dest_folder,
+        _start,
+        processor::hash_folder,
+    );
+
+    execute_file(
         MOVE_SORTED,
         command.as_str(),
         &source_folder,
@@ -201,13 +230,23 @@ fn three_arguments(_start: &std::time::Instant) {
     );
 
     #[cfg(feature = "cli")]
-    execute_folder(
-        EMPTY_SORTED,
-        source.as_str(),
-        &destination,
-        _start,
-        processor::empty,
-    );
+    {
+        execute_folder(
+            DUPLICATE_SORTED,
+            source.as_str(),
+            &destination,
+            _start,
+            processor::duplicate,
+        );
+
+        execute_folder(
+            EMPTY_SORTED,
+            source.as_str(),
+            &destination,
+            _start,
+            processor::empty,
+        );
+    }
 
     execute_folder(
         FORCE_SORTED,
@@ -215,6 +254,15 @@ fn three_arguments(_start: &std::time::Instant) {
         &destination,
         _start,
         processor::force_file,
+    );
+
+    #[cfg(feature = "cli")]
+    execute_folder(
+        HASH_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::hash_file,
     );
 
     execute_folder(

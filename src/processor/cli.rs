@@ -27,6 +27,17 @@ pub fn create_msg(folder: &str) {
     );
 }
 
+#[inline(always)]
+pub fn duplicate_msg(file: &str) {
+    message(
+        &mut StandardStream::stdout(ColorChoice::Always),
+        Color::Yellow,
+        crate::processor::command_msgs(15),
+        file,
+        true,
+    );
+}
+
 /// Displays a colored "Empty" and the file or folder path
 #[inline(always)]
 pub fn empty_msg(file_folder: &str) {

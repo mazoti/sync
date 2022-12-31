@@ -6,13 +6,16 @@ use crate::processor::SyncError;
 #[cfg(feature = "cli")]
 #[inline(always)]
 pub fn error_to_string(code: i32) -> Option<String> {
-    if (code < 0) || (code as usize) >= (crate::processor::error_msgs().len()) {
-        return None;
+    let code_usize: Result<usize, std::num::TryFromIntError> = code.try_into();
+    match code_usize {
+        Ok(i) => {
+            if i < crate::processor::error_msgs().len() {
+                return Some(String::from(crate::processor::error_msgs()[i]));
+            }
+            None
+        }
+        Err(_) => None,
     }
-
-    Some(String::from(
-        crate::processor::error_msgs()[(code as usize)],
-    ))
 }
 
 /// Returns a String given an error code

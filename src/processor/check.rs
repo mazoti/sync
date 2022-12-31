@@ -60,8 +60,6 @@ pub fn check(
         // Check for empty folder
         if std::fs::read_dir(source)?.next().is_none() {
             if std::fs::read_dir(destination)?.next().is_none() {
-                #[cfg(feature = "cli")]
-                crate::processor::ok_msg(destination);
                 return Ok(());
             }
             return Err(crate::processor::SyncError {
@@ -131,10 +129,6 @@ pub fn check(
                 break;
             }
         }
-
-        #[cfg(feature = "cli")]
-        crate::processor::ok_msg(destination);
-
         Ok(())
     }
 

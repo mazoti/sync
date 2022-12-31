@@ -34,7 +34,13 @@ mod cli;
 mod copy;
 
 mod consts;
+
+#[cfg(feature = "cli")]
+mod duplicate;
+
 mod error;
+
+mod hash;
 
 #[cfg(feature = "cli")]
 mod i18n;
@@ -55,6 +61,11 @@ pub struct SyncError {
     pub line: u32,
     pub source: Option<String>,
     pub destination: Option<String>,
+}
+
+#[inline(always)]
+fn adler32(file: &str) -> Result<u32, SyncError> {
+    hash::adler32(file, consts::BUFFER_SIZE)
 }
 
 /// Creates a config file or appends source full path + "|" + destination full path
@@ -290,6 +301,14 @@ fn datetime() -> String {
 /// Compares every folder, file and byte
 #[inline(always)]
 pub fn check(source: &str, destination: &str) -> Result<(), SyncError> {
+    #[cfg(feature = "cli")]
+    {
+        check::check(source, destination, consts::BUFFER_SIZE)?;
+        crate::processor::ok_msg(destination);
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cli"))]
     check::check(source, destination, consts::BUFFER_SIZE)
 }
 
@@ -307,6 +326,11 @@ pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
 #[inline(always)]
 pub fn command_msgs(code: usize) -> &'static str {
     i18n::command_msgs(code)
+}
+
+#[inline(always)]
+fn compare(source: &str, destination: &str) -> Result<(), SyncError> {
+    check::check(source, destination, consts::BUFFER_SIZE)
 }
 
 pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
@@ -370,6 +394,21 @@ fn create_msg(folder: &str) {
 #[inline(always)]
 fn create_msg_simulation(folder: &str) {
     cli::create_msg_simulation(folder);
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn duplicate(folder: &str) -> Result<(), SyncError> {
+    duplicate::duplicate(folder)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn duplicate_msgs(files: Vec<&str>) {
+    for file in files {
+        cli::duplicate_msg(file);
+    }
+    println!("");
 }
 
 #[cfg(feature = "cli")]
@@ -498,6 +537,17 @@ pub fn force_file(file_path: &str) -> Result<(), SyncError> {
 #[inline(always)]
 pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
     process_folder(sync::force, folder_path)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn hash_file(path: &str) -> Result<(), SyncError> {
+    hash::hash_file(path)
+}
+
+#[inline(always)]
+pub fn hash_folder(source: &str, destination: &str) -> Result<(), SyncError> {
+    hash::hash_folder(source, destination)
 }
 
 /// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code

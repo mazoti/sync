@@ -81,4 +81,5 @@ pub const COMMAND_MSGS: &[&str] = &[
     "(SIMULATION)",
     "(EMPTY)",
     "(ONE ITEM)",
+    "DUPLICATED",
 ];

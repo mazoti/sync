@@ -54,6 +54,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "files or folders are different",                // ERROR_DIFF_FILE_FOLDER
     "file size must be positive",                    // ERROR_FILE_SIZE
     "Input or output error",                         // ERROR_IO
+    "Operating system string error",                 // ERROR_OSSTRING
     "cannot convert number to integer",              // ERROR_PARSE_INT
     "cannot parse line from config file",            // ERROR_PARSE_LINE
     "source and destination are the same",           // ERROR_SAME_FILE_FOLDER

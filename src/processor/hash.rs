@@ -1,5 +1,7 @@
+#[cfg(feature = "cli")]
 use std::io::Read;
 
+#[cfg(feature = "cli")]
 pub fn adler32(file: &str, buffer_size: u64) -> Result<u32, crate::processor::SyncError> {
     let buffer_usize: usize = buffer_size.try_into()?;
     let mut buffer = vec![0; buffer_usize];
@@ -114,7 +116,7 @@ pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::process
 
             if !std::fs::metadata(&fullpath)?.is_dir() {
                 let hash_str = sha256_hash(&fullpath)?;
-                crate::processor::create(&fullpath, &hash_str, &destination_file)?;
+                crate::processor::create(&fullpath, &hash_str, destination_file)?;
                 continue;
             }
 

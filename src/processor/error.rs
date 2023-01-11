@@ -105,3 +105,15 @@ impl From<std::num::TryFromIntError> for SyncError {
         }
     }
 }
+
+impl From<std::ffi::OsString> for SyncError {
+    fn from(_error: std::ffi::OsString) -> Self {
+        SyncError {
+            code: crate::processor::os_string_error(),
+            file: file!(),
+            line: line!(),
+            source: None,
+            destination: None,
+        }
+    }
+}

@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "sync"
-version = "1.1.9"
+version = "1.2.2"
 dependencies = [
  "chrono",
  "sha256",

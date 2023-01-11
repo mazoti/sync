@@ -1,4 +1,6 @@
-//! Splits a file in n files of x bytes or
+//! Splits a file in n files of x bytes.
+//! Files will be generated starting with ".0" extension:
+//! file.data.0, file.data.1...
 
 use std::io::{Read, Write};
 
@@ -23,7 +25,7 @@ pub fn split(
 
     let size = size_bytes.parse::<usize>()?;
 
-    #[inline(always)]
+    #[inline]
     fn create_file(
         filepath: &str,
         count: usize,
@@ -58,6 +60,7 @@ pub fn split(
 
     let metadata_file = std::fs::metadata(filepath)?;
 
+    // Input must be a file
     if !metadata_file.is_file() {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
@@ -68,6 +71,7 @@ pub fn split(
         });
     }
 
+    // File cannot be empty
     if metadata_file.len() < 1 {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
@@ -78,6 +82,7 @@ pub fn split(
         });
     }
 
+    // File fits on split size
     if metadata_file.len() <= size_bytes.parse::<u64>()? {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_split_size(),
@@ -101,6 +106,8 @@ pub fn split(
 
             for _ in 0..blocks_files {
                 bytes_read = split_file.read(&mut buffer)?;
+
+                // Last file
                 if bytes_read < buffer_usize {
                     buffer.truncate(bytes_read);
                     destination_file.write_all(&buffer)?;

@@ -82,7 +82,7 @@ pub fn help() -> i32 {
         crate::processor::msg_help(),
         true,
     );
-    crate::processor::no_error()
+    crate::processor::help_code()
 }
 
 /// Displays a colored "Loading" and the file path

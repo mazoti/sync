@@ -3,10 +3,19 @@
 /// Displays what a sync operation would do without any modification
 #[cfg(feature = "cli")]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-    fn copy_folder_simulation(source: &str) -> Result<(), crate::processor::SyncError> {
-        for path in std::fs::read_dir(source)? {
-            let fullpath = path?.path().display().to_string();
+    let fullpath_source: String;
+    let fullpath_destination: String;
+    let fullpath_source_copy: String;
+    let fullpath_destination_copy: String;
 
+    let handle: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
+    let update_result: Result<(), crate::processor::SyncError>;
+
+    fn copy_folder_simulation(source: &str) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath: String;
+
+        for path in std::fs::read_dir(source)? {
+            fullpath = path?.path().display().to_string();
             if !std::fs::metadata(&fullpath)?.is_dir() {
                 crate::processor::copy_msg_simulation(&fullpath);
                 continue;
@@ -34,10 +43,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         source: &str,
         destination: &str,
     ) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath_source: String;
+        let mut fullpath_destination: String;
+        let mut file_folder: std::io::Result<std::fs::Metadata>;
+
         for path in std::fs::read_dir(source)? {
-            let fullpath_source = path?.path().display().to_string();
-            let fullpath_destination = fullpath_source.replace(source, destination);
-            let file_folder = std::fs::metadata(&fullpath_destination);
+            fullpath_source = path?.path().display().to_string();
+            fullpath_destination = fullpath_source.replace(source, destination);
+            file_folder = std::fs::metadata(&fullpath_destination);
 
             if !std::fs::metadata(&fullpath_source)?.is_dir() {
                 match file_folder {
@@ -66,10 +79,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         source: &str,
         destination: &str,
     ) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath_destination: String;
+        let mut fullpath_source: String;
+        let mut not_found: bool;
+
         for path in std::fs::read_dir(destination)? {
-            let fullpath_destination = path?.path().display().to_string();
-            let fullpath_source = fullpath_destination.replace(destination, source);
-            let not_found = !std::path::Path::new(&fullpath_source).exists();
+            fullpath_destination = path?.path().display().to_string();
+            fullpath_source = fullpath_destination.replace(destination, source);
+            not_found = !std::path::Path::new(&fullpath_source).exists();
 
             // File not found in source, remove in destination
             if !std::fs::metadata(&fullpath_destination)?.is_dir() {
@@ -109,42 +126,38 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         });
     }
 
-    let fullpath_source = std::fs::canonicalize(source)?
+    fullpath_source = std::fs::canonicalize(source)?
         .into_os_string()
-        .into_string()
-        .unwrap();
+        .into_string()?;
 
     if std::path::Path::new(&source).is_dir() {
         if !std::path::Path::new(&destination).exists() {
             crate::processor::create_msg_simulation(destination);
 
-            let fullpath_destination = std::fs::canonicalize(source)?
+            fullpath_destination = std::fs::canonicalize(source)?
                 .into_os_string()
-                .into_string()
-                .unwrap();
+                .into_string()?;
 
             crate::processor::copy_msg_simulation(&fullpath_destination);
             return copy_folder_simulation(&fullpath_source);
         }
 
         if std::path::Path::new(&destination).is_dir() {
-            let fullpath_destination = std::fs::canonicalize(destination)?
+            fullpath_destination = std::fs::canonicalize(destination)?
                 .into_os_string()
-                .into_string()
-                .unwrap();
+                .into_string()?;
 
             crate::processor::sync_msg_simulation(&fullpath_destination);
 
-            let fullpath_source_copy = String::from(&fullpath_source);
-            let fullpath_destination_copy = String::from(&fullpath_destination);
+            fullpath_source_copy = String::from(&fullpath_source);
+            fullpath_destination_copy = String::from(&fullpath_destination);
 
             // Remove files and folders in another thread
-            let handle = std::thread::spawn(move || -> Result<(), crate::processor::SyncError> {
+            handle = std::thread::spawn(move || -> Result<(), crate::processor::SyncError> {
                 remove_simulation(&fullpath_source, &fullpath_destination)
             });
 
-            let update_result =
-                update_simulation(&fullpath_source_copy, &fullpath_destination_copy);
+            update_result = update_simulation(&fullpath_source_copy, &fullpath_destination_copy);
 
             match handle.join() {
                 Err(_) => {
@@ -194,6 +207,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 
 /// Synchronizes source to destination without read or create a config file
 pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    let fullpath_source: String;
+    let fullpath_destination: String;
+    let fullpath_source_copy: String;
+    let fullpath_destination_copy: String;
+
+    let handle: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
+    let update_result: Result<(), crate::processor::SyncError>;
+
     /// Copy a file from source to destination, displays a message and checks for errors
     fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
         #[cfg(feature = "cli")]
@@ -204,13 +225,15 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
     /// Copy source folder to destination and all it's contents recursively
     fn copy_folder(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath: String;
+        let mut fullpath_destination: String;
+
         for path in std::fs::read_dir(source)? {
-            let fullpath = path?.path().display().to_string();
-            let fullpath_destination = fullpath.replace(source, destination);
+            fullpath = path?.path().display().to_string();
+            fullpath_destination = fullpath.replace(source, destination);
 
             // Copy file or symlink
-            let metadata_source = std::fs::metadata(&fullpath)?;
-            if !metadata_source.is_dir() {
+            if !std::fs::metadata(&fullpath)?.is_dir() {
                 copy_file(&fullpath, &fullpath_destination)?;
                 continue;
             }
@@ -233,9 +256,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
     /// Replaces the destination file if its different from source
     fn update_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        let metadata_source = std::fs::metadata(source)?;
-
-        if metadata_source.modified()? == std::fs::metadata(destination)?.modified()? {
+        if std::fs::metadata(source)?.modified()? == std::fs::metadata(destination)?.modified()? {
             return Ok(());
         }
 
@@ -259,10 +280,14 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     /// Iterates over source folder adding and updating files and folders in destination
     /// and removes files and folders from destination not found in source
     fn update(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath_source: String;
+        let mut fullpath_destination: String;
+        let mut file_folder: std::io::Result<std::fs::Metadata>;
+
         for path in std::fs::read_dir(source)? {
-            let fullpath_source = path?.path().display().to_string();
-            let fullpath_destination = fullpath_source.replace(source, destination);
-            let file_folder = std::fs::metadata(&fullpath_destination);
+            fullpath_source = path?.path().display().to_string();
+            fullpath_destination = fullpath_source.replace(source, destination);
+            file_folder = std::fs::metadata(&fullpath_destination);
 
             if !std::fs::metadata(&fullpath_source)?.is_dir() {
                 match file_folder {
@@ -286,10 +311,14 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
     /// Iterate over destination folder and remove files and folders that doesn't exists in source
     fn remove(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath_destination: String;
+        let mut fullpath_source: String;
+        let mut not_found: bool;
+
         for path in std::fs::read_dir(destination)? {
-            let fullpath_destination = path?.path().display().to_string();
-            let fullpath_source = fullpath_destination.replace(destination, source);
-            let not_found = !std::path::Path::new(&fullpath_source).exists();
+            fullpath_destination = path?.path().display().to_string();
+            fullpath_source = fullpath_destination.replace(destination, source);
+            not_found = !std::path::Path::new(&fullpath_source).exists();
 
             // File not found in source, remove in destination
             if !std::fs::metadata(&fullpath_destination)?.is_dir() {
@@ -330,40 +359,37 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         });
     }
 
-    let fullpath_source = std::fs::canonicalize(source)?
+    fullpath_source = std::fs::canonicalize(source)?
         .into_os_string()
-        .into_string()
-        .unwrap();
+        .into_string()?;
 
     if std::path::Path::new(&source).is_dir() {
         if !std::path::Path::new(&destination).exists() {
             create_folder(destination)?;
-            let fullpath_destination = std::fs::canonicalize(destination)?
+            fullpath_destination = std::fs::canonicalize(destination)?
                 .into_os_string()
-                .into_string()
-                .unwrap();
+                .into_string()?;
             return copy_folder(&fullpath_source, &fullpath_destination);
         }
 
         if std::path::Path::new(&destination).is_dir() {
             // Remove files and folders first to free disk space, add and update files and folders
-            let fullpath_destination = std::fs::canonicalize(destination)?
+            fullpath_destination = std::fs::canonicalize(destination)?
                 .into_os_string()
-                .into_string()
-                .unwrap();
+                .into_string()?;
 
             #[cfg(feature = "cli")]
             crate::processor::sync_msg(&fullpath_destination);
 
-            let fullpath_source_copy = String::from(&fullpath_source);
-            let fullpath_destination_copy = String::from(&fullpath_destination);
+            fullpath_source_copy = String::from(&fullpath_source);
+            fullpath_destination_copy = String::from(&fullpath_destination);
 
             // Remove files and folders in another thread
-            let handle = std::thread::spawn(move || -> Result<(), crate::processor::SyncError> {
+            handle = std::thread::spawn(move || -> Result<(), crate::processor::SyncError> {
                 remove(&fullpath_source, &fullpath_destination)
             });
 
-            let update_result = update(&fullpath_source_copy, &fullpath_destination_copy);
+            update_result = update(&fullpath_source_copy, &fullpath_destination_copy);
 
             match handle.join() {
                 Err(_) => {

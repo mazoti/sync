@@ -2,7 +2,7 @@
 
 use std::io::{Read, Write};
 
-// Joins all ".n" files of the folderpath
+// Joins all ".n" files of the folder path
 pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::SyncError> {
     let mut tmp: String;
     let mut read_bytes: usize;

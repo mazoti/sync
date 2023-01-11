@@ -53,8 +53,10 @@ mod sync;
 mod validate;
 
 /// Error class with the message and code defined in consts.rs.
-/// "code" is the number returned to operating system, "message" is the error displayed in stderr,
-/// "file" is the source code file and "line" is the line number of the error
+/// "code" is the number returned to operating system,
+/// "file" is the source code file,
+/// "line" is the line number of the error,
+/// "source" and "destination" are the files processed by the system
 pub struct SyncError {
     pub code: i32,
     pub file: &'static str,
@@ -63,13 +65,81 @@ pub struct SyncError {
     pub destination: Option<String>,
 }
 
-#[inline(always)]
-fn adler32(file: &str) -> Result<u32, SyncError> {
-    hash::adler32(file, consts::BUFFER_SIZE)
+// ============== Public methods in ascending order ==============
+
+/// Compares every folder, file and byte
+#[inline]
+pub fn check(source: &str, destination: &str) -> Result<(), SyncError> {
+    #[cfg(feature = "cli")]
+    {
+        check::check(source, destination, consts::CHECK_BUFFER_SIZE)?;
+        crate::processor::ok_msg(destination);
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cli"))]
+    check::check(source, destination, consts::CHECK_BUFFER_SIZE)
 }
 
-/// Creates a config file or appends source full path + "|" + destination full path
+/// Compares every byte of two files from config to check if they are the same
+#[inline(always)]
+pub fn check_file(file_path: &str) -> Result<(), SyncError> {
+    process_file(check, file_path)
+}
+
+/// Compares every file and every byte of two folders from config to check if they are the same
+#[inline(always)]
+pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
+    process_folder(check, folder_path)
+}
+
+/// Displays a colored command word or words like "Creating", "Sync", "(ONE ITEM)"
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn command_msgs(code: usize) -> &'static str {
+    i18n::command_msgs(code)
+}
+
+/// Copy a file from source to destination using a system function or copy module
+pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
+    #[cfg(feature = "copy")]
+    {
+        copy::copy(source, destination, consts::COPY_BUFFER_SIZE)?;
+        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+        file_source.set_len(file_source.metadata()?.len())?;
+        file_destination.set_len(file_destination.metadata()?.len())?;
+        Ok(())
+    }
+
+    #[cfg(not(feature = "copy"))]
+    {
+        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
+            // Make the modified date the same in source and destination (Unix and Linux only)
+            #[cfg(not(windows))]
+            {
+                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+                file_source.set_len(file_source.metadata()?.len())?;
+                file_destination.set_len(file_destination.metadata()?.len())?;
+            }
+            return Ok(());
+        }
+
+        Err(crate::processor::SyncError {
+            code: crate::processor::error_copy_file_folder(),
+            file: file!(),
+            line: line!(),
+            source: Some(source.to_string()),
+            destination: Some(destination.to_string()),
+        })
+    }
+}
+
+/// Creates a config file or appends full source full + "|" + full destination path
 pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncError> {
+    let mut file: std::fs::File;
+
     if !Path::new(&source).exists() {
         return Err(SyncError {
             code: error_source_folder(),
@@ -134,18 +204,21 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
 
     // Config file does not exist, create and add source|destination full paths
     if !Path::new(&config).is_file() {
-        let mut file = std::fs::OpenOptions::new()
-            .write(true)
-            .append(true)
-            .create(true)
-            .open(config)?;
-        writeln!(file, "{}|{}", &source, &destination)?;
-        return Ok(());
+        return Ok(writeln!(
+            std::fs::OpenOptions::new()
+                .write(true)
+                .append(true)
+                .create(true)
+                .open(config)?,
+            "{}|{}",
+            &source,
+            &destination
+        )?);
     }
 
     // Config file exists, look on each line for source|destination full paths
     // If it doesn't find it, append to the end of the file
-    let mut file = std::fs::OpenOptions::new()
+    file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
         .open(config)?;
@@ -186,186 +259,169 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
     }
 
     // source|destination not found, append in config file
-    writeln!(file, "{}|{}", &source, &destination)?;
-    Ok(())
+    Ok(writeln!(file, "{}|{}", &source, &destination)?)
 }
 
-/// Process all sources to destinations found in the config file
-fn process_file(
-    process_function: fn(&str, &str) -> Result<(), SyncError>,
-    config: &str,
-) -> Result<(), SyncError> {
-    #[cfg(feature = "cli")]
-    loading_msg(config);
-
-    // Parse source and destination paths from config file
-    for line in BufReader::new(std::fs::File::open(config)?).lines() {
-        let data = line?;
-        let path: Vec<&str> = data.split('|').collect();
-        if path.len() != 2 {
-            return Err(SyncError {
-                code: error_parse_line(),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-
-        process_function(path[0], path[1])?;
-    }
-
-    Ok(())
+/// Displays all duplicated files found in the folder
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn duplicate(folder: &str) -> Result<(), SyncError> {
+    duplicate::duplicate(folder)
 }
 
-/// Process all config files found in folder asynchronously
-fn process_folder(
-    process_function: fn(&str, &str) -> Result<(), SyncError>,
-    folder: &str,
-) -> Result<(), SyncError> {
-    let mut thread_pool = Vec::new();
-    let mut exit_code = 0i32;
-
-    #[cfg(feature = "cli")]
-    let mut display_help = true;
-
-    for path in std::fs::read_dir(folder)? {
-        let fullpath = path?.path().display().to_string();
-        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
-            #[cfg(feature = "cli")]
-            {
-                display_help = false;
-            }
-
-            let handle = std::thread::spawn(move || -> i32 {
-                if let Err(err) = process_file(process_function, &fullpath) {
-                    return err.code;
-                }
-                no_error()
-            });
-
-            thread_pool.push(handle);
-        }
+/// Displays the duplicate command message with all duplicate file paths
+#[cfg(feature = "cli")]
+#[inline]
+pub fn duplicate_msgs(files: Vec<&str>) {
+    for file in files {
+        cli::duplicate_msg(file);
     }
+    println!();
+}
 
-    for handle in thread_pool {
-        match handle.join() {
-            Err(_) => {
-                return Err(SyncError {
-                    code: error_thread_join(),
-                    file: file!(),
-                    line: line!(),
-                    source: None,
-                    destination: None,
-                });
-            }
-            Ok(value) => {
-                if value != 0 {
-                    exit_code = value;
-                    #[cfg(feature = "cli")]
-                    error_msg(error_msgs()[value as usize], 0, true);
-                }
-            }
-        }
-    }
+/// Displays all empty files, empty folders and folders with only one item
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn empty(folder: &str) -> Result<(), SyncError> {
+    validate::empty(folder)
+}
 
-    if exit_code == 0 {
-        #[cfg(feature = "cli")]
-        if display_help {
-            return Err(SyncError {
-                code: help(),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-        return Ok(());
-    }
+/// Displays a colored "ERROR", an error message in stderr and exit with the error code.
+/// If user_input is "true", waits an "enter" from user keyboard
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
+    cli::error_msg(msg, code, user_input)
+}
 
-    Err(SyncError {
-        code: exit_code,
-        file: file!(),
-        line: line!(),
-        source: None,
-        destination: None,
-    })
+#[inline(always)]
+pub fn force(source: &str, destination: &str) -> Result<(), SyncError> {
+    sync::force(source, destination)
+}
+
+#[inline(always)]
+pub fn force_file(file_path: &str) -> Result<(), SyncError> {
+    process_file(sync::force, file_path)
+}
+
+#[inline(always)]
+pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
+    process_folder(sync::force, folder_path)
+}
+
+#[inline(always)]
+pub fn hash_file(path: &str) -> Result<(), SyncError> {
+    hash::hash_file(path)
+}
+
+#[inline(always)]
+pub fn hash_folder(source: &str, destination: &str) -> Result<(), SyncError> {
+    hash::hash_folder(source, destination)
+}
+
+/// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn help() -> i32 {
+    cli::help()
 }
 
 #[cfg(feature = "cli")]
 #[inline(always)]
-fn datetime() -> String {
-    chrono::Local::now().format("%Y-%m-%d %T").to_string()
+pub fn help_code() -> i32 {
+    consts::HELP
 }
 
-/// Compares every folder, file and byte
 #[inline(always)]
-pub fn check(source: &str, destination: &str) -> Result<(), SyncError> {
-    #[cfg(feature = "cli")]
-    {
-        check::check(source, destination, consts::BUFFER_SIZE)?;
-        crate::processor::ok_msg(destination);
-        Ok(())
+pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
+    join::join(folderpath, consts::JOIN_BUFFER_SIZE)
+}
+
+pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
+    sync(source, destination)?;
+    check(source, destination)?;
+
+    if std::fs::metadata(source)?.is_file() {
+        std::fs::remove_file(source)?;
+    } else {
+        std::fs::remove_dir_all(source)?;
     }
 
-    #[cfg(not(feature = "cli"))]
-    check::check(source, destination, consts::BUFFER_SIZE)
+    #[cfg(feature = "cli")]
+    crate::processor::remove_msg(source);
+
+    Ok(())
 }
 
 #[inline(always)]
-pub fn check_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(check, file_path)
+pub fn no_error() -> i32 {
+    consts::NO_ERROR
 }
 
+/// Displays the program name, version, URL and date/time (optional)
+#[cfg(feature = "cli")]
 #[inline(always)]
-pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(check, folder_path)
+pub fn show_header(datetime: bool) {
+    cli::show_header(datetime)
 }
 
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn command_msgs(code: usize) -> &'static str {
-    i18n::command_msgs(code)
+pub fn simulate(source: &str, destination: &str) -> Result<(), SyncError> {
+    sync::simulate(source, destination)
 }
 
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn simulate_file(file_path: &str) -> Result<(), SyncError> {
+    process_file(sync::simulate, file_path)
+}
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn simulate_folder(config: &str) -> Result<(), SyncError> {
+    process_folder(sync::simulate, config)
+}
+
+#[inline(always)]
+pub fn split(size_bytes: &str, filepath: &str) -> Result<(), SyncError> {
+    split::split(size_bytes, filepath, consts::SPLIT_BUFFER_SIZE)
+}
+
+#[inline(always)]
+pub fn sync(source: &str, destination: &str) -> Result<(), SyncError> {
+    sync::sync(source, destination)
+}
+
+#[inline(always)]
+pub fn sync_file(config: &str) -> Result<(), SyncError> {
+    process_file(sync::sync, config)
+}
+
+#[inline(always)]
+pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
+    process_folder(sync::sync, folder_path)
+}
+
+/// Displays a colored "Warning", the file path and a message in stdout
+#[cfg(feature = "cli")]
+#[inline(always)]
+pub fn warning_msg(file: &str) {
+    cli::warning_msg(file);
+}
+
+// ============== Private methods in ascending order ==============
+
+#[cfg(feature = "cli")]
+#[inline(always)]
+fn adler32(file: &str) -> Result<u32, SyncError> {
+    hash::adler32(file, consts::HASH_BUFFER_SIZE)
+}
+
+#[cfg(feature = "cli")]
 #[inline(always)]
 fn compare(source: &str, destination: &str) -> Result<(), SyncError> {
-    check::check(source, destination, consts::BUFFER_SIZE)
-}
-
-pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
-    #[cfg(feature = "copy")]
-    {
-        copy::copy(source, destination, consts::BUFFER_SIZE)?;
-        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-        file_source.set_len(file_source.metadata()?.len())?;
-        file_destination.set_len(file_destination.metadata()?.len())?;
-        Ok(())
-    }
-
-    #[cfg(not(feature = "copy"))]
-    {
-        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
-            // Make the modified date the same in source and destination (Unix and Linux only)
-            #[cfg(not(windows))]
-            {
-                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-                file_source.set_len(file_source.metadata()?.len())?;
-                file_destination.set_len(file_destination.metadata()?.len())?;
-            }
-            return Ok(());
-        }
-
-        Err(crate::processor::SyncError {
-            code: crate::processor::error_copy_file_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        })
-    }
+    check::check(source, destination, consts::HASH_BUFFER_SIZE)
 }
 
 /// Displays a colored "Copy" and the file path
@@ -398,23 +454,8 @@ fn create_msg_simulation(folder: &str) {
 
 #[cfg(feature = "cli")]
 #[inline(always)]
-pub fn duplicate(folder: &str) -> Result<(), SyncError> {
-    duplicate::duplicate(folder)
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn duplicate_msgs(files: Vec<&str>) {
-    for file in files {
-        cli::duplicate_msg(file);
-    }
-    println!("");
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn empty(folder: &str) -> Result<(), SyncError> {
-    validate::empty(folder)
+fn datetime() -> String {
+    chrono::Local::now().format("%Y-%m-%d %T").to_string()
 }
 
 /// Displays a colored "Empty", the file path and a message in stdout
@@ -475,14 +516,6 @@ fn error_io() -> i32 {
     consts::ERROR_IO
 }
 
-/// Displays a colored "ERROR", an error message in stderr and exit with the error code.
-/// If user_input is "true", waits an "enter" from user keyboard
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
-    cli::error_msg(msg, code, user_input)
-}
-
 #[cfg(feature = "cli")]
 #[inline(always)]
 fn error_msgs() -> &'static [&'static str] {
@@ -524,50 +557,6 @@ fn error_thread_join() -> i32 {
     consts::ERROR_THREAD_JOIN
 }
 
-#[inline(always)]
-pub fn force(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync::force(source, destination)
-}
-
-#[inline(always)]
-pub fn force_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(sync::force, file_path)
-}
-
-#[inline(always)]
-pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(sync::force, folder_path)
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn hash_file(path: &str) -> Result<(), SyncError> {
-    hash::hash_file(path)
-}
-
-#[inline(always)]
-pub fn hash_folder(source: &str, destination: &str) -> Result<(), SyncError> {
-    hash::hash_folder(source, destination)
-}
-
-/// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn help() -> i32 {
-    cli::help()
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn help_code() -> i32 {
-    consts::HELP
-}
-
-#[inline(always)]
-pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
-    join::join(folderpath, consts::BUFFER_SIZE)
-}
-
 /// Displays a colored "Loading" and the file path
 #[cfg(feature = "cli")]
 #[inline(always)]
@@ -575,31 +564,10 @@ fn loading_msg(file: &str) {
     cli::loading_msg(file);
 }
 
-pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync(source, destination)?;
-    check(source, destination)?;
-
-    if std::fs::metadata(source)?.is_file() {
-        std::fs::remove_file(source)?;
-    } else {
-        std::fs::remove_dir_all(source)?;
-    }
-
-    #[cfg(feature = "cli")]
-    crate::processor::remove_msg(source);
-
-    Ok(())
-}
-
 #[cfg(feature = "cli")]
 #[inline(always)]
 fn msg_help() -> &'static str {
     i18n::msg_help()
-}
-
-#[inline(always)]
-pub fn no_error() -> i32 {
-    consts::NO_ERROR
 }
 
 /// Displays a colored "Remove" and the file path
@@ -617,8 +585,118 @@ fn one_item(folder: &str) {
 }
 
 #[inline(always)]
+fn os_string_error() -> i32 {
+    consts::ERROR_OSSTRING
+}
+
+#[inline(always)]
 fn parse_int_error() -> i32 {
     consts::ERROR_PARSE_INT
+}
+
+/// Process all sources to destinations found in the config file
+fn process_file(
+    process_function: fn(&str, &str) -> Result<(), SyncError>,
+    config: &str,
+) -> Result<(), SyncError> {
+    #[cfg(feature = "cli")]
+    loading_msg(config);
+
+    // Parse source and destination paths from config file
+    for line in BufReader::new(std::fs::File::open(config)?).lines() {
+        let data = line?;
+        let path: Vec<&str> = data.split('|').collect();
+        if path.len() != 2 {
+            return Err(SyncError {
+                code: error_parse_line(),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
+        }
+
+        process_function(path[0], path[1])?;
+    }
+
+    Ok(())
+}
+
+/// Process all config files found in folder asynchronously
+fn process_folder(
+    process_function: fn(&str, &str) -> Result<(), SyncError>,
+    folder: &str,
+) -> Result<(), SyncError> {
+    let mut fullpath: String;
+    let mut handle: std::thread::JoinHandle<i32>;
+
+    let mut thread_pool = Vec::new();
+    let mut exit_code = 0i32;
+
+    #[cfg(feature = "cli")]
+    let mut display_help = true;
+
+    for path in std::fs::read_dir(folder)? {
+        fullpath = path?.path().display().to_string();
+        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
+            #[cfg(feature = "cli")]
+            {
+                display_help = false;
+            }
+
+            handle = std::thread::spawn(move || -> i32 {
+                if let Err(err) = process_file(process_function, &fullpath) {
+                    return err.code;
+                }
+                no_error()
+            });
+
+            thread_pool.push(handle);
+        }
+    }
+
+    for handle in thread_pool {
+        match handle.join() {
+            Err(_) => {
+                return Err(SyncError {
+                    code: error_thread_join(),
+                    file: file!(),
+                    line: line!(),
+                    source: None,
+                    destination: None,
+                });
+            }
+            Ok(value) => {
+                if value != 0 {
+                    exit_code = value;
+                    #[cfg(feature = "cli")]
+                    error_msg(error_msgs()[value as usize], 0, true);
+                }
+            }
+        }
+    }
+
+    if exit_code == 0 {
+        #[cfg(feature = "cli")]
+        if display_help {
+            return Err(SyncError {
+                code: help(),
+                file: file!(),
+                line: line!(),
+                source: None,
+                destination: None,
+            });
+        }
+        return Ok(());
+    }
+
+    Err(SyncError {
+        code: exit_code,
+        file: file!(),
+        line: line!(),
+        source: None,
+        destination: None,
+    })
 }
 
 /// Displays a colored "Remove" and the file path
@@ -633,51 +711,6 @@ fn remove_msg(file: &str) {
 #[inline(always)]
 fn remove_msg_simulation(file: &str) {
     cli::remove_msg_simulation(file);
-}
-
-/// Displays the program name, version, URL and date/time (optional)
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn show_header(datetime: bool) {
-    cli::show_header(datetime)
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn simulate(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync::simulate(source, destination)
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn simulate_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(sync::simulate, file_path)
-}
-
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn simulate_folder(config: &str) -> Result<(), SyncError> {
-    process_folder(sync::simulate, config)
-}
-
-#[inline(always)]
-pub fn split(size_bytes: &str, filepath: &str) -> Result<(), SyncError> {
-    split::split(size_bytes, filepath, consts::BUFFER_SIZE)
-}
-
-#[inline(always)]
-pub fn sync(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync::sync(source, destination)
-}
-
-#[inline(always)]
-pub fn sync_file(config: &str) -> Result<(), SyncError> {
-    process_file(sync::sync, config)
-}
-
-#[inline(always)]
-pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(sync::sync, folder_path)
 }
 
 /// Displays a colored "Sync" and the file path
@@ -713,12 +746,6 @@ fn update_msg_simulation(file: &str) {
     cli::update_msg_simulation(file);
 }
 
-/// Displays a colored "Warning", the file path and a message in stdout
-#[cfg(feature = "cli")]
-#[inline(always)]
-pub fn warning_msg(file: &str) {
-    cli::warning_msg(file);
-}
 //====================================== Unit Tests ======================================
 #[cfg(test)]
 mod tests {

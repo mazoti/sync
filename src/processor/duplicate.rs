@@ -6,7 +6,7 @@ use std::collections::HashMap as Map;
 
 fn compare_all_files_contents(files: &str) {
     let mut files_vector: Vec<&str> = files.split('?').collect();
-    while files_vector.len() > 0 {
+    while !files_vector.is_empty() {
         let mut duplicated_files: Vec<&str> = Default::default();
 
         if let Some(file) = files_vector.pop() {
@@ -85,10 +85,10 @@ pub fn duplicate(folder: &str) -> Result<(), crate::processor::SyncError> {
         }
     }
 
-    println!("");
+    println!();
 
-    for (_, value) in &size_filepath {
-        let file_count = value.matches("?").count();
+    for value in size_filepath.values() {
+        let file_count = value.matches('?').count();
 
         // 2 files, compare without hashing
         if file_count == 1 {
@@ -122,7 +122,7 @@ pub fn duplicate(folder: &str) -> Result<(), crate::processor::SyncError> {
 
     // Same size and same hash, very high probability to be the same file
     // Compare every byte
-    for (_, value) in &adler32_filepath {
+    for value in adler32_filepath.values() {
         compare_all_files_contents(value);
     }
 

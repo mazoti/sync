@@ -147,7 +147,20 @@ fn four_arguments(_start: &std::time::Instant) {
     let dest_folder = std::env::args().nth(3).unwrap();
 
     #[cfg(feature = "cli")]
-    processor::show_header(false);
+    {
+        processor::show_header(false);
+
+        execute_file(
+            SIMULATE_SORTED,
+            command.as_str(),
+            &source_folder,
+            &dest_folder,
+            _start,
+            processor::simulate,
+        );
+
+        processor::show_header(true);
+    }
 
     execute_file(
         CHECK_SORTED,
@@ -194,20 +207,6 @@ fn four_arguments(_start: &std::time::Instant) {
         processor::split,
     );
 
-    #[cfg(feature = "cli")]
-    {
-        execute_file(
-            SIMULATE_SORTED,
-            command.as_str(),
-            &source_folder,
-            &dest_folder,
-            _start,
-            processor::simulate,
-        );
-
-        processor::show_header(true);
-    }
-
     if let Err(err) = processor::create(&command, &source_folder, &dest_folder) {
         return error(err);
     }
@@ -219,18 +218,9 @@ fn three_arguments(_start: &std::time::Instant) {
     let destination = std::env::args().nth(2).unwrap();
 
     #[cfg(feature = "cli")]
-    processor::show_header(true);
-
-    execute_folder(
-        CHECK_SORTED,
-        source.as_str(),
-        &destination,
-        _start,
-        processor::check_file,
-    );
-
-    #[cfg(feature = "cli")]
     {
+        processor::show_header(true);
+
         execute_folder(
             DUPLICATE_SORTED,
             source.as_str(),
@@ -246,7 +236,23 @@ fn three_arguments(_start: &std::time::Instant) {
             _start,
             processor::empty,
         );
+
+        execute_folder(
+            SIMULATE_SORTED,
+            source.as_str(),
+            &destination,
+            _start,
+            processor::simulate_file,
+        );
     }
+
+    execute_folder(
+        CHECK_SORTED,
+        source.as_str(),
+        &destination,
+        _start,
+        processor::check_file,
+    );
 
     execute_folder(
         FORCE_SORTED,
@@ -256,7 +262,6 @@ fn three_arguments(_start: &std::time::Instant) {
         processor::force_file,
     );
 
-    #[cfg(feature = "cli")]
     execute_folder(
         HASH_SORTED,
         source.as_str(),
@@ -271,15 +276,6 @@ fn three_arguments(_start: &std::time::Instant) {
         &destination,
         _start,
         processor::join_folder,
-    );
-
-    #[cfg(feature = "cli")]
-    execute_folder(
-        SIMULATE_SORTED,
-        source.as_str(),
-        &destination,
-        _start,
-        processor::simulate_file,
     );
 
     if let Err(err) = processor::sync(&source, &destination) {
@@ -349,8 +345,9 @@ fn one_argument(_start: &std::time::Instant) {
     #[cfg(feature = "cli")]
     processor::show_header(true);
 
-    let current_path = std::env::current_dir().unwrap().display().to_string();
-    if let Err(err) = processor::sync_folder(&current_path) {
+    if let Err(err) =
+        processor::sync_folder(&std::env::current_dir().unwrap().display().to_string())
+    {
         #[cfg(feature = "cli")]
         if err.code == processor::help_code() {
             std::process::exit(processor::help());

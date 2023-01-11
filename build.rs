@@ -1,12 +1,9 @@
-use std::io;
-
-#[cfg(windows)]
-use winres::WindowsResource;
-
-fn main() -> io::Result<()> {
+fn main() -> std::io::Result<()> {
     #[cfg(windows)]
     {
-        WindowsResource::new().set_icon("icon.ico").compile()?;
+        winres::WindowsResource::new()
+            .set_icon("icon.ico")
+            .compile()?;
     }
     Ok(())
 }

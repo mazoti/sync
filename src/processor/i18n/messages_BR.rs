@@ -55,6 +55,7 @@ pub const ERROR_MSGS: &[&str] = &[
     "arquivos ou pastas são diferentes",                                 // ERROR_DIFF_FILE_FOLDER
     "tamanho do arquivo deve ser positivo",                               // ERROR_FILE_SIZE
     "erro de entrada ou saída",                                          // ERROR_IO
+    "erro de string do sistema operacional",                              // ERROR_OSSTRING
     "não foi possível converter número para inteiro",                  // ERROR_PARSE_INT
     "não foi possível processar registro do arquivo de configuração", // ERROR_PARSE_LINE
     "origem e destino são os mesmos",                                    // ERROR_SAME_FILE_FOLDER

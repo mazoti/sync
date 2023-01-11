@@ -1,10 +1,15 @@
+//! Contains all methods to validate files and folders
+
+/// Look for empty files, empty folders or folders with one file or one folder only
 pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
-    let mut count: usize;
+    let mut fullpath: String;
     let mut folder_metadata: std::fs::Metadata;
 
+    let mut count: usize = 0;
     let folder_path = std::path::Path::new(&folder);
 
-    if !folder_path.exists() {
+    // input must be a folder
+    if !(folder_path.exists() && folder_path.is_dir()) {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_folder(),
             file: file!(),
@@ -14,33 +19,20 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
         });
     }
 
-    // Check file or symlink
-    if !folder_path.is_dir() {
-        return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(folder.to_string()),
-            destination: Some(folder.to_string()),
-        });
-    }
-
-    count = 0;
     for path in std::fs::read_dir(folder)? {
-        let fullpath = path?.path().display().to_string();
+        fullpath = path?.path().display().to_string();
         folder_metadata = std::fs::metadata(&fullpath)?;
+
+        count += 1;
 
         if folder_metadata.is_dir() {
             empty(&fullpath)?;
-            count += 1;
             continue;
         }
 
         if folder_metadata.is_file() && folder_metadata.len() == 0 {
             crate::processor::empty_msg(&fullpath);
         }
-
-        count += 1;
     }
 
     if count == 0 {
@@ -54,3 +46,5 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
 
     Ok(())
 }
+
+//====================================== Unit Tests ======================================

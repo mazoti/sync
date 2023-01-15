@@ -1,57 +1,8 @@
-#[cfg(feature = "cli")]
-use std::io::Read;
+//! Hash functions used by the system to find duplicate files and folder security
 
-#[cfg(feature = "cli")]
-pub fn adler32(file: &str, buffer_size: u64) -> Result<u32, crate::processor::SyncError> {
-    let buffer_usize: usize = buffer_size.try_into()?;
-    let mut buffer = vec![0; buffer_usize];
+use std::{io::BufRead, io::BufReader, io::Write};
 
-    let mut a: u32 = 1;
-    let mut b: u32 = 0;
-
-    if !(std::path::Path::new(file).exists() && std::path::Path::new(file).is_file()) {
-        return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
-            file: file!(),
-            line: line!(),
-            source: None,
-            destination: Some(file.to_string()),
-        });
-    }
-
-    let metadata_file = std::fs::metadata(file)?;
-    let mut hash_file = std::fs::File::open(file)?;
-
-    if metadata_file.len() <= buffer_size {
-        let bytes_read = hash_file.read(&mut buffer)?;
-        let mut i: usize = 0;
-        while i < bytes_read {
-            a = (a + (buffer[i] as u32)) % 65521;
-            b = (b + a) % 65521;
-
-            i += 1;
-        }
-
-        return Ok((b << 16) | a);
-    }
-
-    let mut bytes_read: usize;
-    loop {
-        bytes_read = hash_file.read(&mut buffer)?;
-        let mut i: usize = 0;
-        while i < bytes_read {
-            a = (a + (buffer[i] as u32)) % 65521;
-            b = (b + a) % 65521;
-            i += 1;
-        }
-        if bytes_read < buffer_usize {
-            break;
-        }
-    }
-
-    Ok((b << 16) | a)
-}
-
+/// A stronger hash for the folder security
 fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
     if !std::path::Path::new(filepath).exists() {
         return Err(crate::processor::SyncError {
@@ -73,8 +24,7 @@ fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
         });
     }
 
-    let input = std::path::Path::new(filepath);
-    Ok(sha256::try_digest(input).unwrap())
+    Ok(sha256::try_digest(std::path::Path::new(filepath)).unwrap())
 }
 
 pub fn hash_file(file: &str) -> Result<(), crate::processor::SyncError> {
@@ -98,25 +48,114 @@ pub fn hash_file(file: &str) -> Result<(), crate::processor::SyncError> {
         });
     }
 
-    let input = std::path::Path::new(file);
-    let val = sha256::try_digest(input).unwrap();
-
-    println!("{} => {}", val, file);
-
-    Ok(())
+    Ok(println!(
+        "{} => {}",
+        sha256::try_digest(std::path::Path::new(file)).unwrap(),
+        file
+    ))
 }
 
 pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    fn create(
+        source: &str,
+        destination: &str,
+        config: &str,
+    ) -> Result<(), crate::processor::SyncError> {
+        let mut file: std::fs::File;
+
+        if !std::path::Path::new(&source).exists() {
+            return Err(crate::processor::SyncError {
+                code: crate::processor::error_source_folder(),
+                file: file!(),
+                line: line!(),
+                source: Some(source.to_string()),
+                destination: Some(destination.to_string()),
+            });
+        }
+
+        if std::path::Path::new(&config).is_dir() {
+            return Err(crate::processor::SyncError {
+                code: crate::processor::error_config_folder_code(),
+                file: file!(),
+                line: line!(),
+                source: Some(source.to_string()),
+                destination: Some(destination.to_string()),
+            });
+        }
+
+        // Config file does not exist, create and add source|destination full paths
+        if !std::path::Path::new(&config).is_file() {
+            return Ok(writeln!(
+                std::fs::OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .create(true)
+                    .open(config)?,
+                "{}|{}",
+                &source,
+                &destination
+            )?);
+        }
+
+        // Config file exists, look on each line for source|destination full paths
+        // If it doesn't find it, append to the end of the file
+        file = std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(config)?;
+        for line in BufReader::new(&file).lines() {
+            let data = line?;
+            let path: Vec<&str> = data.split('|').collect();
+            if path.len() != 2 {
+                return Err(crate::processor::SyncError {
+                    code: crate::processor::error_parse_line(),
+                    file: file!(),
+                    line: line!(),
+                    source: Some(source.to_string()),
+                    destination: Some(destination.to_string()),
+                });
+            }
+
+            if path[0] == source && path[1] == destination
+                || path[0] == destination && path[1] == source
+            {
+                return Err(crate::processor::SyncError {
+                    code: crate::processor::error_config_duplicated(),
+                    file: file!(),
+                    line: line!(),
+                    source: Some(source.to_string()),
+                    destination: Some(destination.to_string()),
+                });
+            }
+
+            #[cfg(feature = "cli")]
+            {
+                if path[0] == source || path[1] == source {
+                    crate::processor::warning_msg(source);
+                }
+                if path[0] == destination || path[1] == destination {
+                    crate::processor::warning_msg(destination);
+                }
+            }
+        }
+
+        // source|destination not found, append in config file
+        Ok(writeln!(file, "{}|{}", &destination, &source)?)
+    }
+
     fn hash(
         source_folder: &str,
         destination_file: &str,
     ) -> Result<(), crate::processor::SyncError> {
+        let mut fullpath: String;
+        let mut hash_str: String;
         for path in std::fs::read_dir(source_folder)? {
-            let fullpath = path?.path().display().to_string();
-
+            fullpath = std::fs::canonicalize(path?.path())?
+                .into_os_string()
+                .into_string()?;
             if !std::fs::metadata(&fullpath)?.is_dir() {
-                let hash_str = sha256_hash(&fullpath)?;
-                crate::processor::create(&fullpath, &hash_str, destination_file)?;
+                hash_str = sha256_hash(&fullpath)?;
+                create(&fullpath, &hash_str, destination_file)?;
                 continue;
             }
 

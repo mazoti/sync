@@ -25,8 +25,12 @@ pub fn error_to_string(_code: i32) -> Option<String> {
     None
 }
 
+/// Process input or outpur errors like "File not found"
 impl From<std::io::Error> for SyncError {
     fn from(_error: std::io::Error) -> Self {
+        #[cfg(debug_assertions)]
+        println!("===> {:?} <===", _error);
+
         SyncError {
             code: crate::processor::error_io(),
             file: file!(),
@@ -37,8 +41,12 @@ impl From<std::io::Error> for SyncError {
     }
 }
 
+/// Process system time errors like negative differences between times
 impl From<std::time::SystemTimeError> for SyncError {
     fn from(_error: std::time::SystemTimeError) -> Self {
+        #[cfg(debug_assertions)]
+        println!("===> {:?} <===", _error);
+
         SyncError {
             code: crate::processor::error_system_time(),
             file: file!(),
@@ -49,6 +57,7 @@ impl From<std::time::SystemTimeError> for SyncError {
     }
 }
 
+/// The way a SyncError will be shown on user screen
 impl std::fmt::Display for SyncError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(msg) = error_to_string(self.code) {
@@ -58,6 +67,7 @@ impl std::fmt::Display for SyncError {
     }
 }
 
+/// The way a SyncError will be shown on user screen with debug mode "{:?}"
 impl std::fmt::Debug for SyncError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
@@ -82,8 +92,12 @@ impl std::fmt::Debug for SyncError {
     }
 }
 
+/// Process errors converting string to integers
 impl From<std::num::ParseIntError> for SyncError {
     fn from(_error: std::num::ParseIntError) -> Self {
+        #[cfg(debug_assertions)]
+        println!("===> {:?} <===", _error);
+
         SyncError {
             code: crate::processor::parse_int_error(),
             file: file!(),
@@ -94,8 +108,12 @@ impl From<std::num::ParseIntError> for SyncError {
     }
 }
 
+/// Process errors converting integers to usize
 impl From<std::num::TryFromIntError> for SyncError {
     fn from(_error: std::num::TryFromIntError) -> Self {
+        #[cfg(debug_assertions)]
+        println!("===> {:?} <===", _error);
+
         SyncError {
             code: crate::processor::try_from_int_error(),
             file: file!(),
@@ -106,8 +124,12 @@ impl From<std::num::TryFromIntError> for SyncError {
     }
 }
 
+/// Process errors converting operating system strings
 impl From<std::ffi::OsString> for SyncError {
     fn from(_error: std::ffi::OsString) -> Self {
+        #[cfg(debug_assertions)]
+        println!("===> {:?} <===", _error);
+
         SyncError {
             code: crate::processor::os_string_error(),
             file: file!(),

@@ -6,7 +6,7 @@ license-file     = "License.md"
 name             = "sync"
 readme           = "Readme.md"
 repository       = "https://github.com/mazoti/sync/"
-version          = "1.2.2"
+version          = "1.2.5"
 
 [profile.release]
 codegen-units    = 1
@@ -29,6 +29,7 @@ sha256 = "1.1.1"
 cli = ["dep:termcolor", "dep:chrono"]
 br  = ["cli"]
 en  = ["cli"]
+
 copy = []
 tree = []
 

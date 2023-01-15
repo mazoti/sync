@@ -3,7 +3,6 @@
 /// Displays what a sync operation would do without any modification
 #[cfg(feature = "cli")]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-    let fullpath_source: String;
     let fullpath_destination: String;
     let fullpath_source_copy: String;
     let fullpath_destination_copy: String;
@@ -126,7 +125,7 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         });
     }
 
-    fullpath_source = std::fs::canonicalize(source)?
+    let fullpath_source = std::fs::canonicalize(source)?
         .into_os_string()
         .into_string()?;
 
@@ -207,7 +206,6 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 
 /// Synchronizes source to destination without read or create a config file
 pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-    let fullpath_source: String;
     let fullpath_destination: String;
     let fullpath_source_copy: String;
     let fullpath_destination_copy: String;
@@ -359,7 +357,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         });
     }
 
-    fullpath_source = std::fs::canonicalize(source)?
+    let fullpath_source = std::fs::canonicalize(source)?
         .into_os_string()
         .into_string()?;
 

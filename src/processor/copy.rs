@@ -1,5 +1,6 @@
 use std::io::{Read, Write};
 
+/// Copies a file from source to destination like the operating system does but using a buffer with size defined in consts
 pub fn copy(
     source: &str,
     destination: &str,
@@ -51,11 +52,11 @@ pub fn copy(
     source_file = std::fs::File::open(source)?;
     destination_file = std::fs::File::create(destination)?;
 
+    // File fits in buffer
     bytes_read = source_file.read(&mut buffer)?;
     if bytes_read < buffer_usize {
         buffer.truncate(bytes_read);
-        destination_file.write_all(&buffer)?;
-        return Ok(());
+        return Ok(destination_file.write_all(&buffer)?);
     }
 
     loop {
@@ -63,10 +64,7 @@ pub fn copy(
         bytes_read = source_file.read(&mut buffer)?;
         if bytes_read < buffer_usize {
             buffer.truncate(bytes_read);
-            destination_file.write_all(&buffer)?;
-            break;
+            return Ok(destination_file.write_all(&buffer)?);
         }
     }
-
-    Ok(())
 }

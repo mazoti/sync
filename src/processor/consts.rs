@@ -14,7 +14,6 @@ pub const SPLIT_BUFFER_SIZE: u64 = 1024 * 512;
 pub const HELP: i32 = -1;
 
 pub const NO_ERROR: i32 = 0;
-
 pub const ERROR_CONFIG_DUPLICATED: i32 = 1;
 pub const ERROR_CONFIG_EXT_CODE: i32 = 2;
 pub const ERROR_CONFIG_FOLDER_CODE: i32 = 3;
@@ -28,9 +27,7 @@ pub const ERROR_DEST_NOT_FOLDER: i32 = 7;
 pub const ERROR_DIFF_FILE_FOLDER: i32 = 8;
 pub const ERROR_FILE_SIZE: i32 = 9;
 pub const ERROR_IO: i32 = 10;
-
 pub const ERROR_OSSTRING: i32 = 11;
-
 pub const ERROR_PARSE_INT: i32 = 12;
 pub const ERROR_PARSE_LINE: i32 = 13;
 pub const ERROR_SAME_FILE_FOLDER: i32 = 14;

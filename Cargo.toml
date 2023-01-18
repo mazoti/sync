@@ -6,7 +6,7 @@ license-file     = "License.md"
 name             = "sync"
 readme           = "Readme.md"
 repository       = "https://github.com/mazoti/sync/"
-version          = "1.2.5"
+version          = "1.2.7"
 
 [profile.release]
 codegen-units    = 1
@@ -32,6 +32,7 @@ en  = ["cli"]
 
 copy = []
 tree = []
+check-mt=[]
 
 # Required for Windows application icon only
 [target.'cfg(windows)'.build-dependencies]

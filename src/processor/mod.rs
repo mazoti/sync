@@ -23,34 +23,27 @@
 //!
 //! - force(source: &str, destination: &str)
 
-use std::{io::BufRead, io::BufReader, io::Write, path::Path};
-
-mod check;
+use std::io::{BufRead, BufReader};
 
 #[cfg(feature = "cli")]
 mod cli;
-
-#[cfg(feature = "copy")]
-mod copy;
-
-mod consts;
-
 #[cfg(feature = "cli")]
 mod duplicate;
-
-mod error;
-
-mod hash;
-
 #[cfg(feature = "cli")]
 mod i18n;
-
-mod join;
-mod split;
-mod sync;
-
 #[cfg(feature = "cli")]
 mod validate;
+
+mod check;
+mod consts;
+mod copy;
+mod create;
+mod error;
+mod hash;
+mod join;
+mod mv;
+mod split;
+mod sync;
 
 /// Error class with the message and code defined in consts.rs.
 /// "code" is the number returned to operating system,
@@ -68,16 +61,8 @@ pub struct SyncError {
 // ============================================= Public methods in ascending order ==============
 
 /// Compares every folder, file and byte
-#[inline]
+#[inline(always)]
 pub fn check(source: &str, destination: &str) -> Result<(), SyncError> {
-    #[cfg(feature = "cli")]
-    {
-        check::check(source, destination, consts::CHECK_BUFFER_SIZE)?;
-        crate::processor::ok_msg(destination);
-        Ok(())
-    }
-
-    #[cfg(not(feature = "cli"))]
     check::check(source, destination, consts::CHECK_BUFFER_SIZE)
 }
 
@@ -93,166 +78,15 @@ pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
     process_folder(check, folder_path)
 }
 
-/// Copy a file from source to destination using a system function or copy module
+/// Copy a file from source to destination using the system function or copy method
 pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
-    #[cfg(feature = "copy")]
-    {
-        copy::copy(source, destination, consts::COPY_BUFFER_SIZE)?;
-        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-        file_source.set_len(file_source.metadata()?.len())?;
-        Ok(file_destination.set_len(file_destination.metadata()?.len())?)
-    }
-
-    #[cfg(not(feature = "copy"))]
-    {
-        if std::fs::copy(source, destination)? == std::fs::metadata(source)?.len() {
-            // Make the modified date the same in source and destination (Unix and Linux only)
-            #[cfg(not(windows))]
-            {
-                let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-                let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-                file_source.set_len(file_source.metadata()?.len())?;
-                file_destination.set_len(file_destination.metadata()?.len())?;
-            }
-            return Ok(());
-        }
-
-        Err(crate::processor::SyncError {
-            code: crate::processor::error_copy_file_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        })
-    }
+    copy::copy(source, destination, consts::COPY_BUFFER_SIZE)
 }
 
 /// Creates a config file or appends full source full + "|" + full destination path
+#[inline(always)]
 pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncError> {
-    let mut file: std::fs::File;
-
-    if !Path::new(&source).exists() {
-        return Err(SyncError {
-            code: error_source_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        });
-    }
-
-    if source == destination {
-        return Err(SyncError {
-            code: error_same_file_folder(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        });
-    }
-
-    if Path::new(&destination).exists() {
-        if Path::new(&source).is_dir() && !Path::new(&destination).is_dir() {
-            return Err(SyncError {
-                code: error_dest_not_folder(),
-                file: file!(),
-                line: line!(),
-                source: Some(source.to_string()),
-                destination: Some(destination.to_string()),
-            });
-        }
-
-        if Path::new(&source).is_file() && !Path::new(&destination).is_file() {
-            return Err(SyncError {
-                code: error_dest_not_file(),
-                file: file!(),
-                line: line!(),
-                source: Some(source.to_string()),
-                destination: Some(destination.to_string()),
-            });
-        }
-    }
-
-    // Config files must end with .config
-    if !config.ends_with(".config") {
-        return Err(SyncError {
-            code: error_config_ext_code(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        });
-    }
-
-    if Path::new(&config).is_dir() {
-        return Err(SyncError {
-            code: error_config_folder_code(),
-            file: file!(),
-            line: line!(),
-            source: Some(source.to_string()),
-            destination: Some(destination.to_string()),
-        });
-    }
-
-    // Config file does not exist, create and add source|destination full paths
-    if !Path::new(&config).is_file() {
-        return Ok(writeln!(
-            std::fs::OpenOptions::new()
-                .write(true)
-                .append(true)
-                .create(true)
-                .open(config)?,
-            "{}|{}",
-            &source,
-            &destination
-        )?);
-    }
-
-    // Config file exists, look on each line for source|destination full paths
-    // If it doesn't find it, append to the end of the file
-    file = std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(config)?;
-    for line in BufReader::new(&file).lines() {
-        let data = line?;
-        let path: Vec<&str> = data.split('|').collect();
-        if path.len() != 2 {
-            return Err(SyncError {
-                code: error_parse_line(),
-                file: file!(),
-                line: line!(),
-                source: Some(source.to_string()),
-                destination: Some(destination.to_string()),
-            });
-        }
-
-        if path[0] == source && path[1] == destination
-            || path[0] == destination && path[1] == source
-        {
-            return Err(SyncError {
-                code: error_config_duplicated(),
-                file: file!(),
-                line: line!(),
-                source: Some(source.to_string()),
-                destination: Some(destination.to_string()),
-            });
-        }
-
-        #[cfg(feature = "cli")]
-        {
-            if path[0] == source || path[1] == source {
-                warning_msg(source);
-            }
-            if path[0] == destination || path[1] == destination {
-                warning_msg(destination);
-            }
-        }
-    }
-
-    // source|destination not found, append in config file
-    Ok(writeln!(file, "{}|{}", &source, &destination)?)
+    create::create(source, destination, config)
 }
 
 /// Displays all duplicated files found in the folder
@@ -302,17 +136,7 @@ pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
 
 /// Moves a source file or source to destination file or source. Slower than OS move but safer
 pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
-    sync(source, destination)?;
-    check(source, destination)?;
-
-    #[cfg(feature = "cli")]
-    crate::processor::remove_msg(source);
-
-    if std::fs::metadata(source)?.is_file() {
-        return Ok(std::fs::remove_file(source)?);
-    }
-
-    Ok(std::fs::remove_dir_all(source)?)
+    mv::mv(source, destination)
 }
 
 /// Returns success (0) code to OS

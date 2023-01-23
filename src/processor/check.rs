@@ -5,8 +5,26 @@
 use std::{io::Read, path::Path};
 
 /// Compares every folder, file and byte
-#[cfg(not(feature = "check-mt"))]
+#[inline]
 pub fn check(
+    source: &str,
+    destination: &str,
+    buffer_size: u64,
+) -> Result<(), crate::processor::SyncError> {
+    #[cfg(feature = "cli")]
+    {
+        check_all(source, destination, buffer_size)?;
+        crate::processor::ok_msg(destination);
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cli"))]
+    check_all(source, destination, buffer_size)
+}
+
+/// Compares every folder, file and byte
+#[cfg(not(feature = "check-mt"))]
+fn check_all(
     source: &str,
     destination: &str,
     buffer_size: u64,
@@ -65,7 +83,7 @@ pub fn check(
 
 /// Compares every folder, file and byte
 #[cfg(feature = "check-mt")]
-pub fn check(
+fn check_all(
     source: &str,
     destination: &str,
     buffer_size: u64,
@@ -118,7 +136,7 @@ pub fn check(
 
             match handle1.join() {
                 Err(_) => {
-                    if let Err(_) = handle2.join() {
+                    if handle2.join().is_err() {
                         return Err(crate::processor::SyncError {
                             code: crate::processor::error_thread_join(),
                             file: file!(),
@@ -146,10 +164,8 @@ pub fn check(
                         });
                     }
                     Ok(value2) => {
-                        if let Ok(_) = value {
-                            if let Ok(_) = value2 {
-                                return check_file_folder(source, destination, buffer_size);
-                            }
+                        if value.is_ok() && value2.is_ok() {
+                            return check_file_folder(source, destination, buffer_size);
                         }
                     }
                 },

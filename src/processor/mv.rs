@@ -3,7 +3,7 @@ pub fn mv(source: &str, destination: &str) -> Result<(), crate::processor::SyncE
     crate::processor::copy(source, destination)?;
     crate::processor::check(source, destination)?;
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     crate::processor::remove_msg(source);
 
     if std::fs::metadata(source)?.is_file() {

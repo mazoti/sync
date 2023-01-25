@@ -1,6 +1,6 @@
 //! Contains all strings and error codes
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 pub const HASH_BUFFER_SIZE: u64 = 1024 * 512;
 
 pub const CHECK_BUFFER_SIZE: u64 = 1024 * 512; // 512KB, but it will use 2 buffers
@@ -9,7 +9,7 @@ pub const JOIN_BUFFER_SIZE: u64 = 1024 * 512;
 pub const SPLIT_BUFFER_SIZE: u64 = 1024 * 512;
 
 //====================================== Exit codes to Operating System ======================================
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 pub const HELP: i32 = -1;
 
 pub const NO_ERROR: i32 = 0;
@@ -43,7 +43,7 @@ pub const ERROR_TRY_FROM_INT: i32 = 20;
 mod tests {
 
     #[test]
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     fn consts_tests() {
         for s in crate::processor::error_msgs() {
             println!("{}", s);

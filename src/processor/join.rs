@@ -46,7 +46,7 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
         });
     }
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     crate::processor::create_msg(&destination);
 
     if std::path::Path::new(&destination).exists() {
@@ -70,7 +70,7 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
             break;
         }
 
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::loading_msg(&tmp);
 
         // Append opened file to destination

@@ -8,7 +8,7 @@ const CHECK_SORTED: &[&str] = &[
     "check",
 ];
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 const DUPLICATE_SORTED: &[&str] = &[
     "--DUPLICATE",
     "--duplicate",
@@ -24,7 +24,7 @@ const DUPLICATE_SORTED: &[&str] = &[
     "duplicate",
 ];
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 const EMPTY_SORTED: &[&str] = &[
     "--EMPTY", "--empty", "-E", "-EMPTY", "-e", "-empty", "/E", "/EMPTY", "/e", "/empty", "EMPTY",
     "empty",
@@ -39,7 +39,7 @@ const HASH_SORTED: &[&str] = &[
     "--HASH", "--hash", "-HASH", "-hash", "/HASH", "/hash", "HASH", "hash",
 ];
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 const HELP_SORTED: &[&str] = &[
     "--HELP", "--help", "-?", "-H", "-h", "-help", "/?", "/H", "/HELP", "/h", "/help", "HELP",
     "help",
@@ -53,7 +53,7 @@ const MOVE_SORTED: &[&str] = &[
     "--MOVE", "--move", "-M", "-MOVE", "-m", "-move", "/M", "/MOVE", "/m", "/move", "MOVE", "move",
 ];
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 const SIMULATE_SORTED: &[&str] = &[
     "--SIMULATE",
     "--simulate",
@@ -74,7 +74,7 @@ const SPLIT_SORTED: &[&str] = &[
     "split",
 ];
 
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 const VERSION_SORTED: &[&str] = &[
     "--VERSION",
     "--version",
@@ -95,16 +95,16 @@ fn error(err: processor::SyncError) {
     #[cfg(debug_assertions)]
     println!("{:?}", err);
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     std::process::exit(processor::error_msg(&err.to_string(), err.code, true));
 
-    #[cfg(not(feature = "cli"))]
+    #[cfg(not(feature = "i18n"))]
     std::process::exit(err.code);
 }
 
 /// Display elapsed time (optional) and send a zero code (NO_ERROR) to operating system
 fn no_error(_start: &std::time::Instant) {
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     println!("\n{} {:#?}", processor::command_msgs(2), _start.elapsed());
 
     std::process::exit(processor::no_error());
@@ -146,7 +146,7 @@ fn four_arguments(_start: &std::time::Instant) {
     let source_folder = std::env::args().nth(2).unwrap();
     let dest_folder = std::env::args().nth(3).unwrap();
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     {
         processor::show_header(false);
 
@@ -217,7 +217,7 @@ fn three_arguments(_start: &std::time::Instant) {
     let source = std::env::args().nth(1).unwrap();
     let destination = std::env::args().nth(2).unwrap();
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     {
         processor::show_header(true);
 
@@ -288,7 +288,7 @@ fn two_arguments(_start: &std::time::Instant) {
     let config = std::env::args().nth(1).unwrap();
     let current_path = std::env::current_dir().unwrap().display().to_string();
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     {
         if HELP_SORTED.binary_search(&config.as_str()).is_ok() {
             std::process::exit(processor::help());
@@ -342,13 +342,13 @@ fn two_arguments(_start: &std::time::Instant) {
 
 /// User only enter "sync", could display help or process all configs
 fn one_argument(_start: &std::time::Instant) {
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     processor::show_header(true);
 
     if let Err(err) =
         processor::sync_folder(&std::env::current_dir().unwrap().display().to_string())
     {
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         if err.code == processor::help_code() {
             std::process::exit(processor::help());
         }
@@ -366,9 +366,9 @@ fn main() {
         return FN_ARGS[args - 1](&_start);
     }
 
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     std::process::exit(processor::help());
 
-    #[cfg(not(feature = "cli"))]
+    #[cfg(not(feature = "i18n"))]
     std::process::exit(processor::no_error());
 }

@@ -32,7 +32,7 @@ pub fn split(
     ) -> Result<std::fs::File, crate::processor::SyncError> {
         let destination = filepath.to_owned() + "." + &count.to_string();
 
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::create_msg(&destination);
 
         if std::path::Path::new(&destination).exists() {

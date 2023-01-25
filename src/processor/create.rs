@@ -117,7 +117,7 @@ pub fn create(
             });
         }
 
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         {
             if path[0] == source || path[1] == source {
                 crate::processor::warning_msg(source);

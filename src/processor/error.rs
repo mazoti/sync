@@ -3,7 +3,7 @@
 use crate::processor::SyncError;
 
 /// Returns a String given an error code
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn error_to_string(code: i32) -> Option<String> {
     let code_usize: Result<usize, std::num::TryFromIntError> = code.try_into();
@@ -19,7 +19,7 @@ pub fn error_to_string(code: i32) -> Option<String> {
 }
 
 /// Returns a String given an error code
-#[cfg(not(feature = "cli"))]
+#[cfg(not(feature = "i18n"))]
 #[inline(always)]
 pub fn error_to_string(_code: i32) -> Option<String> {
     None
@@ -99,7 +99,7 @@ impl From<std::num::ParseIntError> for SyncError {
         println!("===> {:?} <===", _error);
 
         SyncError {
-            code: crate::processor::parse_int_error(),
+            code: crate::processor::error_parse_int(),
             file: file!(),
             line: line!(),
             source: None,
@@ -115,7 +115,7 @@ impl From<std::num::TryFromIntError> for SyncError {
         println!("===> {:?} <===", _error);
 
         SyncError {
-            code: crate::processor::try_from_int_error(),
+            code: crate::processor::error_try_from_int(),
             file: file!(),
             line: line!(),
             source: None,
@@ -131,7 +131,7 @@ impl From<std::ffi::OsString> for SyncError {
         println!("===> {:?} <===", _error);
 
         SyncError {
-            code: crate::processor::os_string_error(),
+            code: crate::processor::error_os_string(),
             file: file!(),
             line: line!(),
             source: None,

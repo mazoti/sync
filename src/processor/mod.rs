@@ -23,18 +23,17 @@
 //!
 //! - force(source: &str, destination: &str)
 
-use std::io::{BufRead, BufReader};
-
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 mod cli;
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 mod duplicate;
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 mod i18n;
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 mod validate;
 
 mod check;
+mod config;
 mod consts;
 mod copy;
 mod create;
@@ -58,7 +57,7 @@ pub struct SyncError {
     pub destination: Option<String>,
 }
 
-// ============================================= Public methods in ascending order ==============
+//====================================== Public methods in ascending order ======================================
 
 /// Compares every folder, file and byte
 #[inline(always)]
@@ -69,13 +68,13 @@ pub fn check(source: &str, destination: &str) -> Result<(), SyncError> {
 /// Compares every byte of two files from config to check if they are the same
 #[inline(always)]
 pub fn check_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(check, file_path)
+    config::process_file(check, file_path)
 }
 
 /// Compares every file and every byte of two folders from config to check if they are the same
 #[inline(always)]
 pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(check, folder_path)
+    config::process_folder(check, folder_path)
 }
 
 /// Copy a file from source to destination using the system function or copy method
@@ -90,7 +89,7 @@ pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncE
 }
 
 /// Displays all duplicated files found in the folder
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn duplicate(folder: &str) -> Result<(), SyncError> {
     duplicate::duplicate(folder)
@@ -105,28 +104,26 @@ pub fn force(source: &str, destination: &str) -> Result<(), SyncError> {
 /// Run force on each file in config file
 #[inline(always)]
 pub fn force_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(sync::force, file_path)
+    config::process_file(sync::force, file_path)
 }
 
 /// Run force on each folder in config file
 #[inline(always)]
 pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(sync::force, folder_path)
+    config::process_folder(sync::force, folder_path)
 }
 
-//===============================================================================================================
-
+/// Reads a hash file and checks files hashes
 #[inline(always)]
 pub fn hash_file(path: &str) -> Result<(), SyncError> {
     hash::hash_file(path)
 }
 
+/// Creates a file with all file paths and hashes of the files in folder
 #[inline(always)]
-pub fn hash_folder(source: &str, destination: &str) -> Result<(), SyncError> {
-    hash::hash_folder(source, destination)
+pub fn hash_folder(folder: &str, file: &str) -> Result<(), SyncError> {
+    hash::hash_folder(folder, file)
 }
-
-//===============================================================================================================
 
 /// Joins all splitted files of the folder in one file of the same folder (does not delete any file)
 #[inline(always)]
@@ -145,25 +142,25 @@ pub fn no_error() -> i32 {
     consts::NO_ERROR
 }
 
-/// Does not synchronize, only displays the messages of the sync operation will do
-#[cfg(feature = "cli")]
+/// Does not synchronize, only displays the messages of what sync operation will do
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate(source: &str, destination: &str) -> Result<(), SyncError> {
     sync::simulate(source, destination)
 }
 
 /// Run simulate on each file in config file
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate_file(file_path: &str) -> Result<(), SyncError> {
-    process_file(sync::simulate, file_path)
+    config::process_file(sync::simulate, file_path)
 }
 
 /// Run simulate on each folder in config file
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate_folder(config: &str) -> Result<(), SyncError> {
-    process_folder(sync::simulate, config)
+    config::process_folder(sync::simulate, config)
 }
 
 /// Splits a file in n files of size_bytes each
@@ -181,26 +178,26 @@ pub fn sync(source: &str, destination: &str) -> Result<(), SyncError> {
 /// Run sync on each file in config file
 #[inline(always)]
 pub fn sync_file(config: &str) -> Result<(), SyncError> {
-    process_file(sync::sync, config)
+    config::process_file(sync::sync, config)
 }
 
 /// Run sync on each folder in config file
 #[inline(always)]
 pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
-    process_folder(sync::sync, folder_path)
+    config::process_folder(sync::sync, folder_path)
 }
 
-// ============================================= Public message (cli) methods in ascending order ==============
+//====================================== Public message methods in ascending order ======================================
 
 /// Displays a colored command word or words like "Creating", "Sync", "(ONE ITEM)"
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn command_msgs(code: usize) -> &'static str {
     i18n::command_msgs(code)
 }
 
 /// Displays the duplicate command message with all duplicate file paths
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline]
 pub fn duplicate_msgs(files: Vec<&str>) {
     for file in files {
@@ -210,7 +207,7 @@ pub fn duplicate_msgs(files: Vec<&str>) {
 }
 
 /// Displays all empty files, empty folders and folders with only one item
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn empty(folder: &str) -> Result<(), SyncError> {
     validate::empty(folder)
@@ -218,385 +215,295 @@ pub fn empty(folder: &str) -> Result<(), SyncError> {
 
 /// Displays a colored "ERROR", an error message in stderr and exit with the error code.
 /// If user_input is "true", waits an "enter" from user keyboard
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
     cli::error_msg(msg, code, user_input)
 }
+
 /// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn help() -> i32 {
     cli::help()
 }
 
-/// Returns help code to send to the system
-#[cfg(feature = "cli")]
+/// Returns help code to the system
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn help_code() -> i32 {
     consts::HELP
 }
 
 /// Displays the program name, version, URL and date/time (optional)
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn show_header(datetime: bool) {
     cli::show_header(datetime)
 }
 
 /// Displays a colored "Warning", the file path and a message in stdout
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn warning_msg(file: &str) {
     cli::warning_msg(file);
 }
-// ============================================= Private methods in ascending order ==============
+
+//====================================== Private methods in ascending order ======================================
 
 /// Compares every byte of two files using a buffer
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn compare(source: &str, destination: &str) -> Result<(), SyncError> {
     check::check(source, destination, consts::CHECK_BUFFER_SIZE)
 }
 
 /// Formats a "%Y-%m-%d %T" datetime string
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn datetime() -> String {
     chrono::Local::now().format("%Y-%m-%d %T").to_string()
 }
 
 // Returns the hash configuration buffer size
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn get_hash_buffer_size() -> u64 {
     consts::HASH_BUFFER_SIZE
 }
 
-/// Process all sources to destinations found in the config file
-fn process_file(
-    process_function: fn(&str, &str) -> Result<(), SyncError>,
-    config: &str,
-) -> Result<(), SyncError> {
-    #[cfg(feature = "cli")]
-    loading_msg(config);
-
-    // Parse source and destination paths from config file
-    for line in BufReader::new(std::fs::File::open(config)?).lines() {
-        let data = line?;
-        let path: Vec<&str> = data.split('|').collect();
-        if path.len() != 2 {
-            return Err(SyncError {
-                code: error_parse_line(),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-
-        process_function(path[0], path[1])?;
-    }
-
-    Ok(())
-}
-
-/// Process all config files found in parallel
-fn process_folder(
-    process_function: fn(&str, &str) -> Result<(), SyncError>,
-    folder: &str,
-) -> Result<(), SyncError> {
-    let mut fullpath: String;
-    let mut handle: std::thread::JoinHandle<i32>;
-
-    let mut thread_pool = Vec::new();
-    let mut exit_code = 0i32;
-
-    #[cfg(feature = "cli")]
-    let mut display_help = true;
-
-    for path in std::fs::read_dir(folder)? {
-        fullpath = path?.path().display().to_string();
-        if !std::fs::metadata(&fullpath)?.is_dir() && fullpath.ends_with(".config") {
-            #[cfg(feature = "cli")]
-            {
-                display_help = false;
-            }
-
-            handle = std::thread::spawn(move || -> i32 {
-                if let Err(err) = process_file(process_function, &fullpath) {
-                    return err.code;
-                }
-                no_error()
-            });
-
-            thread_pool.push(handle);
-        }
-    }
-
-    for handle in thread_pool {
-        match handle.join() {
-            Err(_) => {
-                return Err(SyncError {
-                    code: error_thread_join(),
-                    file: file!(),
-                    line: line!(),
-                    source: None,
-                    destination: None,
-                });
-            }
-            Ok(value) => {
-                if value != 0 {
-                    exit_code = value;
-                    #[cfg(feature = "cli")]
-                    error_msg(error_msgs()[value as usize], 0, true);
-                }
-            }
-        }
-    }
-
-    if exit_code == 0 {
-        #[cfg(feature = "cli")]
-        if display_help {
-            return Err(SyncError {
-                code: help(),
-                file: file!(),
-                line: line!(),
-                source: None,
-                destination: None,
-            });
-        }
-        return Ok(());
-    }
-
-    Err(SyncError {
-        code: exit_code,
-        file: file!(),
-        line: line!(),
-        source: None,
-        destination: None,
-    })
-}
-
 //====================================== Private error code methods in ascending order ======================================
 
+/// Source and destination already in config file
 #[inline(always)]
 fn error_config_duplicated() -> i32 {
     consts::ERROR_CONFIG_DUPLICATED
 }
 
+/// Config file not ended in .config
 #[inline(always)]
 fn error_config_ext_code() -> i32 {
     consts::ERROR_CONFIG_EXT_CODE
 }
 
+/// Config must be a .config text file
 #[inline(always)]
 fn error_config_folder_code() -> i32 {
     consts::ERROR_CONFIG_FOLDER_CODE
 }
 
+/// Cannot copy file to destination folder
 #[cfg(not(feature = "copy"))]
 #[inline(always)]
 fn error_copy_file_folder() -> i32 {
     consts::ERROR_COPY_FILE_FOLDER
 }
 
+/// Destination file exists
 #[inline(always)]
 fn error_dest_file() -> i32 {
     consts::ERROR_DEST_FILE
 }
 
+/// Source is a file and destination is a folder
 #[inline(always)]
 fn error_dest_not_file() -> i32 {
     consts::ERROR_DEST_NOT_FILE
 }
 
+/// Source is a folder and destination is a file
 #[inline(always)]
 fn error_dest_not_folder() -> i32 {
     consts::ERROR_DEST_NOT_FOLDER
 }
 
+/// Files or folders are different
 #[inline(always)]
 fn error_diff_file_folder() -> i32 {
     consts::ERROR_DIFF_FILE_FOLDER
 }
 
+/// File size must be positive
 #[inline(always)]
 fn error_file_size() -> i32 {
     consts::ERROR_FILE_SIZE
 }
 
+/// Input or output error
 #[inline(always)]
 fn error_io() -> i32 {
     consts::ERROR_IO
 }
 
-#[cfg(feature = "cli")]
+/// Operating system string error
 #[inline(always)]
-fn error_msgs() -> &'static [&'static str] {
-    i18n::error_msgs()
+fn error_os_string() -> i32 {
+    consts::ERROR_OSSTRING
 }
 
+/// Cannot convert number to integer
+#[inline(always)]
+fn error_parse_int() -> i32 {
+    consts::ERROR_PARSE_INT
+}
+
+/// Cannot parse line from config file
 #[inline(always)]
 fn error_parse_line() -> i32 {
     consts::ERROR_PARSE_LINE
 }
 
+/// Source and destination are the same
 #[inline(always)]
 fn error_same_file_folder() -> i32 {
     consts::ERROR_SAME_FILE_FOLDER
 }
 
-/// Source file not found or not a file
+/// Source file not found
 #[inline(always)]
 fn error_source_file() -> i32 {
     consts::ERROR_SOURCE_FILE
 }
 
-/// Source folder not found or not a folder
+/// Source folder not found
 #[inline(always)]
 fn error_source_folder() -> i32 {
     consts::ERROR_SOURCE_FOLDER
 }
 
-/// Any file must have a positive size to split
+/// File does not need to split
 #[inline(always)]
 fn error_split_size() -> i32 {
     consts::ERROR_SPLIT_SIZE
 }
 
-/// System time error like negative difference between two times
+/// System time error (ex: negative difference between times)
 #[inline(always)]
 fn error_system_time() -> i32 {
     consts::ERROR_SYSTEM_TIME
 }
 
-/// Thread join error (rendezvous) on processing folders
+/// Thread join error
 #[inline(always)]
 fn error_thread_join() -> i32 {
     consts::ERROR_THREAD_JOIN
 }
 
-/// Error converting string to operating system string
+/// Cannot convert number to usize
 #[inline(always)]
-fn os_string_error() -> i32 {
-    consts::ERROR_OSSTRING
-}
-
-/// Error converting string to number
-#[inline(always)]
-fn parse_int_error() -> i32 {
-    consts::ERROR_PARSE_INT
-}
-
-/// Error converting integer to usize
-#[inline(always)]
-fn try_from_int_error() -> i32 {
+fn error_try_from_int() -> i32 {
     consts::ERROR_TRY_FROM_INT
 }
 
-//====================================== Private Message methods in ascending order ======================================
+/// Gets all messages errors
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn error_msgs() -> &'static [&'static str] {
+    i18n::error_msgs()
+}
+
+//====================================== Private message methods in ascending order ======================================
 
 /// Displays a colored "Copy" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn copy_msg(filepath: &str) {
     cli::copy_msg(filepath);
 }
 
 /// Displays a colored "(SIMULATION) Copying" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn copy_msg_simulation(filepath: &str) {
     cli::copy_msg_simulation(filepath);
 }
 
 /// Displays a colored "Create" and the folder path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg(folderpath: &str) {
     cli::create_msg(folderpath);
 }
 
 /// Displays a colored "(SIMULATION) Create" and the folder path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg_simulation(folderpath: &str) {
     cli::create_msg_simulation(folderpath);
 }
 
 /// Displays a colored "Empty", the file path and a message in stdout
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn empty_msg(file_folder: &str) {
     cli::empty_msg(file_folder);
 }
 
 /// Displays a colored "Loading" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn loading_msg(filepath: &str) {
     cli::loading_msg(filepath);
 }
 
 /// Displays help in the selected language
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn msg_help() -> &'static str {
     i18n::msg_help()
 }
 
 /// Displays a colored "Remove" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn ok_msg(filepath: &str) {
     cli::ok_msg(filepath)
 }
 
 /// Displays a colored "1 item" and the folder path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn one_item(folderpath: &str) {
     cli::one_item(folderpath);
 }
 
 /// Displays a colored "Remove" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg(file: &str) {
     cli::remove_msg(file);
 }
 
 /// Displays a colored "(SIMULATION) Remove" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg_simulation(file: &str) {
     cli::remove_msg_simulation(file);
 }
 
 /// Displays a colored "Sync" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn sync_msg(filepath: &str) {
     cli::sync_msg(filepath);
 }
 
 /// Displays a colored "(SIMULATION) Sync" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn sync_msg_simulation(filepath: &str) {
     cli::sync_msg_simulation(filepath);
 }
 
 /// Displays a colored "Update" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg(filepath: &str) {
     cli::update_msg(filepath);
 }
 
 /// Displays a colored "(SIMULATION) Update" and the file path
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg_simulation(file: &str) {
     cli::update_msg_simulation(file);

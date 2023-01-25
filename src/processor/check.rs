@@ -11,14 +11,14 @@ pub fn check(
     destination: &str,
     buffer_size: u64,
 ) -> Result<(), crate::processor::SyncError> {
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     {
         check_all(source, destination, buffer_size)?;
         crate::processor::ok_msg(destination);
         Ok(())
     }
 
-    #[cfg(not(feature = "cli"))]
+    #[cfg(not(feature = "i18n"))]
     check_all(source, destination, buffer_size)
 }
 

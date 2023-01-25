@@ -1,7 +1,7 @@
 //! The core of sync and simulate functions implementations
 
 /// Displays what a sync operation would do without any modification
-#[cfg(feature = "cli")]
+#[cfg(feature = "i18n")]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     let fullpath_destination: String;
     let fullpath_source_copy: String;
@@ -215,7 +215,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
     /// Copy a file from source to destination, displays a message and checks for errors
     fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::copy_msg(destination);
 
         crate::processor::copy(source, destination)
@@ -247,7 +247,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     /// Displays a create message and creates a folder
     #[inline(always)]
     fn create_folder(folder: &str) -> Result<(), std::io::Error> {
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::create_msg(folder);
         std::fs::create_dir(folder)
     }
@@ -258,7 +258,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
             return Ok(());
         }
 
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::update_msg(destination);
 
         crate::processor::copy(source, destination)
@@ -270,7 +270,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         file_folder: &str,
         remove_file_folder: fn(String) -> Result<(), std::io::Error>,
     ) -> Result<(), std::io::Error> {
-        #[cfg(feature = "cli")]
+        #[cfg(feature = "i18n")]
         crate::processor::remove_msg(file_folder);
         remove_file_folder(String::from(file_folder))
     }
@@ -376,7 +376,7 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
                 .into_os_string()
                 .into_string()?;
 
-            #[cfg(feature = "cli")]
+            #[cfg(feature = "i18n")]
             crate::processor::sync_msg(&fullpath_destination);
 
             fullpath_source_copy = String::from(&fullpath_source);
@@ -438,13 +438,13 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     loop {
         if let Err(_err) = sync(source, destination) {
-            #[cfg(feature = "cli")]
+            #[cfg(feature = "i18n")]
             crate::processor::error_msg(&_err.to_string(), _err.code, false);
             continue;
         }
 
         if let Err(_err) = crate::processor::check(source, destination) {
-            #[cfg(feature = "cli")]
+            #[cfg(feature = "i18n")]
             crate::processor::error_msg(&_err.to_string(), _err.code, false);
             continue;
         }

@@ -323,7 +323,7 @@ fn message_simulation(ss: &mut StandardStream, color: Color, colored_msg: &str, 
 #[cfg(test)]
 mod tests {
     #[test]
-    #[cfg(feature = "cli")]
+    #[cfg(feature = "i18n")]
     fn cli_tests() {
         crate::processor::warning_msg("a/file/path/file.ext");
         crate::processor::ok_msg("a/file/path/file.ext");

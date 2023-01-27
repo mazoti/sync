@@ -1,10 +1,8 @@
 //! Contains all strings and error codes
 
-#[cfg(feature = "i18n")]
-pub const HASH_BUFFER_SIZE: u64 = 1024 * 512;
-
 pub const CHECK_BUFFER_SIZE: u64 = 1024 * 512; // 512KB, but it will use 2 buffers
 pub const COPY_BUFFER_SIZE: u64 = 1024 * 512;
+pub const HASH_BUFFER_SIZE: u64 = 1024 * 512;
 pub const JOIN_BUFFER_SIZE: u64 = 1024 * 512;
 pub const SPLIT_BUFFER_SIZE: u64 = 1024 * 512;
 

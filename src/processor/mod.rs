@@ -36,7 +36,6 @@ mod check;
 mod config;
 mod consts;
 mod copy;
-mod create;
 mod error;
 mod hash;
 mod join;
@@ -85,7 +84,7 @@ pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
 /// Creates a config file or appends full source full + "|" + full destination path
 #[inline(always)]
 pub fn create(source: &str, destination: &str, config: &str) -> Result<(), SyncError> {
-    create::create(source, destination, config)
+    config::create(source, destination, config)
 }
 
 /// Displays all duplicated files found in the folder
@@ -113,10 +112,15 @@ pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
     config::process_folder(sync::force, folder_path)
 }
 
+/// Caculates path's hash and checks with hash code
+pub fn hash(hash_code: &str, path: &str) -> Result<(), SyncError> {
+    hash::hash(hash_code, path, consts::HASH_BUFFER_SIZE)
+}
+
 /// Reads a hash file and checks files hashes
 #[inline(always)]
 pub fn hash_file(path: &str) -> Result<(), SyncError> {
-    hash::hash_file(path)
+    config::process_file(hash, path)
 }
 
 /// Creates a file with all file paths and hashes of the files in folder

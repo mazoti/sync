@@ -1,6 +1,6 @@
 //! Compares source and destination.
 //! Both source and destination must be the same type
-//! (files or folders).
+//! (files or folders)
 
 use std::{io::Read, path::Path};
 

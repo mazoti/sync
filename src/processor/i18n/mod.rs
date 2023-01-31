@@ -1,3 +1,5 @@
+//! Contains all strings in translated language
+
 #[cfg(feature = "br")]
 mod messages_br;
 #[cfg(feature = "br")]

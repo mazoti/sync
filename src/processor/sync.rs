@@ -1,4 +1,4 @@
-//! The core of sync and simulate functions implementations
+//! Sync and simulate functions implementations
 
 /// Displays what a sync operation would do without any modification
 #[cfg(feature = "i18n")]

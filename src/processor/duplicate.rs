@@ -1,3 +1,5 @@
+//! Finds all duplicated or empty files in the folder
+
 #[cfg(feature = "tree")]
 use std::collections::BTreeMap as Map;
 

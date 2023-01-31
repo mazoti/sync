@@ -1,3 +1,5 @@
+//! Removes the destination (if it exists) and makes a copy from source using a buffer
+
 #[cfg(feature = "copy")]
 use std::io::{Read, Write};
 

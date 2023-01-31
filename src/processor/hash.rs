@@ -1,4 +1,4 @@
-//! Hash functions used by the system to find duplicate files and folder security
+//! Hash functions used by the system to folder security
 
 use std::io::Write;
 

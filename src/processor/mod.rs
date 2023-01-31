@@ -1,27 +1,5 @@
-//! A backup and synchronization tool
-//!
-//! Provides three ways of synchronization
-//! - Direct: sync(source: &str, destination: &str)
-//!
-//! Removes, adds and updates files and folders in destination
-//!
-//! - By config file: file(config: &str)
-//!
-//! A config file is a text file with .config extension
-//! and each line contains the full path to source file or folder,
-//! the terminator "|" and the full path to destination file or folder.
-//! Ex: "/home/user/data|/home/user/backup"
-//!
-//! - By folder: folder(folder: &str)
-//!
-//! Iterates the folder processing each .config file.
-//! To check each byte of the whole process:
-//!
-//! - check(source: &str, destination: &str)
-//!
-//! To synchronize and check until no errors are found or user press Crtl+C:
-//!
-//! - force(source: &str, destination: &str)
+//! A backup and synchronization tool with safe move, split/join of files, hash folder security, duplicate/empty file
+//! or folder finder, file/folder content comparison and more!
 
 #[cfg(feature = "i18n")]
 mod cli;
@@ -47,7 +25,7 @@ mod sync;
 /// "code" is the number returned to operating system,
 /// "file" is the source code file,
 /// "line" is the line number of the error,
-/// "source" and "destination" are the files processed by the system
+/// "source" and "destination" are the files or the folders processed by the system
 pub struct SyncError {
     pub code: i32,
     pub file: &'static str,
@@ -70,13 +48,13 @@ pub fn check_file(file_path: &str) -> Result<(), SyncError> {
     config::process_file(check, file_path)
 }
 
-/// Compares every file and every byte of two folders from config to check if they are the same
+/// Checks all .config files in parallel if there is anyone in the same folder
 #[inline(always)]
 pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
     config::process_folder(check, folder_path)
 }
 
-/// Copy a file from source to destination using the system function or copy method
+/// Copy a file from source to destination using the system function or the copy method
 pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
     copy::copy(source, destination, consts::COPY_BUFFER_SIZE)
 }
@@ -94,19 +72,19 @@ pub fn duplicate(folder: &str) -> Result<(), SyncError> {
     duplicate::duplicate(folder)
 }
 
-/// Keep copying and checking until both operations succeeds
+/// Keeps copying and checking until both operations succeeds
 #[inline(always)]
 pub fn force(source: &str, destination: &str) -> Result<(), SyncError> {
     sync::force(source, destination)
 }
 
-/// Run force on each file in config file
+/// Runs force on each file in config file
 #[inline(always)]
 pub fn force_file(file_path: &str) -> Result<(), SyncError> {
     config::process_file(sync::force, file_path)
 }
 
-/// Run force on each folder in config file
+/// Runs force in all .config files in parallel if there is anyone in the same folder
 #[inline(always)]
 pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
     config::process_folder(sync::force, folder_path)
@@ -123,7 +101,7 @@ pub fn hash_file(path: &str) -> Result<(), SyncError> {
     config::process_file(hash, path)
 }
 
-/// Creates a file with all file paths and hashes of the files in folder
+/// Creates a file with all file paths and hashes of the files in folder and it's subfolders
 #[inline(always)]
 pub fn hash_folder(folder: &str, file: &str) -> Result<(), SyncError> {
     hash::hash_folder(folder, file)
@@ -146,21 +124,21 @@ pub fn no_error() -> i32 {
     consts::NO_ERROR
 }
 
-/// Does not synchronize, only displays the messages of what sync operation will do
+/// Does not synchronize, only displays the messages of what sync operations would do
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate(source: &str, destination: &str) -> Result<(), SyncError> {
     sync::simulate(source, destination)
 }
 
-/// Run simulate on each file in config file
+/// Runs simulate on each file in config file
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate_file(file_path: &str) -> Result<(), SyncError> {
     config::process_file(sync::simulate, file_path)
 }
 
-/// Run simulate on each folder in config file
+/// Runs simulate in all .config files in parallel if there is anyone in the same folder
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn simulate_folder(config: &str) -> Result<(), SyncError> {
@@ -179,13 +157,13 @@ pub fn sync(source: &str, destination: &str) -> Result<(), SyncError> {
     sync::sync(source, destination)
 }
 
-/// Run sync on each file in config file
+/// Runs sync on each file in config file
 #[inline(always)]
 pub fn sync_file(config: &str) -> Result<(), SyncError> {
     config::process_file(sync::sync, config)
 }
 
-/// Run sync on each folder in config file
+/// Runs sync in all .config files in parallel if there is anyone in the same folder
 #[inline(always)]
 pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
     config::process_folder(sync::sync, folder_path)
@@ -239,14 +217,14 @@ pub fn help_code() -> i32 {
     consts::HELP
 }
 
-/// Displays the program name, version, URL and date/time (optional)
+/// Displays the program name, version, URL and the datetime (optional)
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn show_header(datetime: bool) {
     cli::show_header(datetime)
 }
 
-/// Displays a colored "Warning", the file path and a message in stdout
+/// Displays a colored "WARNING", the file path and a message in stdout
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn warning_msg(file: &str) {
@@ -269,7 +247,7 @@ fn datetime() -> String {
     chrono::Local::now().format("%Y-%m-%d %T").to_string()
 }
 
-// Returns the hash configuration buffer size
+/// Returns the hash configuration buffer size
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn get_hash_buffer_size() -> u64 {
@@ -408,7 +386,7 @@ fn error_msgs() -> &'static [&'static str] {
 
 //====================================== Private message methods in ascending order ======================================
 
-/// Displays a colored "Copy" and the file path
+/// Displays a colored "Copying" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn copy_msg(filepath: &str) {
@@ -422,14 +400,14 @@ fn copy_msg_simulation(filepath: &str) {
     cli::copy_msg_simulation(filepath);
 }
 
-/// Displays a colored "Create" and the folder path
+/// Displays a colored "Creating" and the folder path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg(folderpath: &str) {
     cli::create_msg(folderpath);
 }
 
-/// Displays a colored "(SIMULATION) Create" and the folder path
+/// Displays a colored "(SIMULATION) Creating" and the folder path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg_simulation(folderpath: &str) {
@@ -457,7 +435,7 @@ fn msg_help() -> &'static str {
     i18n::msg_help()
 }
 
-/// Displays a colored "Remove" and the file path
+/// Displays a colored "Ok" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn ok_msg(filepath: &str) {
@@ -471,14 +449,14 @@ fn one_item(folderpath: &str) {
     cli::one_item(folderpath);
 }
 
-/// Displays a colored "Remove" and the file path
+/// Displays a colored "Removing" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg(file: &str) {
     cli::remove_msg(file);
 }
 
-/// Displays a colored "(SIMULATION) Remove" and the file path
+/// Displays a colored "(SIMULATION) Removing" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg_simulation(file: &str) {
@@ -499,14 +477,14 @@ fn sync_msg_simulation(filepath: &str) {
     cli::sync_msg_simulation(filepath);
 }
 
-/// Displays a colored "Update" and the file path
+/// Displays a colored "Updating" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg(filepath: &str) {
     cli::update_msg(filepath);
 }
 
-/// Displays a colored "(SIMULATION) Update" and the file path
+/// Displays a colored "(SIMULATION) Updating" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg_simulation(file: &str) {

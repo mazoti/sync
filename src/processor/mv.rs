@@ -1,3 +1,6 @@
+//! Safe move: removes destination, copies source file or folder to destination, compares source with the destination
+//! and removes source file or folder
+
 /// Moves a source file or source to destination file or source. Slower than OS move but safer
 pub fn mv(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     crate::processor::copy(source, destination)?;

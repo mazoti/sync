@@ -1,6 +1,4 @@
-//! Compares source and destination.
-//! Both source and destination must be the same type
-//! (files or folders)
+//! Compares source and destination: both must be the same type (files or folders)
 
 use std::{io::Read, path::Path};
 
@@ -22,7 +20,7 @@ pub fn check(
     check_all(source, destination, buffer_size)
 }
 
-/// Compares every folder, file and byte
+/// Compares every folder, file and byte using a buffer
 #[cfg(not(feature = "check-mt"))]
 fn check_all(
     source: &str,
@@ -81,7 +79,7 @@ fn check_all(
     check_file(source, destination, buffer_size)
 }
 
-/// Compares every folder, file and byte
+/// Compares every folder, file and byte using a buffer and multithreads
 #[cfg(feature = "check-mt")]
 fn check_all(
     source: &str,
@@ -95,6 +93,9 @@ fn check_all(
 
     let handle1: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
     let handle2: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
+
+    let mut thread_error: bool = false;
+    let mut value_error: bool = false;
 
     if source == destination {
         return Err(crate::processor::SyncError {
@@ -135,49 +136,36 @@ fn check_all(
             });
 
             match handle1.join() {
-                Err(_) => {
-                    if handle2.join().is_err() {
-                        return Err(crate::processor::SyncError {
-                            code: crate::processor::error_thread_join(),
-                            file: file!(),
-                            line: line!(),
-                            source: None,
-                            destination: None,
-                        });
-                    }
-                    return Err(crate::processor::SyncError {
-                        code: crate::processor::error_thread_join(),
-                        file: file!(),
-                        line: line!(),
-                        source: None,
-                        destination: None,
-                    });
-                }
-                Ok(value) => match handle2.join() {
-                    Err(_) => {
-                        return Err(crate::processor::SyncError {
-                            code: crate::processor::error_thread_join(),
-                            file: file!(),
-                            line: line!(),
-                            source: None,
-                            destination: None,
-                        });
-                    }
-                    Ok(value2) => {
-                        if value.is_ok() && value2.is_ok() {
-                            return check_file_folder(source, destination, buffer_size);
-                        }
-                    }
-                },
+                Err(_) => thread_error = true,
+                Ok(value) => value_error = value_error || value.is_err(),
             }
 
-            return Err(crate::processor::SyncError {
-                code: crate::processor::error_diff_file_folder(),
-                file: file!(),
-                line: line!(),
-                source: Some(source.to_string()),
-                destination: Some(destination.to_string()),
-            });
+            match handle2.join() {
+                Err(_) => thread_error = true,
+                Ok(value) => value_error = value_error || value.is_err(),
+            }
+
+            if thread_error {
+                return Err(crate::processor::SyncError {
+                    code: crate::processor::error_thread_join(),
+                    file: file!(),
+                    line: line!(),
+                    source: None,
+                    destination: None,
+                });
+            }
+
+            if value_error {
+                return Err(crate::processor::SyncError {
+                    code: crate::processor::error_diff_file_folder(),
+                    file: file!(),
+                    line: line!(),
+                    source: Some(source.to_string()),
+                    destination: Some(destination.to_string()),
+                });
+            }
+
+            return check_file_folder(source, destination, buffer_size);
         }
 
         // source is a directory but destination is not
@@ -290,7 +278,7 @@ fn check_file_folder(
     Ok(())
 }
 
-/// Look for removed files or folders in source
+/// Looks for removed files and folders in source
 fn check_file_folder_add_removed(
     source: &str,
     destination: &str,

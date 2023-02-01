@@ -6,7 +6,7 @@ license-file     = "License.md"
 name             = "sync"
 readme           = "Readme.md"
 repository       = "https://github.com/mazoti/sync/"
-version          = "1.3.4"
+version          = "1.3.5"
 
 [profile.release]
 codegen-units    = 1

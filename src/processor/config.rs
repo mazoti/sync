@@ -1,8 +1,8 @@
-//! Contains the methods to process config files and folders
+//! Contains the methods to process .config files
 
 use std::io::{BufRead, BufReader, Write};
 
-/// Creates a config file or appends full source full + "|" + full destination path
+/// Creates a config file or appends full source + "|" + full destination path on each line
 pub fn create(
     source: &str,
     destination: &str,
@@ -134,7 +134,7 @@ pub fn create(
     Ok(writeln!(file, "{}|{}", &source, &destination)?)
 }
 
-/// Process all sources to destinations found in the config file
+/// Process all sources to destinations found in the .config file
 pub fn process_file(
     process_function: fn(&str, &str) -> Result<(), crate::processor::SyncError>,
     config: &str,
@@ -162,7 +162,7 @@ pub fn process_file(
     Ok(())
 }
 
-/// Process all config files found in parallel
+/// Process in parallel all .config files found in the same folder as sync binary
 pub fn process_folder(
     process_function: fn(&str, &str) -> Result<(), crate::processor::SyncError>,
     folder: &str,

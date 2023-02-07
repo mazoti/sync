@@ -1,12 +1,10 @@
-//! Command Line Interface, contains all output commands
+//! Command Line Interface: contains all output commands
 
 use std::io::{Read, Write};
 
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-// ============================================= Public methods in ascending order ==============
-
-/// Displays a colored "Copy" and the file path
+/// Displays a colored "Copying" and the file path
 #[inline(always)]
 pub fn copy_msg(filepath: &str) {
     message(
@@ -29,7 +27,7 @@ pub fn copy_msg_simulation(filepath: &str) {
     );
 }
 
-/// Displays a colored "Create" and the folder path
+/// Displays a colored "Creating" and the folder path
 #[inline(always)]
 pub fn create_msg(folderpath: &str) {
     message(
@@ -41,7 +39,7 @@ pub fn create_msg(folderpath: &str) {
     );
 }
 
-/// Displays a colored "(SIMULATION) Create" and the folder path
+/// Displays a colored "(SIMULATION) Creating" and the folder path
 #[inline(always)]
 pub fn create_msg_simulation(folderpath: &str) {
     message_simulation(
@@ -52,7 +50,7 @@ pub fn create_msg_simulation(folderpath: &str) {
     );
 }
 
-/// Displays a colored "Duplicate" and the file path
+/// Displays a colored "DUPLICATED" and the file path
 #[inline(always)]
 pub fn duplicate_msg(filepath: &str) {
     message(
@@ -64,7 +62,7 @@ pub fn duplicate_msg(filepath: &str) {
     );
 }
 
-/// Displays a colored "Empty" and the file or folder path
+/// Displays a colored "(EMPTY)" and the file or folder path
 #[inline(always)]
 pub fn empty_msg(file_folder: &str) {
     message(
@@ -76,8 +74,8 @@ pub fn empty_msg(file_folder: &str) {
     );
 }
 
-/// Displays a colored "ERROR", an error message in stderr and exit with the error code.
-/// If user_input is "true", waits an "enter" from user keyboard
+/// Displays a colored "ERROR", an error message in stderr and exits with the error code.
+/// If user_input is "true", waits an "enter" from the user keyboard
 pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
     message(
         &mut StandardStream::stderr(ColorChoice::Always),
@@ -98,7 +96,7 @@ pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
     code
 }
 
-/// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
+/// Displays a colored "Usage:", the help message in stdout and exit with NO_ERROR code
 #[inline]
 pub fn help() -> i32 {
     message(
@@ -135,7 +133,7 @@ pub fn ok_msg(filepath: &str) {
     );
 }
 
-/// Displays a colored "One item" and the folder path
+/// Displays a colored "(ONE ITEM)" and the folder path
 #[inline(always)]
 pub fn one_item(folderpath: &str) {
     message(
@@ -147,7 +145,7 @@ pub fn one_item(folderpath: &str) {
     );
 }
 
-/// Displays a colored "Remove" and the file path
+/// Displays a colored "Removing" and the file path
 #[inline(always)]
 pub fn remove_msg(filepath: &str) {
     message(
@@ -159,7 +157,7 @@ pub fn remove_msg(filepath: &str) {
     );
 }
 
-/// Displays a colored "(SIMULATION) Remove" and the file path
+/// Displays a colored "(SIMULATION) Removing" and the file path
 #[inline(always)]
 pub fn remove_msg_simulation(filepath: &str) {
     message_simulation(
@@ -170,7 +168,7 @@ pub fn remove_msg_simulation(filepath: &str) {
     );
 }
 
-/// Displays the program name, version, URL and date/time (optional)
+/// Displays the program name, version, URL and datetime (optional)
 #[inline]
 pub fn show_header(datetime: bool) {
     if datetime {
@@ -207,7 +205,7 @@ pub fn sync_msg_simulation(filepath: &str) {
     );
 }
 
-/// Displays a colored "Update" and the file path
+/// Displays a colored "Updating" and the file path
 #[inline(always)]
 pub fn update_msg(filepath: &str) {
     message(
@@ -219,7 +217,7 @@ pub fn update_msg(filepath: &str) {
     );
 }
 
-/// Displays a colored "(SIMULATION) Update" and the file path
+/// Displays a colored "(SIMULATION) Updating" and the file path
 #[inline(always)]
 pub fn update_msg_simulation(filepath: &str) {
     message_simulation(
@@ -230,7 +228,7 @@ pub fn update_msg_simulation(filepath: &str) {
     );
 }
 
-/// Displays a colored "Warning", the file path and a message in stdout
+/// Displays a colored "WARNING", the file path and a message in stdout
 #[inline(always)]
 pub fn warning_msg(filepath: &str) {
     message(
@@ -241,8 +239,6 @@ pub fn warning_msg(filepath: &str) {
         true,
     );
 }
-
-// ============================================= Private methods in ascending order, connects to termcolor crate ==============
 
 /// The kernel of the output messages
 fn message(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str, stdout: bool) {

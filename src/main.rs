@@ -105,7 +105,7 @@ const VERSION_SORTED: &[&str] = &[
 /// Displays the error message (optional) and sends the error code to operating system
 fn error(err: processor::SyncError) {
     #[cfg(debug_assertions)]
-    println!("{:?}", err);
+    println!("{err:?}");
 
     #[cfg(feature = "i18n")]
     std::process::exit(processor::error_msg(&err.to_string(), err.code, true));

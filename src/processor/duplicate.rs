@@ -1,4 +1,4 @@
-//! Finds all duplicated or empty files in the folder
+//! Finds all duplicated and empty files in the folder. Could use a btree (enabled by feature "tree") or hashmap (default)
 
 #[cfg(feature = "tree")]
 use std::collections::BTreeMap as Map;
@@ -8,7 +8,7 @@ use std::collections::HashMap as Map;
 
 use std::io::Read;
 
-/// Finds and displays all duplicated files in folder path
+/// Finds all duplicated and empty files in the folder
 pub fn duplicate(folderpath: &str) -> Result<(), crate::processor::SyncError> {
     let mut file_count: usize;
     let mut hash: u32;

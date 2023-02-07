@@ -29,7 +29,7 @@ pub fn error_to_string(_code: i32) -> Option<String> {
 impl From<std::io::Error> for SyncError {
     fn from(_error: std::io::Error) -> Self {
         #[cfg(debug_assertions)]
-        println!("===> {:?} <===", _error);
+        println!("===> {_error:?} <===");
 
         SyncError {
             code: crate::processor::error_io(),
@@ -45,7 +45,7 @@ impl From<std::io::Error> for SyncError {
 impl From<std::time::SystemTimeError> for SyncError {
     fn from(_error: std::time::SystemTimeError) -> Self {
         #[cfg(debug_assertions)]
-        println!("===> {:?} <===", _error);
+        println!("===> {_error:?} <===");
 
         SyncError {
             code: crate::processor::error_system_time(),
@@ -61,7 +61,7 @@ impl From<std::time::SystemTimeError> for SyncError {
 impl std::fmt::Display for SyncError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(msg) = error_to_string(self.code) {
-            write!(f, "{}", msg)?;
+            write!(f, "{msg}")?;
         }
         Ok(())
     }
@@ -77,15 +77,15 @@ impl std::fmt::Debug for SyncError {
         )?;
 
         if let Some(msg) = error_to_string(self.code) {
-            writeln!(f, "Message: {}", msg)?;
+            writeln!(f, "Message: {msg}")?;
         }
 
         if let Some(src) = &self.source {
-            writeln!(f, "Source: {}", src)?;
+            writeln!(f, "Source: {src}")?;
         }
 
         if let Some(dest) = &self.destination {
-            writeln!(f, "Destination: {}", dest)?;
+            writeln!(f, "Destination: {dest}")?;
         }
 
         Ok(())
@@ -96,7 +96,7 @@ impl std::fmt::Debug for SyncError {
 impl From<std::num::ParseIntError> for SyncError {
     fn from(_error: std::num::ParseIntError) -> Self {
         #[cfg(debug_assertions)]
-        println!("===> {:?} <===", _error);
+        println!("===> {_error:?} <===");
 
         SyncError {
             code: crate::processor::error_parse_int(),
@@ -112,7 +112,7 @@ impl From<std::num::ParseIntError> for SyncError {
 impl From<std::num::TryFromIntError> for SyncError {
     fn from(_error: std::num::TryFromIntError) -> Self {
         #[cfg(debug_assertions)]
-        println!("===> {:?} <===", _error);
+        println!("===> {_error:?} <===");
 
         SyncError {
             code: crate::processor::error_try_from_int(),
@@ -128,7 +128,7 @@ impl From<std::num::TryFromIntError> for SyncError {
 impl From<std::ffi::OsString> for SyncError {
     fn from(_error: std::ffi::OsString) -> Self {
         #[cfg(debug_assertions)]
-        println!("===> {:?} <===", _error);
+        println!("===> {_error:?} <===");
 
         SyncError {
             code: crate::processor::error_os_string(),

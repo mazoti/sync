@@ -275,7 +275,6 @@ fn error_config_folder_code() -> i32 {
 }
 
 /// Cannot copy file to destination folder
-#[cfg(not(feature = "copy"))]
 #[inline(always)]
 fn error_copy_file_folder() -> i32 {
     consts::ERROR_COPY_FILE_FOLDER

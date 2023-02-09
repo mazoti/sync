@@ -1,4 +1,4 @@
-//! Finds all duplicated and empty files in the folder. Could use a btree (enabled by feature "tree") or hashmap (default)
+//! Finds all duplicated and empty files in the folder: can use a btree (enabled by feature "tree") or hashmap (default)
 
 #[cfg(feature = "tree")]
 use std::collections::BTreeMap as Map;

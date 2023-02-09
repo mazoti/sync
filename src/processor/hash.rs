@@ -1,10 +1,10 @@
-//! Hash functions used by the system to folder security
+//! Hash functions used by the system for folder security
 
 use std::io::Write;
 
-/// A stronger hash for the folder security
+/// Calculates the SHA256 of the filepath and returns an hexadecimal string of the hash
 fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
-    if !std::path::Path::new(filepath).exists() {
+    if !(std::path::Path::new(filepath).exists() && std::path::Path::new(filepath).is_file()) {
         return Err(crate::processor::SyncError {
             code: crate::processor::error_source_file(),
             file: file!(),
@@ -14,19 +14,10 @@ fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
         });
     }
 
-    if !std::path::Path::new(filepath).is_file() {
-        return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
-            file: file!(),
-            line: line!(),
-            source: Some(filepath.to_string()),
-            destination: None,
-        });
-    }
-
     Ok(sha256::try_digest(std::path::Path::new(filepath)).unwrap())
 }
 
+/// Compares the SHA256 hash of the hash file with the hash of the system file
 #[inline]
 pub fn hash(
     hash_code: &str,
@@ -56,7 +47,7 @@ pub fn hash(
     Ok(())
 }
 
-/// Creates a file with all paths and hashes of each file in source folder
+/// Creates a file with all paths and hashes of each file of the source folder and subfolders
 pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
     fn walk(
         source_folder: &str,

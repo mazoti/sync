@@ -33,13 +33,13 @@ pub fn copy(
 
     if feature_copy(source, destination, _buffer_size)? == std::fs::metadata(source)?.len() {
         // Make the modified date the same in source and destination (Unix and Linux only)
-        #[cfg(not(windows))]
-        {
-            let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-            let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-            file_source.set_len(file_source.metadata()?.len())?;
-            file_destination.set_len(file_destination.metadata()?.len())?;
-        }
+        //       #[cfg(not(windows))]
+        //       {
+        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+        file_source.set_len(file_source.metadata()?.len())?;
+        file_destination.set_len(file_destination.metadata()?.len())?;
+        //      }
 
         return Ok(());
     }

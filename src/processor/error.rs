@@ -2,7 +2,7 @@
 
 use crate::processor::SyncError;
 
-/// Returns a String given an error code
+/// Returns a String given an error code if internationalization is enabled
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn error_to_string(code: i32) -> Option<String> {
@@ -18,7 +18,7 @@ pub fn error_to_string(code: i32) -> Option<String> {
     }
 }
 
-/// Returns a String given an error code
+/// Returns a String given an error code if internationalization is enabled
 #[cfg(not(feature = "i18n"))]
 #[inline(always)]
 pub fn error_to_string(_code: i32) -> Option<String> {

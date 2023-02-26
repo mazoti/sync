@@ -6,7 +6,7 @@ use std::io::Write;
 fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
     if !(std::path::Path::new(filepath).exists() && std::path::Path::new(filepath).is_file()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: None,
@@ -26,7 +26,7 @@ pub fn hash(
 ) -> Result<(), crate::processor::SyncError> {
     if !(std::path::Path::new(path).exists() && std::path::Path::new(path).is_file()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: None,
@@ -36,7 +36,7 @@ pub fn hash(
 
     if hash_code != sha256::try_digest(std::path::Path::new(path)).unwrap() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_diff_file_folder(),
+            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
             file: file!(),
             line: line!(),
             source: Some(hash_code.to_string()),
@@ -73,7 +73,7 @@ pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::process
 
     if !(std::path::Path::new(source).exists() && std::path::Path::new(source).is_dir()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -83,7 +83,7 @@ pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::process
 
     if std::path::Path::new(destination).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_file(),
+            code: crate::processor::ErrorCode::ErrorDestFile,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -91,6 +91,5 @@ pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::process
         });
     }
 
-    let hash_file: std::fs::File = std::fs::File::create(destination)?;
-    walk(source, &hash_file)
+    walk(source, &std::fs::File::create(destination)?)
 }

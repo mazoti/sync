@@ -1,86 +1,123 @@
-pub const MSG_HELP: &str = "
+//! English string messages crate
+
+/// "Copying"
+pub const COPY_MSG: &str = "Copying";
+
+/// "Creating"
+pub const CREATE_MSG: &str = "Creating";
+
+/// "DUPLICATED"
+pub const DUPLICATE_MSG: &str = "DUPLICATED";
+
+/// "elapsed:"
+pub const ELAPSE_MSG: &str = "elapsed:";
+
+/// "(EMPTY)"
+pub const EMPTY_MSG: &str = "(EMPTY)";
+
+/// "ERROR"
+pub const ERROR_MSG: &str = "ERROR";
+
+/// Message displayed when user enters "help" or sync didn't find any possible operation
+pub const HELP_MSG: &str = "
 	sync [source] [destination]
-	sync /home/user/data /home/user/backup
-	sync \"C:\\My project\\file.dat\" \"D:\\Backup\\file.dat\"
-
-If the destination does not exists, it will be created.
-To see what sync would do without any modification,
-add the \"--simulate\" parameter first:
-
-    sync --simulate \"source\" \"destination\"
-
-To synchronize more files or folders, create a config file:
-
-	sync [source] [destination] [config_file.config]
-	sync /home/user/folder /home/user/backup/folder backups.config
-	sync /home/user/file.ext /home/user/backup/file.ext backups.config
-	...
-
-and run with the .config file as argument:
-
-	sync backups.config
-
-Multiple .config files are also supported:
-
-	sync user1/folder   user1/backup/folder   sync_bin_folder/user1.config
-	sync user1/file.ext user1/backup/file.ext sync_bin_folder/user1.config
-	...
-	sync user2/folder   user2/backup/folder   sync_bin_folder/user2.config
-	sync user2/file.ext user2/backup/file.ext sync_bin_folder/user2.config
-	...
-
-the .config files must be in same folder as the sync binary; than run without arguments:
-
-	sync
-
-To check every folder, file and byte of the whole process:
-
-	sync --check \"source\" \"destination\"
-
-To keep synchronizing and checking until both operations succeed, use the \"--force\" flag:
-
-	sync --force \"source\" \"destination\"
+	sync [source] [destination] [file.config]
+	sync [file.config] (or just sync if .config files are in the same folder)
+	sync check [source] [destination]
+	sync empty [folder]
+	sync duplicate [folder]
+	sync force [source] [destination]
+	sync hash [folder] [file.hashs]
+	sync hash [file.hashs]
+	sync join [folder]
+	sync move [source] [destination]
+	sync split [size in bytes] [file]
+	sync simulate [source] [destination]
 ";
 
-pub const ERROR_MSGS: &[&str] = &[
-    "",                                              // NO_ERROR
-    "source and destination already in config file", // ERROR_CONFIG_DUPLICATED
-    "config file not ended in .config",              // ERROR_CONFIG_EXT_CODE
-    "config must be a .config text file",            // ERROR_CONFIG_FOLDER_CODE
-    "cannot copy file to destination folder",        // ERROR_COPY_FILE_FOLDER
-    "destination file exists",                       // ERROR_DEST_FILE
-    "source is a file and destination is a folder",  // ERROR_DEST_NOT_FILE
-    "source is a folder and destination is a file",  // ERROR_DEST_NOT_FOLDER
-    "files or folders are different",                // ERROR_DIFF_FILE_FOLDER
-    "file size must be positive",                    // ERROR_FILE_SIZE
-    "Input or output error",                         // ERROR_IO
-    "Operating system string error",                 // ERROR_OSSTRING
-    "cannot convert number to integer",              // ERROR_PARSE_INT
-    "cannot parse line from config file",            // ERROR_PARSE_LINE
-    "source and destination are the same",           // ERROR_SAME_FILE_FOLDER
-    "source file not found",                         // ERROR_SOURCE_FILE
-    "source folder not found",                       // ERROR_SOURCE_FOLDER
-    "file does not need to split",                   // ERROR_SPLIT_SIZE
-    "system time error",                             // ERROR_SYSTEM_TIME
-    "cannot join thread",                            // ERROR_THREAD_JOIN
-    "cannot convert number to usize",                // ERROR_TRY_FROM_INT
-];
+/// "Loading"
+pub const LOADING_MSG: &str = "Loading";
 
-pub const COMMAND_MSGS: &[&str] = &[
-    "Creating",
-    " Copying",
-    "Elapsed",
-    "ERROR",
-    " Loading",
-    "      Ok",
-    "Removing",
-    "started",
-    "    Sync",
-    "Updating",
-    "Usage:",
-    " WARNING",
-    "(SIMULATION)",
-    "(EMPTY)",
-    "(ONE ITEM)",
-    "DUPLICATED",
-];
+/// "Ok"
+pub const OK_MSG: &str = "Ok";
+
+/// "(ONE ITEM)"
+pub const ONE_ITEM_MSG: &str = "(ONE ITEM)";
+
+/// "Removing"
+pub const REMOVE_MSG: &str = "Removing";
+
+/// "(SIMULATION)"
+pub const SIMULATION_MSG: &str = "(SIMULATION)";
+
+/// "started"
+pub const START_MSG: &str = "started";
+
+/// "Sync"
+pub const SYNC_MSG: &str = "Sync";
+
+/// "Updating"
+pub const UPDATE_MSG: &str = "Updating";
+
+/// "Usage:"
+pub const USAGE_MSG: &str = "Usage:";
+
+/// "source and destination already in config file"
+pub const ERROR_CONFIG_DUPLICATED: &str = "source and destination already in config file";
+
+/// "config file not ended in .config"
+pub const ERROR_CONFIG_EXT_CODE: &str = "config file not ended in .config";
+
+/// "config must be a .config text file"
+pub const ERROR_CONFIG_FOLDER_CODE: &str = "config must be a .config text file";
+
+/// "cannot copy file to destination folder"
+pub const ERROR_COPY_FILE_FOLDER: &str = "cannot copy file to destination folder";
+
+/// "destination file exists"
+pub const ERROR_DEST_FILE: &str = "destination file exists";
+
+/// "source is a file and destination is a folder"
+pub const ERROR_DEST_NOT_FILE: &str = "source is a file and destination is a folder";
+
+/// "source is a folder and destination is a file"
+pub const ERROR_DEST_NOT_FOLDER: &str = "source is a folder and destination is a file";
+
+/// "files or folders are different"
+pub const ERROR_DIFF_FILE_FOLDER: &str = "files or folders are different";
+
+/// "file size must be positive"
+pub const ERROR_FILE_SIZE: &str = "file size must be positive";
+
+/// "Input or output error"
+pub const ERROR_IO: &str = "Input or output error";
+
+/// "Operating system string error"
+pub const ERROR_OSSTRING: &str = "Operating system string error";
+
+/// "cannot convert number to integer"
+pub const ERROR_PARSE_INT: &str = "cannot convert number to integer";
+
+/// "cannot parse line from config file"
+pub const ERROR_PARSE_LINE: &str = "cannot parse line from config file";
+
+/// "source and destination are the same"
+pub const ERROR_SAME_FILE_FOLDER: &str = "source and destination are the same";
+
+/// "source file not found"
+pub const ERROR_SOURCE_FILE: &str = "source file not found";
+
+/// "source folder not found"
+pub const ERROR_SOURCE_FOLDER: &str = "source folder not found";
+
+/// "file does not need to split"
+pub const ERROR_SPLIT_SIZE: &str = "file does not need to split";
+
+/// "system time error"
+pub const ERROR_SYSTEM_TIME: &str = "system time error";
+
+/// "cannot join thread"
+pub const ERROR_THREAD_JOIN: &str = "cannot join thread";
+
+/// "cannot convert number to usize"
+pub const ERROR_TRY_FROM_INT: &str = "cannot convert number to usize";

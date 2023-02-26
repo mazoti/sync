@@ -1,6 +1,6 @@
 //! Contains all methods to validate files and folders
 
-/// Look for empty files, empty folders or folders with one file or one folder only
+/// Looks for empty files, empty folders or folders with one file or one folder only
 pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
     let mut fullpath: String;
     let mut folder_metadata: std::fs::Metadata;
@@ -11,7 +11,7 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
     // input must be a folder
     if !(folder_path.exists() && folder_path.is_dir()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(folder.to_string()),
@@ -41,10 +41,8 @@ pub fn empty(folder: &str) -> Result<(), crate::processor::SyncError> {
     }
 
     if count == 1 {
-        crate::processor::one_item(folder);
+        crate::processor::one_item_msg(folder);
     }
 
     Ok(())
 }
-
-//====================================== Unit Tests ======================================

@@ -12,7 +12,11 @@ pub fn check(
     #[cfg(feature = "i18n")]
     {
         check_all(source, destination, buffer_size)?;
-        crate::processor::ok_msg(destination);
+        crate::processor::ok_msg(
+            &std::fs::canonicalize(destination)?
+                .into_os_string()
+                .into_string()?,
+        );
         Ok(())
     }
 
@@ -22,14 +26,14 @@ pub fn check(
 
 /// Compares every folder, file and byte using a buffer
 #[cfg(not(feature = "check-mt"))]
-fn check_all(
+pub fn check_all(
     source: &str,
     destination: &str,
     buffer_size: u64,
 ) -> Result<(), crate::processor::SyncError> {
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -39,7 +43,7 @@ fn check_all(
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_same_file_folder(),
+            code: crate::processor::ErrorCode::ErrorSameFileFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -57,7 +61,7 @@ fn check_all(
 
         // source is a directory but destination not
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_not_folder(),
+            code: crate::processor::ErrorCode::ErrorDestNotFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -68,7 +72,7 @@ fn check_all(
     // source is a file or symlink
     if Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_not_file(),
+            code: crate::processor::ErrorCode::ErrorDestNotFile,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -81,7 +85,7 @@ fn check_all(
 
 /// Compares every folder, file and byte using a buffer and multithreads
 #[cfg(feature = "check-mt")]
-fn check_all(
+pub fn check_all(
     source: &str,
     destination: &str,
     buffer_size: u64,
@@ -99,7 +103,7 @@ fn check_all(
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_same_file_folder(),
+            code: crate::processor::ErrorCode::ErrorSameFileFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -109,7 +113,7 @@ fn check_all(
 
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -147,7 +151,7 @@ fn check_all(
 
             if thread_error {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::error_thread_join(),
+                    code: crate::processor::ErrorCode::ErrorThreadJoin,
                     file: file!(),
                     line: line!(),
                     source: None,
@@ -157,7 +161,7 @@ fn check_all(
 
             if value_error {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::error_diff_file_folder(),
+                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
                     file: file!(),
                     line: line!(),
                     source: Some(source.to_string()),
@@ -170,7 +174,7 @@ fn check_all(
 
         // source is a directory but destination is not
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_not_folder(),
+            code: crate::processor::ErrorCode::ErrorDestNotFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -181,7 +185,7 @@ fn check_all(
     // source is a file or symlink
     if Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_not_file(),
+            code: crate::processor::ErrorCode::ErrorDestNotFile,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -215,7 +219,7 @@ fn check_file(
 
         if src_bytes != dest_bytes {
             return Err(crate::processor::SyncError {
-                code: crate::processor::error_diff_file_folder(),
+                code: crate::processor::ErrorCode::ErrorDiffFileFolder,
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),
@@ -226,7 +230,7 @@ fn check_file(
         for i in 0..src_bytes {
             if src_buffer[i] != dest_buffer[i] {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::error_diff_file_folder(),
+                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
                     file: file!(),
                     line: line!(),
                     source: Some(source.to_string()),
@@ -256,7 +260,7 @@ fn check_file_folder(
             return Ok(());
         }
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_diff_file_folder(),
+            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -292,7 +296,7 @@ fn check_file_folder_add_removed(
             return Ok(());
         }
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_diff_file_folder(),
+            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -308,7 +312,7 @@ fn check_file_folder_add_removed(
         if !Path::new(&fullpath).is_dir() {
             if !Path::new(&fullpath_destination).exists() {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::error_diff_file_folder(),
+                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
                     file: file!(),
                     line: line!(),
                     source: Some(source.to_string()),

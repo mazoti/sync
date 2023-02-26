@@ -2,7 +2,7 @@
 
 use std::io::{Read, Write};
 
-// Joins all ".n" files of the folder path
+/// Joins all ".n" files of the folder path where n is integer and starts with 0
 pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::SyncError> {
     let mut tmp: String;
     let mut read_bytes: usize;
@@ -18,7 +18,7 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
 
     if !std::fs::metadata(folderpath)?.is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(folderpath.to_string()),
@@ -38,7 +38,7 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
     // First file not found
     if destination.is_empty() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: None,
@@ -47,11 +47,15 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
     }
 
     #[cfg(feature = "i18n")]
-    crate::processor::create_msg(&destination);
+    crate::processor::create_msg(
+        &std::fs::canonicalize(&destination)?
+            .into_os_string()
+            .into_string()?,
+    );
 
     if std::path::Path::new(&destination).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_dest_file(),
+            code: crate::processor::ErrorCode::ErrorDestFile,
             file: file!(),
             line: line!(),
             source: None,
@@ -71,7 +75,11 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
         }
 
         #[cfg(feature = "i18n")]
-        crate::processor::loading_msg(&tmp);
+        crate::processor::loading_msg(
+            &std::fs::canonicalize(&tmp)?
+                .into_os_string()
+                .into_string()?,
+        );
 
         // Append opened file to destination
         source_file = std::fs::File::open(&tmp)?;
@@ -93,5 +101,3 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
 
     Ok(())
 }
-
-//====================================== Unit Tests ======================================

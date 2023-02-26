@@ -33,19 +33,20 @@ pub fn copy(
 
     if feature_copy(source, destination, _buffer_size)? == std::fs::metadata(source)?.len() {
         // Make the modified date the same in source and destination (Unix and Linux only)
-        //       #[cfg(not(windows))]
-        //       {
-        let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
-        let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
-        file_source.set_len(file_source.metadata()?.len())?;
-        file_destination.set_len(file_destination.metadata()?.len())?;
-        //      }
+
+        #[cfg(any(not(windows), feature = "copy"))]
+        {
+            let file_source = std::fs::OpenOptions::new().write(true).open(source)?;
+            let file_destination = std::fs::OpenOptions::new().write(true).open(destination)?;
+            file_destination.set_len(file_destination.metadata()?.len())?;
+            file_source.set_len(file_source.metadata()?.len())?;
+        }
 
         return Ok(());
     }
 
     Err(crate::processor::SyncError {
-        code: crate::processor::error_copy_file_folder(),
+        code: crate::processor::ErrorCode::ErrorCopyFileFolder,
         file: file!(),
         line: line!(),
         source: Some(source.to_string()),
@@ -71,7 +72,7 @@ fn copy_buffered(
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_same_file_folder(),
+            code: crate::processor::ErrorCode::ErrorSameFileFolder,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -81,7 +82,7 @@ fn copy_buffered(
 
     if !(std::path::Path::new(&source).exists() && std::path::Path::new(&source).is_file()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: Some(source.to_string()),
@@ -93,7 +94,7 @@ fn copy_buffered(
         // Destination is a folder, can't remove
         if !std::path::Path::new(&destination).is_file() {
             return Err(crate::processor::SyncError {
-                code: crate::processor::error_dest_not_file(),
+                code: crate::processor::ErrorCode::ErrorDestNotFile,
                 file: file!(),
                 line: line!(),
                 source: Some(source.to_string()),

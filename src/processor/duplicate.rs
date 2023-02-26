@@ -62,7 +62,7 @@ pub fn duplicate(folderpath: &str) -> Result<(), crate::processor::SyncError> {
 
         if !(std::path::Path::new(file).exists() && std::path::Path::new(file).is_file()) {
             return Err(crate::processor::SyncError {
-                code: crate::processor::error_source_file(),
+                code: crate::processor::ErrorCode::ErrorSourceFile,
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -132,7 +132,7 @@ pub fn duplicate(folderpath: &str) -> Result<(), crate::processor::SyncError> {
 
     if !(std::path::Path::new(folderpath).exists() && std::path::Path::new(folderpath).is_dir()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_folder(),
+            code: crate::processor::ErrorCode::ErrorSourceFolder,
             file: file!(),
             line: line!(),
             source: Some(folderpath.to_string()),

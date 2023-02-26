@@ -1,10 +1,10 @@
 All you have to do is download and extract. For security you can check the SHA256 hashes below:
 
-- sync1.2.7-freebsd-x64.tgz
-cd401931cc3fbb3566b75a4646654122e9c971b6e5b5a62ad38eb73ee23ce8cd
+- sync1.4.5-freebsd-x64.tgz
+8150bfe3d483806336a92667dce361df8e5dfd51d74fc66f3b614879828266a0
 - sync1.2.7-linux-x64.tgz
-fcb7e35bc7f7dd9a722b043cc6f463e5ff453335d7316279dbe02240905731de
-- sync1.2.7-macos-x64.tgz
-b254993729a5fdd6f24d71afe8ad6c73ac606799a9fa0a31ea86c96f2d7dd42e
-- sync1.2.7-windows-x64.zip
-5e0bcfd0b80ac9918393b776782264d8af5e49a37308ad2428cbf52b7c5b8e91
+bd8ba76c5f3ab6b771c63b061d87a7c1211360cbe9522ed87edf719334f5ec0d
+- sync1.4.5-macos-x64.tgz
+4d12975ee3a66cf817e260c4dd7e366ac51ee94beab7d1274e9cb2906d44e2a2
+- sync1.4.5-windows-x64.zip
+07252455bff5fa20331499647f5640b63f7cd4df0f74ae4bf9cf6e23b2ecf53f

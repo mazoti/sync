@@ -1,87 +1,125 @@
-pub const MSG_HELP: &str = "
+//! Portuguese string messages crate
+
+/// "Copying"
+pub const COPY_MSG: &str = "Copiando";
+
+/// "Creating"
+pub const CREATE_MSG: &str = "Criando";
+
+/// "DUPLICATED"
+pub const DUPLICATE_MSG: &str = "DUPLICADO";
+
+/// "elapsed:"
+pub const ELAPSE_MSG: &str = "total:";
+
+/// "(EMPTY)"
+pub const EMPTY_MSG: &str = "(VAZIO)";
+
+/// "ERROR"
+pub const ERROR_MSG: &str = "ERRO";
+
+/// Message displayed when user enters "help" or sync didn't find any possible operation
+pub const HELP_MSG: &str = "
 	sync [origem] [destino]
-	sync /home/user/data /home/user/backup
-	sync \"C:\\Meu projeto\\arquivo.dat\" \"D:\\Backup\\arquivo.dat\"
-
-O destino será criado caso não exista. Para simular a operação sem
-nenhuma modificação, adicione a flag \"--simulate\":
-
-    sync --simulate \"source\" \"destination\"
-
-Para sincronizar mais arquivos ou pastas, crie um arquivo de configuração:
-
 	sync [origem] [destino] [arquivo.config]
-	sync /home/user/pasta /home/user/backup/pasta backups.config
-	sync /home/user/arquivo.ext /home/user/backup/arquivo.ext backups.config
-	...
-
-e passe o arquivo de configuração como argumento:
-
-	sync backups.config
-
-Também são suportados vários arquivos de configuração:
-
-	sync user1/folder   user1/backup/folder   sync_bin_folder/user1.config
-	sync user1/file.ext user1/backup/file.ext sync_bin_folder/user1.config
-	...
-	sync user2/folder   user2/backup/folder   sync_bin_folder/user2.config
-	sync user2/file.ext user2/backup/file.ext sync_bin_folder/user2.config
-	...
-
-para isso coloque os arquivos de configuração .config na mesma pasta
-do sync e execute sem argumentos:
-
-	sync
-
-Para verificar todas as pastas e arquivos:
-
-	sync --check \"origem\" \"destino\"
-
-E para tentar novamente em caso de erros (até conseguir ou o usuário
-entrar com ctrl+C), use a flag \"--force\":
-
-	sync --force \"origem\" \"destino\"
+	sync [arquivo.config] (ou somente sync se os arquivos .config estão na mesma pasta)
+	sync check [origem] [destino]
+	sync empty [pasta]
+	sync duplicate [pasta]
+	sync force [origem] [destino]
+	sync hash [pasta] [arquivo.hashs]
+	sync hash [arquivo.hashs]
+	sync join [pasta]
+	sync move [origem] [destino]
+	sync split [tamanho em bytes] [arquivo]
+	sync simulate [origem] [destino]
 ";
 
-pub const ERROR_MSGS: &[&str] = &[
-    "",                                                                   // NO_ERROR
-    "origem e destino já estão no arquivo de configuração",           // ERROR_CONFIG_DUPLICATED
-    "arquivo de configuração deve terminar com .config",                // ERROR_CONFIG_EXT_CODE
-    "configuração deve ser um arquivo de texto terminado em .config",   // ERROR_CONFIG_FOLDER_CODE
-    "não foi possível copiar o arquivo para a pasta de destinor",       // ERROR_COPY_FILE_FOLDER
-    "arquivo de destino existe",                                          // ERROR_DEST_FILE
-    "origem é um arquivo e destino uma pasta",                           // ERROR_DEST_NOT_FILE
-    "origem é uma pasta e destino um arquivo",                           // ERROR_DEST_NOT_FOLDER
-    "arquivos ou pastas são diferentes",                                 // ERROR_DIFF_FILE_FOLDER
-    "tamanho do arquivo deve ser positivo",                               // ERROR_FILE_SIZE
-    "erro de entrada ou saída",                                          // ERROR_IO
-    "erro de string do sistema operacional",                              // ERROR_OSSTRING
-    "não foi possível converter número para inteiro",                  // ERROR_PARSE_INT
-    "não foi possível processar registro do arquivo de configuração", // ERROR_PARSE_LINE
-    "origem e destino são os mesmos",                                    // ERROR_SAME_FILE_FOLDER
-    "arquivo de origem não encontrado",                                  // ERROR_SOURCE_FILE
-    "pasta de destino não encontrada",                                   // ERROR_SOURCE_FOLDER
-    "não é necessário dividir o arquivo",                              // ERROR_SPLIT_SIZE
-    "erro na hora do sistema",                                            // ERROR_SYSTEM_TIME
-    "não foi possível parar a thread",                                  // ERROR_THREAD_JOIN
-    "não foi possível converter número para usize",                    // ERROR_TRY_FROM_INT
-];
+/// "Carregando"
+pub const LOADING_MSG: &str = "Carregando";
 
-pub const COMMAND_MSGS: &[&str] = &[
-    "      Criando",
-    "     Copiando",
-    "Total",
-    "ERRO",
-    "   Carregando",
-    "           Ok",
-    "     Apagando",
-    "iniciado",
-    "Sincronizando",
-    "  Atualizando",
-    "Uso:",
-    "ATENÇÃO",
-    "(SIMULAÇÃO)",
-    "(VAZIO)",
-    "(UM ITEM)",
-    "DUPLICADO",
-];
+/// "Ok"
+pub const OK_MSG: &str = "Ok";
+
+/// "(ONE ITEM)"
+pub const ONE_ITEM_MSG: &str = "(UM ITEM)";
+
+/// "Removing"
+pub const REMOVE_MSG: &str = "Apagando";
+
+/// "(SIMULATION)"
+pub const SIMULATION_MSG: &str = "(SIMULAÇÃO)";
+
+/// "started"
+pub const START_MSG: &str = "iniciado";
+
+/// "Sync"
+pub const SYNC_MSG: &str = "Sincronizando";
+
+/// "Updating"
+pub const UPDATE_MSG: &str = "Atualizando";
+
+/// "Usage:"
+pub const USAGE_MSG: &str = "Uso:";
+
+/// "source and destination already in config file"
+pub const ERROR_CONFIG_DUPLICATED: &str = "origem e destino já estão no arquivo de configuração";
+
+/// "config file not ended in .config"
+pub const ERROR_CONFIG_EXT_CODE: &str = "arquivo de configuração deve terminar com .config";
+
+/// "config must be a .config text file"
+pub const ERROR_CONFIG_FOLDER_CODE: &str =
+    "configuração deve ser um arquivo de texto terminado em .config";
+
+/// "cannot copy file to destination folder"
+pub const ERROR_COPY_FILE_FOLDER: &str =
+    "não foi possível copiar o arquivo para a pasta de destinor";
+
+/// "destination file exists"
+pub const ERROR_DEST_FILE: &str = "arquivo de destino existe";
+
+/// "source is a file and destination is a folder"
+pub const ERROR_DEST_NOT_FILE: &str = "origem é um arquivo e destino uma pasta";
+
+/// "source is a folder and destination is a file"
+pub const ERROR_DEST_NOT_FOLDER: &str = "origem é uma pasta e destino um arquivo";
+
+/// "files or folders are different"
+pub const ERROR_DIFF_FILE_FOLDER: &str = "arquivos ou pastas são diferentes";
+
+/// "file size must be positive"
+pub const ERROR_FILE_SIZE: &str = "tamanho do arquivo deve ser positivo";
+
+/// "Input or output error"
+pub const ERROR_IO: &str = "erro de entrada ou saída";
+
+/// "Operating system string error"
+pub const ERROR_OSSTRING: &str = "erro de string do sistema operacional";
+
+/// "cannot convert number to integer"
+pub const ERROR_PARSE_INT: &str = "não foi possível converter número para inteiro";
+
+/// "cannot parse line from config file"
+pub const ERROR_PARSE_LINE: &str = "não foi possível processar registro do arquivo de configuração";
+
+/// "source and destination are the same"
+pub const ERROR_SAME_FILE_FOLDER: &str = "origem e destino são os mesmos";
+
+/// "source file not found"
+pub const ERROR_SOURCE_FILE: &str = "arquivo de origem não encontrado";
+
+/// "source folder not found"
+pub const ERROR_SOURCE_FOLDER: &str = "pasta de origem não encontrada";
+
+/// "file does not need to split"
+pub const ERROR_SPLIT_SIZE: &str = "não é necessário dividir o arquivo";
+
+/// "system time error"
+pub const ERROR_SYSTEM_TIME: &str = "erro na hora do sistema";
+
+/// "cannot join thread"
+pub const ERROR_THREAD_JOIN: &str = "não foi possível terminar a thread";
+
+/// "cannot convert number to usize"
+pub const ERROR_TRY_FROM_INT: &str = "não foi possível converter número para usize";

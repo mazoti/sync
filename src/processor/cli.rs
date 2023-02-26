@@ -1,171 +1,19 @@
-//! Command Line Interface: contains all output commands
+//! User interface: contains all output commands
 
-use std::io::{Read, Write};
-
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
-
-/// Displays a colored "Copying" and the file path
+/// Displays "Usage", the help message in stdout and exit with HELP code
 #[inline(always)]
-pub fn copy_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Green,
-        crate::processor::command_msgs(1),
-        filepath,
-        true,
-    );
-}
+pub fn help(
+    command: &str,
+    message: &str,
+    return_code: crate::processor::ErrorCode,
+) -> crate::processor::ErrorCode {
+    #[cfg(feature = "colored")]
+    print!("\x1B[33m{command}\x1b[0m{message}");
 
-/// Displays a colored "(SIMULATION) Copying" and the file path
-#[inline(always)]
-pub fn copy_msg_simulation(filepath: &str) {
-    message_simulation(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Green,
-        crate::processor::command_msgs(1),
-        filepath,
-    );
-}
+    #[cfg(not(feature = "colored"))]
+    print!("{command}{message}");
 
-/// Displays a colored "Creating" and the folder path
-#[inline(always)]
-pub fn create_msg(folderpath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Green,
-        crate::processor::command_msgs(0),
-        folderpath,
-        true,
-    );
-}
-
-/// Displays a colored "(SIMULATION) Creating" and the folder path
-#[inline(always)]
-pub fn create_msg_simulation(folderpath: &str) {
-    message_simulation(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Green,
-        crate::processor::command_msgs(0),
-        folderpath,
-    );
-}
-
-/// Displays a colored "DUPLICATED" and the file path
-#[inline(always)]
-pub fn duplicate_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Yellow,
-        crate::processor::command_msgs(15),
-        filepath,
-        true,
-    );
-}
-
-/// Displays a colored "(EMPTY)" and the file or folder path
-#[inline(always)]
-pub fn empty_msg(file_folder: &str) {
-    message(
-        &mut StandardStream::stderr(ColorChoice::Always),
-        Color::Red,
-        crate::processor::command_msgs(13),
-        file_folder,
-        false,
-    );
-}
-
-/// Displays a colored "ERROR", an error message in stderr and exits with the error code.
-/// If user_input is "true", waits an "enter" from the user keyboard
-pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
-    message(
-        &mut StandardStream::stderr(ColorChoice::Always),
-        Color::Red,
-        &("[".to_owned()
-            + &crate::processor::datetime()
-            + "] "
-            + crate::processor::command_msgs(3)),
-        msg,
-        false,
-    );
-
-    // Waits user press "Enter"
-    if user_input {
-        let mut buffer = [0; 1];
-        std::io::stdin().read_exact(&mut buffer).unwrap();
-    }
-    code
-}
-
-/// Displays a colored "Usage:", the help message in stdout and exit with NO_ERROR code
-#[inline]
-pub fn help() -> i32 {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Yellow,
-        crate::processor::command_msgs(10),
-        crate::processor::msg_help(),
-        true,
-    );
-    crate::processor::help_code()
-}
-
-/// Displays a colored "Loading" and the file path
-#[inline(always)]
-pub fn loading_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Cyan,
-        crate::processor::command_msgs(4),
-        filepath,
-        true,
-    );
-}
-
-/// Displays a colored "Ok" and the file path
-#[inline(always)]
-pub fn ok_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Blue,
-        crate::processor::command_msgs(5),
-        filepath,
-        true,
-    );
-}
-
-/// Displays a colored "(ONE ITEM)" and the folder path
-#[inline(always)]
-pub fn one_item(folderpath: &str) {
-    message(
-        &mut StandardStream::stderr(ColorChoice::Always),
-        Color::Red,
-        crate::processor::command_msgs(14),
-        folderpath,
-        false,
-    );
-}
-
-/// Displays a colored "Removing" and the file path
-#[inline(always)]
-pub fn remove_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Red,
-        crate::processor::command_msgs(6),
-        filepath,
-        true,
-    );
-}
-
-/// Displays a colored "(SIMULATION) Removing" and the file path
-#[inline(always)]
-pub fn remove_msg_simulation(filepath: &str) {
-    message_simulation(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Red,
-        crate::processor::command_msgs(6),
-        filepath,
-    );
+    return_code
 }
 
 /// Displays the program name, version, URL and datetime (optional)
@@ -178,166 +26,318 @@ pub fn show_header(datetime: bool) {
     println!(
         "sync version {} (https://github.com/mazoti/sync) {}\n",
         option_env!("CARGO_PKG_VERSION").unwrap_or("unknown"),
-        crate::processor::command_msgs(7),
+        crate::processor::start_msg(),
     );
 }
 
-/// Displays a colored "Sync" and the file path
+//====================================== Message methods in ascending order ======================================
+
+/// Displays "Copying" and the file path
+#[cfg(feature = "i18n")]
 #[inline(always)]
-pub fn sync_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Magenta,
-        crate::processor::command_msgs(8),
-        filepath,
-        true,
+pub fn copy_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[92m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
     );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[92m{command:>14} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
 }
 
-/// Displays a colored "(SIMULATION) Sync" and the file path
+/// Displays "Creating" and the folder path
+#[cfg(feature = "i18n")]
 #[inline(always)]
-pub fn sync_msg_simulation(filepath: &str) {
-    message_simulation(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Magenta,
-        crate::processor::command_msgs(8),
-        filepath,
+pub fn create_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[96m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
     );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[96m{command:>14} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
 }
 
-/// Displays a colored "Updating" and the file path
+/// Displays "DUPLICATED" with all duplicated file paths
+#[inline]
+pub fn duplicate_msgs(command: &str, files: Vec<&str>) {
+    for message in files {
+        #[cfg(feature = "colored")]
+        println!("\x1B[91m{command:>14} \x1B[0m{message}");
+
+        #[cfg(not(feature = "colored"))]
+        println!("{command:>14} {message}");
+    }
+    println!();
+}
+
+/// Displays "Empty", the file or folder path and a message in stdout
+#[cfg(feature = "i18n")]
 #[inline(always)]
-pub fn update_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Yellow,
-        crate::processor::command_msgs(9),
-        filepath,
-        true,
-    );
+pub fn empty_msg(command: &str, message: &str) {
+    #[cfg(feature = "colored")]
+    eprintln!("\x1B[93m{command:>14} \x1b[0m{message}");
+
+    #[cfg(not(feature = "colored"))]
+    eprintln!("{command:>14} {message}");
 }
 
-/// Displays a colored "(SIMULATION) Updating" and the file path
+/// Displays "ERROR", an error message in stderr and exits with the error code.
+/// If user_input is "true", waits an "enter" from the user keyboard
+#[inline]
+pub fn error_msg(command: &str, message: &str, code: i32, user_input: bool) -> i32 {
+    use std::io::Read;
+
+    #[cfg(feature = "colored")]
+    eprintln!("\x1B[91m{command:>14} \x1B[0m{message}");
+
+    #[cfg(not(feature = "colored"))]
+    eprintln!("{command:>14} {message}");
+
+    // Waits user press "Enter"
+    if user_input {
+        let mut buffer = [0; 1];
+        std::io::stdin().read_exact(&mut buffer).unwrap();
+    }
+    code
+}
+
+/// Displays "Loading" and the file path
 #[inline(always)]
-pub fn update_msg_simulation(filepath: &str) {
-    message_simulation(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Yellow,
-        crate::processor::command_msgs(9),
-        filepath,
+pub fn loading_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[96m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
     );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[96m{command:>14} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
 }
 
-/// Displays a colored "WARNING", the file path and a message in stdout
+/// Displays "Ok" and the file or folder path
+#[cfg(feature = "i18n")]
 #[inline(always)]
-pub fn warning_msg(filepath: &str) {
-    message(
-        &mut StandardStream::stdout(ColorChoice::Always),
-        Color::Yellow,
-        crate::processor::error_msgs()[11],
-        &(filepath.to_owned() + " " + crate::processor::error_msgs()[13]),
-        true,
+pub fn ok_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[94m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
     );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[94m{command:>14} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}")
 }
 
-/// The kernel of the output messages
-fn message(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str, stdout: bool) {
-    let str: String;
+/// Displays "(ONE ITEM)" and the folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn one_item_msg(command: &str, message: &str) {
+    #[cfg(feature = "colored")]
+    eprintln!("\x1B[93m{command:>14} \x1b[0m{message}");
 
-    let mut stdout_locked = std::io::stdout().lock();
-    let mut stderr_locked = std::io::stderr().lock();
-
-    if stdout {
-        ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
-        stdout_locked
-            .write_all(colored_msg.as_bytes())
-            .expect(crate::processor::error_msgs()[12]);
-        ss.reset().unwrap();
-
-        #[cfg(windows)]
-        {
-            str = format!(" {}\n", msg.replace("\\\\?\\", ""));
-        }
-
-        #[cfg(not(windows))]
-        {
-            str = format!(" {}\n", msg);
-        }
-
-        stdout_locked
-            .write_all(str.as_bytes())
-            .expect(crate::processor::error_msgs()[12]);
-        return;
-    }
-
-    ss.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();
-    stderr_locked
-        .write_all(colored_msg.as_bytes())
-        .expect(crate::processor::error_msgs()[12]);
-    ss.reset().unwrap();
-
-    #[cfg(windows)]
-    {
-        str = format!(" {}\n", msg.replace("\\\\?\\", ""));
-    }
-
-    #[cfg(not(windows))]
-    {
-        str = format!(" {}\n", msg);
-    }
-    stderr_locked
-        .write_all(str.as_bytes())
-        .expect(crate::processor::error_msgs()[12]);
+    #[cfg(not(feature = "colored"))]
+    eprintln!("{command:>14} {message}");
 }
 
-/// Adds a red "(SIMULATION) " before the command message
-fn message_simulation(ss: &mut StandardStream, color: Color, colored_msg: &str, msg: &str) {
-    {
-        let mut stdout_locked = std::io::stdout().lock();
-        let mut _stderr_locked = std::io::stderr().lock();
+/// Displays "Removing" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn remove_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
 
-        ss.set_color(ColorSpec::new().set_fg(Some(Color::Red)))
-            .unwrap();
-        stdout_locked
-            .write_all(crate::processor::command_msgs(12).as_bytes())
-            .expect(crate::processor::error_msgs()[12]);
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{command:>14} \x1B[0m{message}");
 
-        stdout_locked
-            .write_all(" ".as_bytes())
-            .expect(crate::processor::error_msgs()[12]);
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
 
-        ss.reset().unwrap();
-
-        // Unlocks stdout and stderr
-    }
-
-    message(ss, color, colored_msg, msg, true)
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
 }
 
-//====================================== Unit Tests ======================================
+/// Displays "Sync" and the file path
+#[inline(always)]
+pub fn sync_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[95m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    #[cfg(feature = "i18n")]
-    fn cli_tests() {
-        crate::processor::warning_msg("a/file/path/file.ext");
-        crate::processor::ok_msg("a/file/path/file.ext");
-        crate::processor::update_msg("a/file/path/file.ext");
-        crate::processor::create_msg("a/file/path/file.ext");
-        crate::processor::remove_msg("a/file/path/file.ext");
-        crate::processor::sync_msg("a/file/path/file.ext");
-        crate::processor::loading_msg("a/file/path/file.ext");
-        crate::processor::copy_msg("a/file/path/file.ext");
-        crate::processor::error_msg("Error message", 1234, false);
-        crate::processor::help();
-        crate::processor::show_header(true);
-        crate::processor::show_header(false);
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[95m{command:>14} \x1B[0m{message}");
 
-        crate::processor::copy_msg_simulation("a/file/path/file.ext");
-        crate::processor::update_msg_simulation("a/file/path/file.ext");
-        crate::processor::create_msg_simulation("a/file/path/file.ext");
-        crate::processor::remove_msg_simulation("a/file/path/file.ext");
-        crate::processor::sync_msg_simulation("a/file/path/file.ext");
-    }
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
+}
+
+/// Displays "Updating" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn update_msg(command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[93m{command:>14} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[93m{command:>14} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!("{command:>14} {}", message.replace("\\\\?\\", ""));
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{command:>14} {message}");
+}
+
+//====================================== Simulation message methods in ascending order ======================================
+
+/// Displays "(SIMULATION) Copying" and the file path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn copy_msg_simulation(simulate: &str, command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{simulate:>14} \x1B[92m{command} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{simulate:>14} \x1B[92m{command} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!(
+        "{simulate:>14} {command} {}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{simulate:>14} {command} {message}");
+}
+
+/// Displays "(SIMULATION) Creating" and the folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn create_msg_simulation(simulate: &str, command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{simulate:>14} \x1B[96m{command} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{simulate:>14} \x1B[96m{command} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!(
+        "{simulate:>14} {command} {}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{simulate:>14} {command} {message}");
+}
+
+/// Displays "(SIMULATION) Removing" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn remove_msg_simulation(simulate: &str, command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{simulate:>14} \x1B[91m{command} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{simulate:>14} \x1B[91m{command} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!(
+        "{simulate:>14} {command} {}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{simulate:>14} {command} {message}");
+}
+
+/// Displays "(SIMULATION) Sync" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn sync_msg_simulation(simulate: &str, command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{simulate:>14} \x1B[95m{command} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{simulate:>14} \x1B[95m{command} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!(
+        "{simulate:>14} {command} {}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{simulate:>14} {command} {message}");
+}
+
+/// Displays "(SIMULATION) Updating" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn update_msg_simulation(simulate: &str, command: &str, message: &str) {
+    #[cfg(all(windows, feature = "colored"))]
+    println!(
+        "\x1B[91m{simulate:>14} \x1B[93m{command} \x1B[0m{}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), feature = "colored"))]
+    println!("\x1B[91m{simulate:>14} \x1B[93m{command} \x1B[0m{message}");
+
+    #[cfg(all(windows, not(feature = "colored")))]
+    println!(
+        "{simulate:>14} {command} {}",
+        message.replace("\\\\?\\", "")
+    );
+
+    #[cfg(all(not(windows), not(feature = "colored")))]
+    println!("{simulate:>14} {command} {message}");
 }

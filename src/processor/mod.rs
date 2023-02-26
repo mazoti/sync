@@ -21,20 +21,272 @@ mod mv;
 mod split;
 mod sync;
 
-/// Error class with the message and code defined in consts.rs.
+#[derive(Clone)]
+pub enum ErrorCode {
+    /// Displays all commands and how to use them
+    #[cfg(feature = "i18n")]
+    Help = -1,
+
+    /// No messages to display
+    NoError = 0,
+
+    /// Source and destination already in config file
+    ErrorConfigDuplicated = 1,
+
+    /// Config file not ended in .config
+    ErrorConfigExtCode = 2,
+
+    /// Config must be a .config text file
+    ErrorConfigFolderCode = 3,
+
+    /// Cannot copy file to destination folder
+    ErrorCopyFileFolder = 4,
+
+    /// Destination file exists
+    ErrorDestFile = 5,
+
+    /// Source is a file and destination is a folder
+    ErrorDestNotFile = 6,
+
+    /// Source is a folder and destination is a file
+    ErrorDestNotFolder = 7,
+
+    /// Files or folders are different
+    ErrorDiffFileFolder = 8,
+
+    /// File size must be positive
+    ErrorFileSize = 9,
+
+    /// Input or output error
+    ErrorIO = 10,
+
+    /// Operating system string error
+    ErrorOSString = 11,
+
+    /// Cannot convert number to integer
+    ErrorParseInt = 12,
+
+    /// Cannot parse line from config file
+    ErrorParseLine = 13,
+
+    /// Source and destination are the same
+    ErrorSameFileFolder = 14,
+
+    /// Source file not found
+    ErrorSourceFile = 15,
+
+    /// Source folder not found
+    ErrorSourceFolder = 16,
+
+    /// File does not need to split
+    ErrorSplitSize = 17,
+
+    /// System time error (ex. negative time difference)
+    ErrorSystemTime = 18,
+
+    /// Cannot join thread
+    ErrorThreadJoin = 19,
+
+    /// Cannot convert number to usize
+    ErrorTryFromInt = 20,
+}
+
+/// Error class with the message and code defined in consts.rs:
 /// "code" is the number returned to operating system,
 /// "file" is the source code file,
 /// "line" is the line number of the error,
 /// "source" and "destination" are the files or the folders processed by the system
 pub struct SyncError {
-    pub code: i32,
+    pub code: ErrorCode,
     pub file: &'static str,
     pub line: u32,
     pub source: Option<String>,
     pub destination: Option<String>,
 }
 
-//====================================== Public methods in ascending order ======================================
+/// The way a ErrorCode will be shown on user screen
+#[cfg(feature = "i18n")]
+impl std::fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ErrorCode::Help => write!(f, "{}", i18n::msgs::HELP_MSG)?,
+
+            ErrorCode::NoError => {}
+
+            ErrorCode::ErrorConfigDuplicated => {
+                write!(f, "{}", i18n::msgs::ERROR_CONFIG_DUPLICATED)?
+            }
+            ErrorCode::ErrorConfigExtCode => write!(f, "{}", i18n::msgs::ERROR_CONFIG_EXT_CODE)?,
+            ErrorCode::ErrorConfigFolderCode => {
+                write!(f, "{}", i18n::msgs::ERROR_CONFIG_FOLDER_CODE)?
+            }
+            ErrorCode::ErrorCopyFileFolder => write!(f, "{}", i18n::msgs::ERROR_COPY_FILE_FOLDER)?,
+            ErrorCode::ErrorDestFile => write!(f, "{}", i18n::msgs::ERROR_DEST_FILE)?,
+            ErrorCode::ErrorDestNotFile => write!(f, "{}", i18n::msgs::ERROR_DEST_NOT_FILE)?,
+            ErrorCode::ErrorDestNotFolder => write!(f, "{}", i18n::msgs::ERROR_DEST_NOT_FOLDER)?,
+            ErrorCode::ErrorDiffFileFolder => write!(f, "{}", i18n::msgs::ERROR_DIFF_FILE_FOLDER)?,
+            ErrorCode::ErrorFileSize => write!(f, "{}", i18n::msgs::ERROR_FILE_SIZE)?,
+            ErrorCode::ErrorIO => write!(f, "{}", i18n::msgs::ERROR_IO)?,
+            ErrorCode::ErrorOSString => write!(f, "{}", i18n::msgs::ERROR_OSSTRING)?,
+            ErrorCode::ErrorParseInt => write!(f, "{}", i18n::msgs::ERROR_PARSE_INT)?,
+            ErrorCode::ErrorParseLine => write!(f, "{}", i18n::msgs::ERROR_PARSE_LINE)?,
+            ErrorCode::ErrorSameFileFolder => write!(f, "{}", i18n::msgs::ERROR_SAME_FILE_FOLDER)?,
+            ErrorCode::ErrorSourceFile => write!(f, "{}", i18n::msgs::ERROR_SOURCE_FILE)?,
+            ErrorCode::ErrorSourceFolder => write!(f, "{}", i18n::msgs::ERROR_SOURCE_FOLDER)?,
+            ErrorCode::ErrorSplitSize => write!(f, "{}", i18n::msgs::ERROR_SPLIT_SIZE)?,
+            ErrorCode::ErrorSystemTime => write!(f, "{}", i18n::msgs::ERROR_SYSTEM_TIME)?,
+            ErrorCode::ErrorThreadJoin => write!(f, "{}", i18n::msgs::ERROR_THREAD_JOIN)?,
+            ErrorCode::ErrorTryFromInt => write!(f, "{}", i18n::msgs::ERROR_TRY_FROM_INT)?,
+        }
+
+        Ok(())
+    }
+}
+
+//====================================== i18n methods in ascending order ======================================
+
+/// Displays "elapsed:"
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn elapse_msg() -> &'static str {
+    i18n::msgs::ELAPSE_MSG
+}
+
+/// Displays "started"
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn start_msg() -> &'static str {
+    i18n::msgs::START_MSG
+}
+
+//====================================== cli.rs methods in ascending order ======================================
+
+/// Displays "Copying" and the file path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn copy_msg(path: &str) {
+    cli::copy_msg(i18n::msgs::COPY_MSG, path)
+}
+
+/// Displays "(SIMULATION) Copying" and the file path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn copy_msg_simulation(path: &str) {
+    cli::copy_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::COPY_MSG, path)
+}
+
+/// Displays "Creating" and the folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn create_msg(path: &str) {
+    cli::create_msg(i18n::msgs::CREATE_MSG, path)
+}
+
+/// Displays "(SIMULATION) Creating" and the folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn create_msg_simulation(path: &str) {
+    cli::create_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::CREATE_MSG, path)
+}
+
+/// Displays "DUPLICATED" with all duplicated file paths
+#[cfg(feature = "i18n")]
+#[inline]
+pub fn duplicate_msgs(paths: Vec<&str>) {
+    cli::duplicate_msgs(i18n::msgs::DUPLICATE_MSG, paths)
+}
+
+/// Displays "Empty", the file or folder path and a message in stdout
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn empty_msg(path: &str) {
+    cli::empty_msg(i18n::msgs::EMPTY_MSG, path);
+}
+
+/// Displays "ERROR", an error message in stderr and exit with the error code.
+/// If user_input is "true", waits an "enter" from user keyboard
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn error_msg(message: &str, code: i32, user_input: bool) -> i32 {
+    cli::error_msg(i18n::msgs::ERROR_MSG, message, code, user_input)
+}
+
+/// Displays "Usage", the help message in stdout and exit with HELP code
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn help() -> ErrorCode {
+    cli::help(i18n::msgs::USAGE_MSG, i18n::msgs::HELP_MSG, ErrorCode::Help)
+}
+
+/// Displays "Loading" and the file path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn loading_msg(path: &str) {
+    cli::loading_msg(i18n::msgs::LOADING_MSG, path)
+}
+
+/// Displays "Ok" and the file or folder path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn ok_msg(path: &str) {
+    cli::ok_msg(i18n::msgs::OK_MSG, path)
+}
+
+/// Displays "(ONE ITEM)" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn one_item_msg(path: &str) {
+    cli::one_item_msg(i18n::msgs::ONE_ITEM_MSG, path)
+}
+
+/// Displays "Removing" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn remove_msg(path: &str) {
+    cli::remove_msg(i18n::msgs::REMOVE_MSG, path)
+}
+
+/// Displays "(SIMULATION) Removing" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn remove_msg_simulation(path: &str) {
+    cli::remove_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::REMOVE_MSG, path)
+}
+
+/// Displays the program name, version, URL and the datetime (optional)
+#[cfg(feature = "i18n")]
+#[inline(always)]
+pub fn show_header(datetime: bool) {
+    cli::show_header(datetime)
+}
+
+/// Displays "Sync" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn sync_msg(path: &str) {
+    cli::sync_msg(i18n::msgs::SYNC_MSG, path)
+}
+
+/// Displays "(SIMULATION) Sync" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn sync_msg_simulation(path: &str) {
+    cli::sync_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::SYNC_MSG, path)
+}
+
+/// Displays "Updating" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn update_msg(path: &str) {
+    cli::update_msg(i18n::msgs::UPDATE_MSG, path)
+}
+
+/// Displays "(SIMULATION) Updating" and the path
+#[cfg(feature = "i18n")]
+#[inline(always)]
+fn update_msg_simulation(path: &str) {
+    cli::update_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::UPDATE_MSG, path)
+}
 
 /// Compares every folder, file and byte
 #[inline(always)]
@@ -55,6 +307,7 @@ pub fn check_folder(folder_path: &str) -> Result<(), SyncError> {
 }
 
 /// Copy a file from source to destination using the system function or the copy method
+#[inline(always)]
 pub fn copy(source: &str, destination: &str) -> Result<(), SyncError> {
     copy::copy(source, destination, consts::COPY_BUFFER_SIZE)
 }
@@ -91,6 +344,7 @@ pub fn force_folder(folder_path: &str) -> Result<(), SyncError> {
 }
 
 /// Caculates path's hash and checks with hash code
+#[inline(always)]
 pub fn hash(hash_code: &str, path: &str) -> Result<(), SyncError> {
     hash::hash(hash_code, path, consts::HASH_BUFFER_SIZE)
 }
@@ -114,14 +368,9 @@ pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
 }
 
 /// Moves a source file or source to destination file or source. Slower than OS move but safer
+#[inline(always)]
 pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
     mv::mv(source, destination)
-}
-
-/// Returns success (0) code to OS
-#[inline(always)]
-pub fn no_error() -> i32 {
-    consts::NO_ERROR
 }
 
 /// Does not synchronize, only displays the messages of what sync operations would do
@@ -169,66 +418,11 @@ pub fn sync_folder(folder_path: &str) -> Result<(), SyncError> {
     config::process_folder(sync::sync, folder_path)
 }
 
-//====================================== Public message methods in ascending order ======================================
-
-/// Displays a colored command word or words like "Creating", "Sync", "(ONE ITEM)"
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn command_msgs(code: usize) -> &'static str {
-    i18n::command_msgs(code)
-}
-
-/// Displays the duplicate command message with all duplicate file paths
-#[cfg(feature = "i18n")]
-#[inline]
-pub fn duplicate_msgs(files: Vec<&str>) {
-    for file in files {
-        cli::duplicate_msg(file);
-    }
-    println!();
-}
-
 /// Displays all empty files, empty folders and folders with only one item
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn empty(folder: &str) -> Result<(), SyncError> {
     validate::empty(folder)
-}
-
-/// Displays a colored "ERROR", an error message in stderr and exit with the error code.
-/// If user_input is "true", waits an "enter" from user keyboard
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn error_msg(msg: &str, code: i32, user_input: bool) -> i32 {
-    cli::error_msg(msg, code, user_input)
-}
-
-/// Displays a colored "Usage", the help message in stdout and exit with NO_ERROR code
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn help() -> i32 {
-    cli::help()
-}
-
-/// Returns help code to the system
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn help_code() -> i32 {
-    consts::HELP
-}
-
-/// Displays the program name, version, URL and the datetime (optional)
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn show_header(datetime: bool) {
-    cli::show_header(datetime)
-}
-
-/// Displays a colored "WARNING", the file path and a message in stdout
-#[cfg(feature = "i18n")]
-#[inline(always)]
-pub fn warning_msg(file: &str) {
-    cli::warning_msg(file);
 }
 
 //====================================== Private methods in ascending order ======================================
@@ -237,7 +431,7 @@ pub fn warning_msg(file: &str) {
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn compare(source: &str, destination: &str) -> Result<(), SyncError> {
-    check::check(source, destination, consts::CHECK_BUFFER_SIZE)
+    check::check_all(source, destination, consts::CHECK_BUFFER_SIZE)
 }
 
 /// Formats a "%Y-%m-%d %T" datetime string
@@ -252,242 +446,6 @@ fn datetime() -> String {
 #[inline(always)]
 fn get_hash_buffer_size() -> u64 {
     consts::HASH_BUFFER_SIZE
-}
-
-//====================================== Private error code methods in ascending order ======================================
-
-/// Source and destination already in config file
-#[inline(always)]
-fn error_config_duplicated() -> i32 {
-    consts::ERROR_CONFIG_DUPLICATED
-}
-
-/// Config file not ended in .config
-#[inline(always)]
-fn error_config_ext_code() -> i32 {
-    consts::ERROR_CONFIG_EXT_CODE
-}
-
-/// Config must be a .config text file
-#[inline(always)]
-fn error_config_folder_code() -> i32 {
-    consts::ERROR_CONFIG_FOLDER_CODE
-}
-
-/// Cannot copy file to destination folder
-#[inline(always)]
-fn error_copy_file_folder() -> i32 {
-    consts::ERROR_COPY_FILE_FOLDER
-}
-
-/// Destination file exists
-#[inline(always)]
-fn error_dest_file() -> i32 {
-    consts::ERROR_DEST_FILE
-}
-
-/// Source is a file and destination is a folder
-#[inline(always)]
-fn error_dest_not_file() -> i32 {
-    consts::ERROR_DEST_NOT_FILE
-}
-
-/// Source is a folder and destination is a file
-#[inline(always)]
-fn error_dest_not_folder() -> i32 {
-    consts::ERROR_DEST_NOT_FOLDER
-}
-
-/// Files or folders are different
-#[inline(always)]
-fn error_diff_file_folder() -> i32 {
-    consts::ERROR_DIFF_FILE_FOLDER
-}
-
-/// File size must be positive
-#[inline(always)]
-fn error_file_size() -> i32 {
-    consts::ERROR_FILE_SIZE
-}
-
-/// Input or output error
-#[inline(always)]
-fn error_io() -> i32 {
-    consts::ERROR_IO
-}
-
-/// Operating system string error
-#[inline(always)]
-fn error_os_string() -> i32 {
-    consts::ERROR_OSSTRING
-}
-
-/// Cannot convert number to integer
-#[inline(always)]
-fn error_parse_int() -> i32 {
-    consts::ERROR_PARSE_INT
-}
-
-/// Cannot parse line from config file
-#[inline(always)]
-fn error_parse_line() -> i32 {
-    consts::ERROR_PARSE_LINE
-}
-
-/// Source and destination are the same
-#[inline(always)]
-fn error_same_file_folder() -> i32 {
-    consts::ERROR_SAME_FILE_FOLDER
-}
-
-/// Source file not found
-#[inline(always)]
-fn error_source_file() -> i32 {
-    consts::ERROR_SOURCE_FILE
-}
-
-/// Source folder not found
-#[inline(always)]
-fn error_source_folder() -> i32 {
-    consts::ERROR_SOURCE_FOLDER
-}
-
-/// File does not need to split
-#[inline(always)]
-fn error_split_size() -> i32 {
-    consts::ERROR_SPLIT_SIZE
-}
-
-/// System time error (ex: negative difference between times)
-#[inline(always)]
-fn error_system_time() -> i32 {
-    consts::ERROR_SYSTEM_TIME
-}
-
-/// Thread join error
-#[inline(always)]
-fn error_thread_join() -> i32 {
-    consts::ERROR_THREAD_JOIN
-}
-
-/// Cannot convert number to usize
-#[inline(always)]
-fn error_try_from_int() -> i32 {
-    consts::ERROR_TRY_FROM_INT
-}
-
-/// Gets all messages errors
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn error_msgs() -> &'static [&'static str] {
-    i18n::error_msgs()
-}
-
-//====================================== Private message methods in ascending order ======================================
-
-/// Displays a colored "Copying" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn copy_msg(filepath: &str) {
-    cli::copy_msg(filepath);
-}
-
-/// Displays a colored "(SIMULATION) Copying" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn copy_msg_simulation(filepath: &str) {
-    cli::copy_msg_simulation(filepath);
-}
-
-/// Displays a colored "Creating" and the folder path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn create_msg(folderpath: &str) {
-    cli::create_msg(folderpath);
-}
-
-/// Displays a colored "(SIMULATION) Creating" and the folder path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn create_msg_simulation(folderpath: &str) {
-    cli::create_msg_simulation(folderpath);
-}
-
-/// Displays a colored "Empty", the file path and a message in stdout
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn empty_msg(file_folder: &str) {
-    cli::empty_msg(file_folder);
-}
-
-/// Displays a colored "Loading" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn loading_msg(filepath: &str) {
-    cli::loading_msg(filepath);
-}
-
-/// Displays help in the selected language
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn msg_help() -> &'static str {
-    i18n::msg_help()
-}
-
-/// Displays a colored "Ok" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn ok_msg(filepath: &str) {
-    cli::ok_msg(filepath)
-}
-
-/// Displays a colored "1 item" and the folder path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn one_item(folderpath: &str) {
-    cli::one_item(folderpath);
-}
-
-/// Displays a colored "Removing" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn remove_msg(file: &str) {
-    cli::remove_msg(file);
-}
-
-/// Displays a colored "(SIMULATION) Removing" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn remove_msg_simulation(file: &str) {
-    cli::remove_msg_simulation(file);
-}
-
-/// Displays a colored "Sync" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn sync_msg(filepath: &str) {
-    cli::sync_msg(filepath);
-}
-
-/// Displays a colored "(SIMULATION) Sync" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn sync_msg_simulation(filepath: &str) {
-    cli::sync_msg_simulation(filepath);
-}
-
-/// Displays a colored "Updating" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn update_msg(filepath: &str) {
-    cli::update_msg(filepath);
-}
-
-/// Displays a colored "(SIMULATION) Updating" and the file path
-#[cfg(feature = "i18n")]
-#[inline(always)]
-fn update_msg_simulation(file: &str) {
-    cli::update_msg_simulation(file);
 }
 
 //====================================== Unit Tests ======================================

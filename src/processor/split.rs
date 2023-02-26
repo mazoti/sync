@@ -1,10 +1,8 @@
-//! Splits a file in n files of x bytes.
-//! Files will be generated starting with ".0" extension:
-//! file.data.0, file.data.1...
+//! Splits a file in n files of m bytes each: files will be generated starting with ".0" extension (file.ext.0, file.ext.1...)
 
 use std::io::{Read, Write};
 
-/// Split file in n bytes each
+/// Creates n files of size_bytes each using a buffer of buffer_size
 pub fn split(
     size_bytes: &str,
     filepath: &str,
@@ -37,7 +35,7 @@ pub fn split(
 
         if std::path::Path::new(&destination).exists() {
             return Err(crate::processor::SyncError {
-                code: crate::processor::error_dest_file(),
+                code: crate::processor::ErrorCode::ErrorDestFile,
                 file: file!(),
                 line: line!(),
                 source: None,
@@ -50,7 +48,7 @@ pub fn split(
 
     if size < 1 {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_file_size(),
+            code: crate::processor::ErrorCode::ErrorFileSize,
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -63,7 +61,7 @@ pub fn split(
     // Input must be a file
     if !metadata_file.is_file() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -74,7 +72,7 @@ pub fn split(
     // File cannot be empty
     if metadata_file.len() < 1 {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_source_file(),
+            code: crate::processor::ErrorCode::ErrorSourceFile,
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -85,7 +83,7 @@ pub fn split(
     // File fits on split size
     if metadata_file.len() <= size_bytes.parse::<u64>()? {
         return Err(crate::processor::SyncError {
-            code: crate::processor::error_split_size(),
+            code: crate::processor::ErrorCode::ErrorSplitSize,
             file: file!(),
             line: line!(),
             source: Some(size_bytes.to_string()),
@@ -101,7 +99,12 @@ pub fn split(
         remainder_size = size % buffer_usize;
 
         loop {
-            destination_file = create_file(filepath, file_count)?;
+            destination_file = create_file(
+                &std::fs::canonicalize(filepath)?
+                    .into_os_string()
+                    .into_string()?,
+                file_count,
+            )?;
             buffer.resize(buffer_usize, 0);
 
             for _ in 0..blocks_files {
@@ -159,5 +162,3 @@ pub fn split(
 
     Ok(())
 }
-
-//====================================== Unit Tests ======================================

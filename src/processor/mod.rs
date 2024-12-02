@@ -1,4 +1,4 @@
-//! A backup and synchronization tool with safe move, split/join of files, hash folder security, duplicate/empty file
+//! A backup tool with safe move, split/join of files, hash folder security, duplicate/empty file
 //! or folder finder, file/folder content comparison and more!
 
 #[cfg(feature = "i18n")]

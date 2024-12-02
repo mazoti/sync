@@ -149,9 +149,8 @@ All strings are in the folder i18n (each file is a language) and can be translat
 - Portuguese
 
 ## Donations
-You can become a [sponsor](https://github.com/sponsors/mazoti) or donate directly:
+You can become a sponsor [here](https://github.com/sponsors/mazoti)
 
-BTC: 3JpkXivH11xQU37Lwk5TFBqLUo8gytLH84
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 

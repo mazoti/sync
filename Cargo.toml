@@ -7,6 +7,8 @@ name             = "sync"
 readme           = "Readme.md"
 repository       = "https://github.com/mazoti/sync/"
 version          = "1.4.6"
+categories       = ["filesystem", "command-line-utilities"]
+keywords         = ["backup", "sync", "filesystem"]
 
 [profile.release]
 codegen-units    = 1
@@ -21,26 +23,27 @@ rpath            = false
 strip            = "symbols"
 
 [dependencies]
-chrono    = {version = "0.4.20", optional = true}
-sha256 = "1.1.1"
+chrono = { version = "0.4.38", optional = true }
+sha256 = "1.5.0"
 
 [features]
-i18n = ["dep:chrono"]
-colored=["i18n"]
+default  = ["i18n"]
+i18n     = ["dep:chrono"]
+colored  = ["i18n"]
 
-br  = ["i18n"]
-en  = ["i18n"]
+br       = ["i18n"]
+en       = ["i18n"]
 
-copy = []
-tree = []
-check-mt=[]
+copy     = []
+tree     = []
+check-mt = []
 
 # Required for Windows application icon only
 [target.'cfg(windows)'.build-dependencies]
-winres    = "0.1"
+winres    = "0.1.12"
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.45.0"
+version = "0.59.0"
 features = [
     "Win32_Foundation",
     "Win32_Security",

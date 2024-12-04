@@ -54,12 +54,13 @@ fn main() -> io::Result<()> {
 	// First run clippy without any features
 	let output = Command::new("cargo").arg("clippy").output()?;
 	io::stdout().write_all(&output.stdout)?;
-    io::stderr().write_all(&output.stderr)?;
+  io::stderr().write_all(&output.stderr)?;
 
 	// Then run clippy for each feature combination
 	for feature in FEATURES {
 		let output_features = Command::new("cargo").arg("clippy")
 			.arg("--features").arg(feature).output()?;
+
 		io::stdout().write_all(&output_features.stdout)?;
 		io::stderr().write_all(&output_features.stderr)?;
 	}

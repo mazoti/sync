@@ -1,6 +1,8 @@
 mod aliases;
 mod processor;
 
+use std::ffi::c_void;
+
 /// Function array to run according to the number of arguments entered
 const FN_ARGS: [fn(&std::time::Instant); 4] =
     [one_argument, two_arguments, three_arguments, four_arguments];
@@ -336,7 +338,7 @@ fn enable_ansi_support() -> Result<(), std::io::Error> {
             std::ptr::null(),
             OPEN_EXISTING,
             0,
-            0,
+            0 as *mut c_void,
         );
 
         if console_handle == INVALID_HANDLE_VALUE {

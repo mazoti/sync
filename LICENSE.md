@@ -1,4 +1,4 @@
-Copyright (c) 2008-2023 Marcos Mazoti
+Copyright (c) 2008-2024 Marcos Mazoti
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 

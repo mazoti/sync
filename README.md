@@ -1,6 +1,6 @@
-# **sync**
-#### _A backup and synchronization tool_
-![FreeBSD](https://img.shields.io/badge/-FreeBSD-%23870000?style=for-the-badge&logo=freebsd&logoColor=white)![Debian](https://img.shields.io/badge/Debian-D70A53?style=for-the-badge&logo=debian&logoColor=white)![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
+<div align="center">
+  <img src="logo.png">
+</div>
 
 After years using [rsync](https://rsync.samba.org), I decided to make a simpler and portable tool to make my own backups, so why use sync?
 - Open source
@@ -17,7 +17,9 @@ After years using [rsync](https://rsync.samba.org), I decided to make a simpler 
 All you need is the sync binary file of your architecture and operating system (just decompress and use).
 
 Releases can be downloaded [here](https://github.com/mazoti/sync/tree/main/download).
+
 ## Usage
+
 For a simple backup/restore:
 ```bash
 sync "source" "destination" (backup)
@@ -91,56 +93,21 @@ sync --move "source file" "destination file"
 sync --move "source folder" "destination folder"
 ```
 
-
-## Aliases
-
-### Check:
-```
---CHECK, --check, -C, -CHECK, -c, -check, /C, /CHECK, /c, /check, CHECK, check
-```
-### Duplicate:
-```
---DUPLICATE, --duplicate, -D, -DUPLICATE, -d, -duplicate, /D, /DUPLICATE, /d, /duplicate, DUPLICATE, duplicate
-```
-### Empty:
-```
---EMPTY, --empty, -E, -EMPTY, -e, -empty, /E, /EMPTY, /e, /empty, EMPTY, empty
-```
-### Force:
-```
---FORCE, --force, -F, -FORCE, -f, -force, /F, /FORCE, /f, /force, FORCE, force
-```
-### Hash:
-```
---HASH, --hash, -HASH, -hash, /HASH, /hash, HASH, hash
-```
-### Help:
-```
---HELP, --help, -?, -H, -h, -help, /?, /H, /HELP, /h, /help, HELP, help
-```
-### Join
-```
---JOIN, --join, -J, -JOIN, -j, -join, /J, /JOIN, /j, /join, JOIN, join
-```
-### Move
-```
---MOVE, --move, -M, -MOVE, -m, -move, /M, /MOVE, /m, /move, MOVE, move
-```
-### Simulate
-```
---SIMULATE, --simulate, -S, -SIMULATE, -s, -simulate, /S, /SIMULATE, /s, /simulate, SIMULATE, simulate
-```
-### Split
-```
---SPLIT, --split, -S, -SPLIT, -s, -split, /S, /SPLIT, /s, /split, SPLIT, split
-```
-### Version
-```
---VERSION, --version, -V, -VERSION, -v, -version, /V, /VERSION, /v, /version, VERSION, version
-```
-
 ## Build from source
 Instructions to build from source code can be found [here](https://github.com/mazoti/sync/blob/main/BUILDING.md). It's easier and faster than you think!
+
+### Source code
+
+#### Directory structure:
+<pre>
+sync/
+├── .github              # 
+├── automation           #
+├── download             #
+└── src                  #
+    └── processor        #
+        └── i18n         #
+</pre>
 
 ## Translations
 All strings are in the folder i18n (each file is a language) and can be translated. Now sync has two languages:

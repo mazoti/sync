@@ -35,10 +35,14 @@ pub fn split(
 
         if std::path::Path::new(&destination).exists() {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorDestFile,
+                code: crate::processor::ErrorCode::DestFile,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: None,
+                #[cfg(feature = "i18n")]
                 destination: Some(destination),
             });
         }
@@ -48,10 +52,14 @@ pub fn split(
 
     if size < 1 {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorFileSize,
+            code: crate::processor::ErrorCode::FileSize,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(size_bytes.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(filepath.to_string()),
         });
     }
@@ -61,10 +69,14 @@ pub fn split(
     // Input must be a file
     if !metadata_file.is_file() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFile,
+            code: crate::processor::ErrorCode::SourceFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(size_bytes.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(filepath.to_string()),
         });
     }
@@ -72,10 +84,14 @@ pub fn split(
     // File cannot be empty
     if metadata_file.len() < 1 {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFile,
+            code: crate::processor::ErrorCode::SourceFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(size_bytes.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(filepath.to_string()),
         });
     }
@@ -83,10 +99,14 @@ pub fn split(
     // File fits on split size
     if metadata_file.len() <= size_bytes.parse::<u64>()? {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSplitSize,
+            code: crate::processor::ErrorCode::SplitSize,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(size_bytes.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(filepath.to_string()),
         });
     }

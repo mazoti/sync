@@ -1,5 +1,13 @@
-//! A backup tool with safe move, split/join of files, hash folder security, duplicate/empty file
-//! or folder finder, file/folder content comparison and more!
+//! A data tool with advanced file management capabilities including:
+//! - Safe file moving operations
+//! - File splitting and joining
+//! - Directory hash-based security
+//! - Duplicate and empty file/folder detection
+//! - Content comparison utilities
+//!
+//! # Features
+//! - `i18n`: Enables internationalization support
+//! - Default: file management functionality
 
 #[cfg(feature = "i18n")]
 mod cli;
@@ -10,6 +18,7 @@ mod i18n;
 #[cfg(feature = "i18n")]
 mod validate;
 
+
 mod check;
 mod config;
 mod consts;
@@ -17,11 +26,11 @@ mod copy;
 mod error;
 mod hash;
 mod join;
-mod mv;
+mod r#move;
 mod split;
 mod sync;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ErrorCode {
     /// Displays all commands and how to use them
     #[cfg(feature = "i18n")]
@@ -31,64 +40,64 @@ pub enum ErrorCode {
     NoError = 0,
 
     /// Source and destination already in config file
-    ErrorConfigDuplicated = 1,
+    ConfigDuplicated = 1,
 
     /// Config file not ended in .config
-    ErrorConfigExtCode = 2,
+    ConfigExtCode = 2,
 
     /// Config must be a .config text file
-    ErrorConfigFolderCode = 3,
+    ConfigFolderCode = 3,
 
     /// Cannot copy file to destination folder
-    ErrorCopyFileFolder = 4,
+    CopyFileFolder = 4,
 
     /// Destination file exists
-    ErrorDestFile = 5,
+    DestFile = 5,
 
     /// Source is a file and destination is a folder
-    ErrorDestNotFile = 6,
+    DestNotFile = 6,
 
     /// Source is a folder and destination is a file
-    ErrorDestNotFolder = 7,
+    DestNotFolder = 7,
 
     /// Files or folders are different
-    ErrorDiffFileFolder = 8,
+    DiffFileFolder = 8,
 
     /// File size must be positive
-    ErrorFileSize = 9,
+    FileSize = 9,
 
     /// Input or output error
-    ErrorIO = 10,
+    IO = 10,
 
     /// Operating system string error
-    ErrorOSString = 11,
+    OSString = 11,
 
     /// Cannot convert number to integer
-    ErrorParseInt = 12,
+    ParseInt = 12,
 
     /// Cannot parse line from config file
-    ErrorParseLine = 13,
+    ParseLine = 13,
 
     /// Source and destination are the same
-    ErrorSameFileFolder = 14,
+    SameFileFolder = 14,
 
     /// Source file not found
-    ErrorSourceFile = 15,
+    SourceFile = 15,
 
     /// Source folder not found
-    ErrorSourceFolder = 16,
+    SourceFolder = 16,
 
     /// File does not need to split
-    ErrorSplitSize = 17,
+    SplitSize = 17,
 
     /// System time error (ex. negative time difference)
-    ErrorSystemTime = 18,
+    SystemTime = 18,
 
     /// Cannot join thread
-    ErrorThreadJoin = 19,
+    ThreadJoin = 19,
 
     /// Cannot convert number to usize
-    ErrorTryFromInt = 20,
+    TryFromInt = 20,
 }
 
 /// Error class with the message and code defined in consts.rs:
@@ -98,9 +107,13 @@ pub enum ErrorCode {
 /// "source" and "destination" are the files or the folders processed by the system
 pub struct SyncError {
     pub code: ErrorCode,
+    #[cfg(feature = "i18n")]
     pub file: &'static str,
+    #[cfg(feature = "i18n")]
     pub line: u32,
+    #[cfg(feature = "i18n")]
     pub source: Option<String>,
+    #[cfg(feature = "i18n")]
     pub destination: Option<String>,
 }
 
@@ -109,34 +122,44 @@ pub struct SyncError {
 impl std::fmt::Display for ErrorCode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ErrorCode::Help => write!(f, "{}", i18n::msgs::HELP_MSG)?,
+            ErrorCode::Help => write!(f, "{}", i18n::message::HELP)?,
 
             ErrorCode::NoError => {}
 
-            ErrorCode::ErrorConfigDuplicated => {
-                write!(f, "{}", i18n::msgs::ERROR_CONFIG_DUPLICATED)?
+            ErrorCode::ConfigDuplicated => {
+                write!(f, "{}", i18n::message::errors::CONFIG_DUPLICATED)?
             }
-            ErrorCode::ErrorConfigExtCode => write!(f, "{}", i18n::msgs::ERROR_CONFIG_EXT_CODE)?,
-            ErrorCode::ErrorConfigFolderCode => {
-                write!(f, "{}", i18n::msgs::ERROR_CONFIG_FOLDER_CODE)?
+            ErrorCode::ConfigExtCode => {
+                write!(f, "{}", i18n::message::errors::CONFIG_EXT_CODE)?
             }
-            ErrorCode::ErrorCopyFileFolder => write!(f, "{}", i18n::msgs::ERROR_COPY_FILE_FOLDER)?,
-            ErrorCode::ErrorDestFile => write!(f, "{}", i18n::msgs::ERROR_DEST_FILE)?,
-            ErrorCode::ErrorDestNotFile => write!(f, "{}", i18n::msgs::ERROR_DEST_NOT_FILE)?,
-            ErrorCode::ErrorDestNotFolder => write!(f, "{}", i18n::msgs::ERROR_DEST_NOT_FOLDER)?,
-            ErrorCode::ErrorDiffFileFolder => write!(f, "{}", i18n::msgs::ERROR_DIFF_FILE_FOLDER)?,
-            ErrorCode::ErrorFileSize => write!(f, "{}", i18n::msgs::ERROR_FILE_SIZE)?,
-            ErrorCode::ErrorIO => write!(f, "{}", i18n::msgs::ERROR_IO)?,
-            ErrorCode::ErrorOSString => write!(f, "{}", i18n::msgs::ERROR_OSSTRING)?,
-            ErrorCode::ErrorParseInt => write!(f, "{}", i18n::msgs::ERROR_PARSE_INT)?,
-            ErrorCode::ErrorParseLine => write!(f, "{}", i18n::msgs::ERROR_PARSE_LINE)?,
-            ErrorCode::ErrorSameFileFolder => write!(f, "{}", i18n::msgs::ERROR_SAME_FILE_FOLDER)?,
-            ErrorCode::ErrorSourceFile => write!(f, "{}", i18n::msgs::ERROR_SOURCE_FILE)?,
-            ErrorCode::ErrorSourceFolder => write!(f, "{}", i18n::msgs::ERROR_SOURCE_FOLDER)?,
-            ErrorCode::ErrorSplitSize => write!(f, "{}", i18n::msgs::ERROR_SPLIT_SIZE)?,
-            ErrorCode::ErrorSystemTime => write!(f, "{}", i18n::msgs::ERROR_SYSTEM_TIME)?,
-            ErrorCode::ErrorThreadJoin => write!(f, "{}", i18n::msgs::ERROR_THREAD_JOIN)?,
-            ErrorCode::ErrorTryFromInt => write!(f, "{}", i18n::msgs::ERROR_TRY_FROM_INT)?,
+            ErrorCode::ConfigFolderCode => {
+                write!(f, "{}", i18n::message::errors::CONFIG_FOLDER_CODE)?
+            }
+            ErrorCode::CopyFileFolder => {
+                write!(f, "{}", i18n::message::errors::COPY_FILE_FOLDER)?
+            }
+            ErrorCode::DestFile => write!(f, "{}", i18n::message::errors::DEST_FILE)?,
+            ErrorCode::DestNotFile => write!(f, "{}", i18n::message::errors::DEST_NOT_FILE)?,
+            ErrorCode::DestNotFolder => {
+                write!(f, "{}", i18n::message::errors::DEST_NOT_FOLDER)?
+            }
+            ErrorCode::DiffFileFolder => {
+                write!(f, "{}", i18n::message::errors::DIFF_FILE_FOLDER)?
+            }
+            ErrorCode::FileSize => write!(f, "{}", i18n::message::errors::FILE_SIZE)?,
+            ErrorCode::IO => write!(f, "{}", i18n::message::errors::IO)?,
+            ErrorCode::OSString => write!(f, "{}", i18n::message::errors::OSSTRING)?,
+            ErrorCode::ParseInt => write!(f, "{}", i18n::message::errors::PARSE_INT)?,
+            ErrorCode::ParseLine => write!(f, "{}", i18n::message::errors::PARSE_LINE)?,
+            ErrorCode::SameFileFolder => {
+                write!(f, "{}", i18n::message::errors::SAME_FILE_FOLDER)?
+            }
+            ErrorCode::SourceFile => write!(f, "{}", i18n::message::errors::SOURCE_FILE)?,
+            ErrorCode::SourceFolder => write!(f, "{}", i18n::message::errors::SOURCE_FOLDER)?,
+            ErrorCode::SplitSize => write!(f, "{}", i18n::message::errors::SPLIT_SIZE)?,
+            ErrorCode::SystemTime => write!(f, "{}", i18n::message::errors::SYSTEM_TIME)?,
+            ErrorCode::ThreadJoin => write!(f, "{}", i18n::message::errors::THREAD_JOIN)?,
+            ErrorCode::TryFromInt => write!(f, "{}", i18n::message::errors::TRY_FROM_INT)?,
         }
 
         Ok(())
@@ -148,15 +171,15 @@ impl std::fmt::Display for ErrorCode {
 /// Displays "elapsed:"
 #[cfg(feature = "i18n")]
 #[inline(always)]
-pub fn elapse_msg() -> &'static str {
-    i18n::msgs::ELAPSE_MSG
+pub fn elapsed_msg() -> &'static str {
+    i18n::message::status::ELAPSED
 }
 
 /// Displays "started"
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn start_msg() -> &'static str {
-    i18n::msgs::START_MSG
+    i18n::message::status::START
 }
 
 //====================================== cli.rs methods in ascending order ======================================
@@ -165,42 +188,50 @@ pub fn start_msg() -> &'static str {
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn copy_msg(path: &str) {
-    cli::copy_msg(i18n::msgs::COPY_MSG, path)
+    cli::copy_msg(i18n::message::status::COPY, path)
 }
 
 /// Displays "(SIMULATION) Copying" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn copy_msg_simulation(path: &str) {
-    cli::copy_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::COPY_MSG, path)
+    cli::copy_msg_simulation(
+        i18n::message::status::SIMULATION,
+        i18n::message::status::COPY,
+        path,
+    )
 }
 
 /// Displays "Creating" and the folder path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg(path: &str) {
-    cli::create_msg(i18n::msgs::CREATE_MSG, path)
+    cli::create_msg(i18n::message::status::CREATE, path)
 }
 
 /// Displays "(SIMULATION) Creating" and the folder path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn create_msg_simulation(path: &str) {
-    cli::create_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::CREATE_MSG, path)
+    cli::create_msg_simulation(
+        i18n::message::status::SIMULATION,
+        i18n::message::status::CREATE,
+        path,
+    )
 }
 
 /// Displays "DUPLICATED" with all duplicated file paths
 #[cfg(feature = "i18n")]
 #[inline]
 pub fn duplicate_msgs(paths: Vec<&str>) {
-    cli::duplicate_msgs(i18n::msgs::DUPLICATE_MSG, paths)
+    cli::duplicate_msgs(i18n::message::status::DUPLICATE, paths)
 }
 
 /// Displays "Empty", the file or folder path and a message in stdout
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn empty_msg(path: &str) {
-    cli::empty_msg(i18n::msgs::EMPTY_MSG, path);
+    cli::empty_msg(i18n::message::status::EMPTY, path);
 }
 
 /// Displays "ERROR", an error message in stderr and exit with the error code.
@@ -208,49 +239,57 @@ fn empty_msg(path: &str) {
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn error_msg(message: &str, code: i32, user_input: bool) -> i32 {
-    cli::error_msg(i18n::msgs::ERROR_MSG, message, code, user_input)
+    cli::error_msg(i18n::message::status::ERROR, message, code, user_input)
 }
 
 /// Displays "Usage", the help message in stdout and exit with HELP code
 #[cfg(feature = "i18n")]
 #[inline(always)]
 pub fn help() -> ErrorCode {
-    cli::help(i18n::msgs::USAGE_MSG, i18n::msgs::HELP_MSG, ErrorCode::Help)
+    cli::help(
+        i18n::message::status::USAGE,
+        i18n::message::HELP,
+        ErrorCode::Help,
+    )
 }
 
 /// Displays "Loading" and the file path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn loading_msg(path: &str) {
-    cli::loading_msg(i18n::msgs::LOADING_MSG, path)
+    cli::loading_msg(i18n::message::status::LOADING, path)
 }
 
 /// Displays "Ok" and the file or folder path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn ok_msg(path: &str) {
-    cli::ok_msg(i18n::msgs::OK_MSG, path)
+    cli::ok_msg(i18n::message::status::OK, path)
 }
 
 /// Displays "(ONE ITEM)" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn one_item_msg(path: &str) {
-    cli::one_item_msg(i18n::msgs::ONE_ITEM_MSG, path)
+    cli::one_item_msg(i18n::message::status::ONE_ITEM, path)
 }
 
 /// Displays "Removing" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg(path: &str) {
-    cli::remove_msg(i18n::msgs::REMOVE_MSG, path)
+    cli::remove_msg(i18n::message::status::REMOVE, path)
 }
 
 /// Displays "(SIMULATION) Removing" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn remove_msg_simulation(path: &str) {
-    cli::remove_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::REMOVE_MSG, path)
+    cli::remove_msg_simulation(
+        i18n::message::status::SIMULATION,
+        i18n::message::status::REMOVE,
+        path,
+    )
 }
 
 /// Displays the program name, version, URL and the datetime (optional)
@@ -264,28 +303,36 @@ pub fn show_header(datetime: bool) {
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn sync_msg(path: &str) {
-    cli::sync_msg(i18n::msgs::SYNC_MSG, path)
+    cli::sync_msg(i18n::message::status::SYNC, path)
 }
 
 /// Displays "(SIMULATION) Sync" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn sync_msg_simulation(path: &str) {
-    cli::sync_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::SYNC_MSG, path)
+    cli::sync_msg_simulation(
+        i18n::message::status::SIMULATION,
+        i18n::message::status::SYNC,
+        path,
+    )
 }
 
 /// Displays "Updating" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg(path: &str) {
-    cli::update_msg(i18n::msgs::UPDATE_MSG, path)
+    cli::update_msg(i18n::message::status::UPDATE, path)
 }
 
 /// Displays "(SIMULATION) Updating" and the path
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn update_msg_simulation(path: &str) {
-    cli::update_msg_simulation(i18n::msgs::SIMULATION_MSG, i18n::msgs::UPDATE_MSG, path)
+    cli::update_msg_simulation(
+        i18n::message::status::SIMULATION,
+        i18n::message::status::UPDATE,
+        path,
+    )
 }
 
 /// Compares every folder, file and byte
@@ -370,7 +417,7 @@ pub fn join_folder(folderpath: &str) -> Result<(), SyncError> {
 /// Moves a source file or source to destination file or source. Slower than OS move but safer
 #[inline(always)]
 pub fn mv(source: &str, destination: &str) -> Result<(), SyncError> {
-    mv::mv(source, destination)
+    r#move::mv(source, destination)
 }
 
 /// Does not synchronize, only displays the messages of what sync operations would do
@@ -431,7 +478,7 @@ pub fn empty(folder: &str) -> Result<(), SyncError> {
 #[cfg(feature = "i18n")]
 #[inline(always)]
 fn compare(source: &str, destination: &str) -> Result<(), SyncError> {
-    check::check_all(source, destination, consts::CHECK_BUFFER_SIZE)
+    check::check_directories(source, destination, consts::CHECK_BUFFER_SIZE)
 }
 
 /// Formats a "%Y-%m-%d %T" datetime string
@@ -502,7 +549,7 @@ mod tests {
     #[test]
     fn src_inexistent_dest_inexistent_config_inexistent() {
         match crate::processor::create("none", "nothing", "empty.config") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent_config_inexistent"),
         }
     }
@@ -512,7 +559,7 @@ mod tests {
         let folder = Folder::new("src_folder_dest_folder_same_config_any");
 
         match crate::processor::create(&folder.path, &folder.path, "empty.config") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SameFileFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same_config_any"),
         }
     }
@@ -527,7 +574,7 @@ mod tests {
             &dest_file.path,
             "src_folder_dest_file_config_any/config.config",
         ) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_file_config_any"),
         }
     }
@@ -542,7 +589,7 @@ mod tests {
             &dest_folder.path,
             "src_file_dest_folder_config_any/config.config",
         ) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_file()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFile),
             Ok(_) => panic!("ERROR => src_file_dest_folder_config_any"),
         }
     }
@@ -557,7 +604,7 @@ mod tests {
             &dest_folder.path,
             "src_folder_dest_folder_config_ext_error/config.conf",
         ) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_config_ext_code()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::ConfigExtCode),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_ext_error"),
         }
     }
@@ -568,7 +615,7 @@ mod tests {
         let dest_folder = Folder::new("src_folder_dest_folder_config_folder.config");
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_config_folder_code()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::ConfigFolderCode),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_folder"),
         }
     }
@@ -610,7 +657,7 @@ mod tests {
         );
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &config_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_parse_line()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::ParseLine),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_error_data"),
         }
     }
@@ -623,7 +670,7 @@ mod tests {
         let config_file = TextFile::new("src_folder_dest_folder_config_exists_src_dest/config.config", b"target/src_folder_dest_folder_config_exists_src_dest|target/src_folder_dest_folder_config_exists_src_dest/destination\nsource|destination");
 
         match crate::processor::create(&src_folder.path, &dest_folder.path, &config_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_config_duplicated()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::ConfigDuplicated),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_config_exists_src_dest"),
         }
     }

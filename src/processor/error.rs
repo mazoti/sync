@@ -9,10 +9,14 @@ impl From<std::io::Error> for SyncError {
         println!("===> {_error:?} <===");
 
         SyncError {
-            code: crate::processor::ErrorCode::ErrorIO,
+            code: crate::processor::ErrorCode::IO,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         }
     }
@@ -25,10 +29,14 @@ impl From<std::time::SystemTimeError> for SyncError {
         println!("===> {_error:?} <===");
 
         SyncError {
-            code: crate::processor::ErrorCode::ErrorSystemTime,
+            code: crate::processor::ErrorCode::SystemTime,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         }
     }
@@ -71,10 +79,14 @@ impl From<std::num::ParseIntError> for SyncError {
         println!("===> {_error:?} <===");
 
         SyncError {
-            code: crate::processor::ErrorCode::ErrorParseInt,
+            code: crate::processor::ErrorCode::ParseInt,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         }
     }
@@ -87,10 +99,14 @@ impl From<std::num::TryFromIntError> for SyncError {
         println!("===> {_error:?} <===");
 
         SyncError {
-            code: crate::processor::ErrorCode::ErrorTryFromInt,
+            code: crate::processor::ErrorCode::TryFromInt,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         }
     }
@@ -103,10 +119,14 @@ impl From<std::ffi::OsString> for SyncError {
         println!("===> {_error:?} <===");
 
         SyncError {
-            code: crate::processor::ErrorCode::ErrorOSString,
+            code: crate::processor::ErrorCode::OSString,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         }
     }

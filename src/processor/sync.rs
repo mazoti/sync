@@ -1,5 +1,147 @@
 //! Sync and simulate functions implementations
 
+/// Copy a file from source to destination, displays a message and checks for errors
+fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    #[cfg(feature = "i18n")]
+    crate::processor::copy_msg(destination);
+    crate::processor::copy(source, destination)
+}
+
+/// Copy source folder to destination and all it's contents recursively
+fn copy_folder(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(source)? {
+        let fullpath = path?.path().display().to_string();
+        let fullpath_destination = fullpath.replace(source, destination);
+
+        // Copy file or symlink
+        if !std::fs::metadata(&fullpath)?.is_dir() {
+            copy_file(&fullpath, &fullpath_destination)?;
+            continue;
+        }
+
+        // Create destination folder and copy directories recursively
+        create_folder(&fullpath_destination)?;
+        copy_folder(&fullpath, &fullpath_destination)?;
+    }
+    Ok(())
+}
+
+#[cfg(feature = "i18n")]
+fn copy_folder_simulation(source: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(source)? {
+        let fullpath = path?.path().display().to_string();
+        if !std::fs::metadata(&fullpath)?.is_dir() {
+            #[cfg(feature = "i18n")]
+            crate::processor::copy_msg_simulation(&fullpath);
+            continue;
+        }
+
+        // Create destination folder and copy directories recursively
+        copy_folder_simulation(&fullpath)?;
+    }
+    Ok(())
+}
+
+/// Displays a create message and creates a folder
+#[inline(always)]
+fn create_folder(folder: &str) -> Result<(), std::io::Error> {
+    #[cfg(feature = "i18n")]
+    crate::processor::create_msg(folder);
+    std::fs::create_dir(folder)
+}
+
+/// Synchronizes and checks every byte, retrying on failure until success or interrupted
+///
+/// # Arguments
+/// * `source` - Path to source file/directory
+/// * `destination` - Path to destination file/directory
+///
+/// # Returns
+/// * `Ok(())` on successful sync and verification
+/// * `Err(SyncError)` if interrupted by Ctrl+C
+pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    loop {
+        if let Err(_sync_err) = sync(source, destination) {
+            #[cfg(feature = "i18n")]
+            crate::processor::error_msg(&_sync_err.to_string(), _sync_err.code as i32, false);
+            continue;
+        }
+
+        if let Err(_err) = crate::processor::check(source, destination) {
+            #[cfg(feature = "i18n")]
+            crate::processor::error_msg(&_err.to_string(), _err.code as i32, false);
+            continue;
+        }
+        break;
+    }
+    Ok(())
+}
+
+/// Iterate over destination folder and remove files and folders that doesn't exists in source
+fn remove(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(destination)? {
+        let fullpath_destination = path?.path().display().to_string();
+        let fullpath_source = fullpath_destination.replace(destination, source);
+        let not_found = !std::path::Path::new(&fullpath_source).exists();
+
+        // File not found in source, remove in destination
+        if !std::fs::metadata(&fullpath_destination)?.is_dir() {
+            if not_found {
+                remove_all(&fullpath_destination, std::fs::remove_file)?;
+            }
+            continue;
+        }
+
+        // Directory not found in source, remove in destination
+        if not_found {
+            remove_all(&fullpath_destination, std::fs::remove_dir_all)?;
+            continue;
+        }
+
+        remove(&fullpath_source, &fullpath_destination)?;
+    }
+    Ok(())
+}
+
+/// Displays a remove message and removes a file or folder from destination
+#[inline(always)]
+fn remove_all(
+    file_folder: &str,
+    remove_file_folder: fn(String) -> Result<(), std::io::Error>,
+) -> Result<(), std::io::Error> {
+    #[cfg(feature = "i18n")]
+    crate::processor::remove_msg(file_folder);
+    remove_file_folder(String::from(file_folder))
+}
+
+/// Iterate over destination folder and remove files and folders that doesn't exists in source
+#[cfg(feature = "i18n")]
+fn remove_simulation(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(destination)? {
+        let fullpath_destination = path?.path().display().to_string();
+        let fullpath_source = fullpath_destination.replace(destination, source);
+        let not_found = !std::path::Path::new(&fullpath_source).exists();
+
+        // File not found in source, remove in destination
+        if !std::fs::metadata(&fullpath_destination)?.is_dir() {
+            if not_found {
+                #[cfg(feature = "i18n")]
+                crate::processor::remove_msg_simulation(&fullpath_destination);
+            }
+            continue;
+        }
+
+        // Directory not found in source, remove in destination
+        if not_found {
+            #[cfg(feature = "i18n")]
+            crate::processor::remove_msg_simulation(&fullpath_destination);
+            continue;
+        }
+        remove_simulation(&fullpath_source, &fullpath_destination)?;
+    }
+    Ok(())
+}
+
 /// Displays what a sync operation would do without any modification
 #[cfg(feature = "i18n")]
 pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
@@ -10,117 +152,30 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
     let handle: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
     let update_result: Result<(), crate::processor::SyncError>;
 
-    fn copy_folder_simulation(source: &str) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath: String;
-
-        for path in std::fs::read_dir(source)? {
-            fullpath = path?.path().display().to_string();
-            if !std::fs::metadata(&fullpath)?.is_dir() {
-                crate::processor::copy_msg_simulation(&fullpath);
-                continue;
-            }
-
-            // Create destination folder and copy directories recursively
-            copy_folder_simulation(&fullpath)?;
-        }
-        Ok(())
-    }
-
-    fn update_file_simulation(
-        source: &str,
-        destination: &str,
-    ) -> Result<(), crate::processor::SyncError> {
-        if std::fs::metadata(source)?.modified()? != std::fs::metadata(destination)?.modified()? {
-            crate::processor::update_msg_simulation(destination);
-        }
-        Ok(())
-    }
-
-    /// Iterates over source folder adding and updating files and folders in destination
-    /// and removes files and folders from destination not found in source
-    fn update_simulation(
-        source: &str,
-        destination: &str,
-    ) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath_source: String;
-        let mut fullpath_destination: String;
-        let mut file_folder: std::io::Result<std::fs::Metadata>;
-
-        for path in std::fs::read_dir(source)? {
-            fullpath_source = path?.path().display().to_string();
-            fullpath_destination = fullpath_source.replace(source, destination);
-            file_folder = std::fs::metadata(&fullpath_destination);
-
-            if !std::fs::metadata(&fullpath_source)?.is_dir() {
-                match file_folder {
-                    Err(_) => {
-                        crate::processor::copy_msg_simulation(&fullpath_destination);
-                        return Ok(());
-                    }
-                    Ok(_) => update_file_simulation(&fullpath_source, &fullpath_destination)?,
-                }
-                continue;
-            }
-
-            // Folder does not exist
-            if file_folder.is_err() {
-                crate::processor::create_msg_simulation(&fullpath_destination);
-                copy_folder_simulation(&fullpath_source)?;
-                continue;
-            }
-            update_simulation(&fullpath_source, &fullpath_destination)?;
-        }
-        Ok(())
-    }
-
-    /// Iterate over destination folder and remove files and folders that doesn't exists in source
-    fn remove_simulation(
-        source: &str,
-        destination: &str,
-    ) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath_destination: String;
-        let mut fullpath_source: String;
-        let mut not_found: bool;
-
-        for path in std::fs::read_dir(destination)? {
-            fullpath_destination = path?.path().display().to_string();
-            fullpath_source = fullpath_destination.replace(destination, source);
-            not_found = !std::path::Path::new(&fullpath_source).exists();
-
-            // File not found in source, remove in destination
-            if !std::fs::metadata(&fullpath_destination)?.is_dir() {
-                if not_found {
-                    crate::processor::remove_msg_simulation(&fullpath_destination);
-                }
-                continue;
-            }
-
-            // Directory not found in source, remove in destination
-            if not_found {
-                crate::processor::remove_msg_simulation(&fullpath_destination);
-                continue;
-            }
-            remove_simulation(&fullpath_source, &fullpath_destination)?;
-        }
-        Ok(())
-    }
-
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSameFileFolder,
+            code: crate::processor::ErrorCode::SameFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -161,10 +216,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
             match handle.join() {
                 Err(_) => {
                     return Err(crate::processor::SyncError {
-                        code: crate::processor::ErrorCode::ErrorThreadJoin,
+                        code: crate::processor::ErrorCode::ThreadJoin,
+                        #[cfg(feature = "i18n")]
                         file: file!(),
+                        #[cfg(feature = "i18n")]
                         line: line!(),
+                        #[cfg(feature = "i18n")]
                         source: None,
+                        #[cfg(feature = "i18n")]
                         destination: None,
                     });
                 }
@@ -176,10 +235,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
         }
 
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -192,10 +255,14 @@ pub fn simulate(source: &str, destination: &str) -> Result<(), crate::processor:
 
     if std::path::Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -213,145 +280,30 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     let handle: std::thread::JoinHandle<Result<(), crate::processor::SyncError>>;
     let update_result: Result<(), crate::processor::SyncError>;
 
-    /// Copy a file from source to destination, displays a message and checks for errors
-    fn copy_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        #[cfg(feature = "i18n")]
-        crate::processor::copy_msg(destination);
-
-        crate::processor::copy(source, destination)
-    }
-
-    /// Copy source folder to destination and all it's contents recursively
-    fn copy_folder(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath: String;
-        let mut fullpath_destination: String;
-
-        for path in std::fs::read_dir(source)? {
-            fullpath = path?.path().display().to_string();
-            fullpath_destination = fullpath.replace(source, destination);
-
-            // Copy file or symlink
-            if !std::fs::metadata(&fullpath)?.is_dir() {
-                copy_file(&fullpath, &fullpath_destination)?;
-                continue;
-            }
-
-            // Create destination folder and copy directories recursively
-            create_folder(&fullpath_destination)?;
-            copy_folder(&fullpath, &fullpath_destination)?;
-        }
-
-        Ok(())
-    }
-
-    /// Displays a create message and creates a folder
-    #[inline(always)]
-    fn create_folder(folder: &str) -> Result<(), std::io::Error> {
-        #[cfg(feature = "i18n")]
-        crate::processor::create_msg(folder);
-        std::fs::create_dir(folder)
-    }
-
-    /// Replaces the destination file if its different from source
-    fn update_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        if std::fs::metadata(source)?.modified()? == std::fs::metadata(destination)?.modified()? {
-            return Ok(());
-        }
-
-        #[cfg(feature = "i18n")]
-        crate::processor::update_msg(destination);
-        crate::processor::copy(source, destination)
-    }
-
-    /// Displays a remove message and removes a file or folder from destination
-    #[inline(always)]
-    fn remove_all(
-        file_folder: &str,
-        remove_file_folder: fn(String) -> Result<(), std::io::Error>,
-    ) -> Result<(), std::io::Error> {
-        #[cfg(feature = "i18n")]
-        crate::processor::remove_msg(file_folder);
-        remove_file_folder(String::from(file_folder))
-    }
-
-    /// Iterates over source folder adding and updating files and folders in destination
-    /// and removes files and folders from destination not found in source
-    fn update(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath_source: String;
-        let mut fullpath_destination: String;
-        let mut file_folder: std::io::Result<std::fs::Metadata>;
-
-        for path in std::fs::read_dir(source)? {
-            fullpath_source = path?.path().display().to_string();
-            fullpath_destination = fullpath_source.replace(source, destination);
-            file_folder = std::fs::metadata(&fullpath_destination);
-
-            if !std::fs::metadata(&fullpath_source)?.is_dir() {
-                match file_folder {
-                    Err(_) => copy_file(&fullpath_source, &fullpath_destination)?,
-                    Ok(_) => update_file(&fullpath_source, &fullpath_destination)?, // File exists, update if necessary
-                }
-                continue;
-            }
-
-            // Folder does not exist
-            if file_folder.is_err() {
-                create_folder(&fullpath_destination)?;
-                copy_folder(&fullpath_source, &fullpath_destination)?;
-                continue;
-            }
-
-            update(&fullpath_source, &fullpath_destination)?;
-        }
-        Ok(())
-    }
-
-    /// Iterate over destination folder and remove files and folders that doesn't exists in source
-    fn remove(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-        let mut fullpath_destination: String;
-        let mut fullpath_source: String;
-        let mut not_found: bool;
-
-        for path in std::fs::read_dir(destination)? {
-            fullpath_destination = path?.path().display().to_string();
-            fullpath_source = fullpath_destination.replace(destination, source);
-            not_found = !std::path::Path::new(&fullpath_source).exists();
-
-            // File not found in source, remove in destination
-            if !std::fs::metadata(&fullpath_destination)?.is_dir() {
-                if not_found {
-                    remove_all(&fullpath_destination, std::fs::remove_file)?;
-                }
-                continue;
-            }
-
-            // Directory not found in source, remove in destination
-            if not_found {
-                remove_all(&fullpath_destination, std::fs::remove_dir_all)?;
-                continue;
-            }
-
-            remove(&fullpath_source, &fullpath_destination)?;
-        }
-        Ok(())
-    }
-
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSameFileFolder,
+            code: crate::processor::ErrorCode::SameFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -391,10 +343,14 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
             match handle.join() {
                 Err(_) => {
                     return Err(crate::processor::SyncError {
-                        code: crate::processor::ErrorCode::ErrorThreadJoin,
+                        code: crate::processor::ErrorCode::ThreadJoin,
+                        #[cfg(feature = "i18n")]
                         file: file!(),
+                        #[cfg(feature = "i18n")]
                         line: line!(),
+                        #[cfg(feature = "i18n")]
                         source: None,
+                        #[cfg(feature = "i18n")]
                         destination: None,
                     });
                 }
@@ -406,10 +362,14 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
         }
 
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -421,10 +381,14 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
 
     if std::path::Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -433,21 +397,91 @@ pub fn sync(source: &str, destination: &str) -> Result<(), crate::processor::Syn
     update_file(source, destination)
 }
 
-/// Synchronizes and checks every byte stopping only on success or Ctrl+C
-pub fn force(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
-    loop {
-        if let Err(_err) = sync(source, destination) {
-            #[cfg(feature = "i18n")]
-            crate::processor::error_msg(&_err.to_string(), _err.code as i32, false);
+/// Iterates over source folder adding and updating files and folders in destination
+/// and removes files and folders from destination not found in source
+fn update(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(source)? {
+        let fullpath_source = path?.path().display().to_string();
+        let fullpath_destination = fullpath_source.replace(source, destination);
+        let file_folder = std::fs::metadata(&fullpath_destination);
+
+        if !std::fs::metadata(&fullpath_source)?.is_dir() {
+            match file_folder {
+                Err(_) => copy_file(&fullpath_source, &fullpath_destination)?,
+                Ok(_) => update_file(&fullpath_source, &fullpath_destination)?, // File exists, update if necessary
+            }
             continue;
         }
 
-        if let Err(_err) = crate::processor::check(source, destination) {
-            #[cfg(feature = "i18n")]
-            crate::processor::error_msg(&_err.to_string(), _err.code as i32, false);
+        // Folder does not exist
+        if file_folder.is_err() {
+            create_folder(&fullpath_destination)?;
+            copy_folder(&fullpath_source, &fullpath_destination)?;
             continue;
         }
-        break;
+
+        update(&fullpath_source, &fullpath_destination)?;
+    }
+    Ok(())
+}
+
+/// Replaces the destination file if its different from source
+fn update_file(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    if std::fs::metadata(source)?.modified()? == std::fs::metadata(destination)?.modified()? {
+        return Ok(());
+    }
+
+    #[cfg(feature = "i18n")]
+    crate::processor::update_msg(destination);
+    crate::processor::copy(source, destination)
+}
+
+#[cfg(feature = "i18n")]
+fn update_file_simulation(
+    source: &str,
+    destination: &str,
+) -> Result<(), crate::processor::SyncError> {
+    if std::fs::metadata(source)?.modified()? != std::fs::metadata(destination)?.modified()? {
+        #[cfg(feature = "i18n")]
+        crate::processor::update_msg_simulation(destination);
+    }
+    Ok(())
+}
+
+/// Iterates over source folder adding and updating files and folders in destination
+/// and removes files and folders from destination not found in source
+#[cfg(feature = "i18n")]
+fn update_simulation(source: &str, destination: &str) -> Result<(), crate::processor::SyncError> {
+    for path in std::fs::read_dir(source)? {
+        let fullpath_source = path?.path().display().to_string();
+        let fullpath_destination = fullpath_source.replace(source, destination);
+        let file_folder = std::fs::metadata(&fullpath_destination);
+
+        if !std::fs::metadata(&fullpath_source)?.is_dir() {
+            match file_folder {
+                Err(_) => {
+                    #[cfg(feature = "i18n")]
+                    crate::processor::copy_msg_simulation(&fullpath_destination);
+                    return Ok(());
+                }
+                Ok(_) => {
+                    #[cfg(feature = "i18n")]
+                    update_file_simulation(&fullpath_source, &fullpath_destination)?
+                }
+            }
+            continue;
+        }
+
+        // Folder does not exist
+        if file_folder.is_err() {
+            #[cfg(feature = "i18n")]
+            {
+                crate::processor::create_msg_simulation(&fullpath_destination);
+                copy_folder_simulation(&fullpath_source)?;
+            }
+            continue;
+        }
+        update_simulation(&fullpath_source, &fullpath_destination)?;
     }
     Ok(())
 }
@@ -461,7 +495,7 @@ mod tests {
     #[test]
     fn src_inexistent_dest_inexistent() {
         match crate::processor::sync("none", "nothing") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent"),
         }
     }
@@ -470,7 +504,7 @@ mod tests {
     fn src_folder_dest_folder_same() {
         let folder = Folder::new("src_folder_dest_folder_same");
         match crate::processor::sync(&folder.path, &folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SameFileFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same"),
         }
     }
@@ -654,7 +688,7 @@ mod tests {
         let dest_file = TextFile::new("src_folder_dest_file.txt", b"data");
 
         match crate::processor::sync(&src_folder.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_file"),
         }
     }
@@ -665,7 +699,7 @@ mod tests {
         let dest_folder = Folder::new("src_file_dest_folder");
 
         match crate::processor::sync(&src_file.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFolder),
             Ok(_) => panic!("ERROR => src_file_dest_folder"),
         }
     }

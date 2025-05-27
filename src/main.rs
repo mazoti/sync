@@ -1,6 +1,7 @@
 mod aliases;
 mod processor;
 
+#[cfg(all(windows, feature = "colored"))]
 use std::ffi::c_void;
 
 /// Function array to run according to the number of arguments entered
@@ -28,7 +29,7 @@ fn error(err: processor::SyncError) {
 /// Displays elapsed time (optional) and sends a zero code (NO_ERROR) to operating system
 fn no_error(_start: &std::time::Instant) {
     #[cfg(feature = "i18n")]
-    println!("\n{} {:#?}", processor::elapse_msg(), _start.elapsed());
+    println!("\n{} {:#?}", processor::elapsed_msg(), _start.elapsed());
 
     std::process::exit(processor::ErrorCode::NoError as i32);
 }
@@ -338,7 +339,7 @@ fn enable_ansi_support() -> Result<(), std::io::Error> {
             std::ptr::null(),
             OPEN_EXISTING,
             0,
-            0 as *mut c_void,
+            std::ptr::null_mut::<c_void>(),
         );
 
         if console_handle == INVALID_HANDLE_VALUE {

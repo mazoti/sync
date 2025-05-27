@@ -1,8 +1,6 @@
-<div align="center">
-  <img src="logo.png">
-</div>
+<div align="center"><img src="logo.png" alt="Sync Logo"></div>
 
-After years using [rsync](https://rsync.samba.org), I decided to make a simpler and portable tool to make my own backups, so why use sync?
+ After years using [rsync](https://rsync.samba.org), I decided to make a simpler and portable tool to make my own backups, so why use sync?
 - Open source
 - Multi-language
 - Low CPU/RAM usage
@@ -16,7 +14,7 @@ After years using [rsync](https://rsync.samba.org), I decided to make a simpler 
 
 All you need is the sync binary file of your architecture and operating system (just decompress and use).
 
-Releases can be downloaded [here](https://github.com/mazoti/sync/tree/main/download).
+Releases can be downloaded [here](https://github.com/mazoti/sync/blob/main/releases/).
 
 ## Usage
 

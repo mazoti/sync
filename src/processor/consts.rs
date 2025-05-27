@@ -23,33 +23,44 @@ mod tests {
     #[test]
     #[cfg(feature = "i18n")]
     fn consts_tests() {
-        for s in crate::processor::error_msgs() {
-            println!("{}", s);
-        }
+        println!("{}", crate::processor::i18n::messages::errors::CONFIG_DUPLICATED);
+        println!("{}", crate::processor::i18n::messages::errors::CONFIG_EXT_CODE);
+        println!("{}", crate::processor::i18n::messages::errors::CONFIG_FOLDER_CODE);
+        println!("{}", crate::processor::i18n::messages::errors::COPY_FILE_FOLDER);
+        println!("{}", crate::processor::i18n::messages::errors::DEST_FILE);
+        println!("{}", crate::processor::i18n::messages::errors::DEST_NOT_FILE);
+        println!("{}", crate::processor::i18n::messages::errors::DEST_NOT_FOLDER);
+        println!("{}", crate::processor::i18n::messages::errors::DIFF_FILE_FOLDER);
+        println!("{}", crate::processor::i18n::messages::errors::FILE_SIZE);
+        println!("{}", crate::processor::i18n::messages::errors::IO);
+        println!("{}", crate::processor::i18n::messages::errors::OSSTRING);
+        println!("{}", crate::processor::i18n::messages::errors::PARSE_INT);
+        println!("{}", crate::processor::i18n::messages::errors::PARSE_LINE);
+        println!("{}", crate::processor::i18n::messages::errors::SAME_FILE_FOLDER);
+        println!("{}", crate::processor::i18n::messages::errors::SOURCE_FILE);
+        println!("{}", crate::processor::i18n::messages::errors::SOURCE_FOLDER);
+        println!("{}", crate::processor::i18n::messages::errors::SPLIT_SIZE);
+        println!("{}", crate::processor::i18n::messages::errors::SYSTEM_TIME);
+        println!("{}", crate::processor::i18n::messages::errors::THREAD_JOIN);
+        println!("{}", crate::processor::i18n::messages::errors::TRY_FROM_INT);
 
-        for s in 0..13 {
-            println!("{}", crate::processor::command_msgs(s));
-        }
 
-        println!("{}", crate::processor::msg_help());
+        println!("{}", crate::processor::i18n::messages::status::CREATE);
+        println!("{}", crate::processor::i18n::messages::status::COPY);
+        println!("{}", crate::processor::i18n::messages::status::DUPLICATE);
+        println!("{}", crate::processor::i18n::messages::status::ELAPSED);
+        println!("{}", crate::processor::i18n::messages::status::EMPTY);
+        println!("{}", crate::processor::i18n::messages::status::ERROR);
+        println!("{}", crate::processor::i18n::messages::status::LOADING);
+        println!("{}", crate::processor::i18n::messages::status::OK);
+        println!("{}", crate::processor::i18n::messages::status::ONE_ITEM);
+        println!("{}", crate::processor::i18n::messages::status::REMOVE);
+        println!("{}", crate::processor::i18n::messages::status::SIMULATION);
+        println!("{}", crate::processor::i18n::messages::status::START);
+        println!("{}", crate::processor::i18n::messages::status::SYNC);
+        println!("{}", crate::processor::i18n::messages::status::UPDATE);
+        println!("{}", crate::processor::i18n::messages::status::USAGE);
 
-        for n in [
-            crate::processor::error_config_duplicated(),
-            crate::processor::error_config_ext_code(),
-            crate::processor::error_config_folder_code(),
-            crate::processor::error_copy_file_folder(),
-            crate::processor::error_dest_not_file(),
-            crate::processor::error_dest_not_folder(),
-            crate::processor::error_diff_file_folder(),
-            crate::processor::error_io(),
-            crate::processor::error_parse_line(),
-            crate::processor::error_same_file_folder(),
-            crate::processor::error_source_folder(),
-            crate::processor::error_system_time(),
-            crate::processor::no_error(),
-            crate::processor::help(),
-        ] {
-            println!("{}", n);
-        }
+        println!("{}", crate::processor::i18n::messages::HELP);
     }
 }

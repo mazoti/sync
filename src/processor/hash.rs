@@ -6,10 +6,14 @@ use std::io::Write;
 fn sha256_hash(filepath: &str) -> Result<String, crate::processor::SyncError> {
     if !(std::path::Path::new(filepath).exists() && std::path::Path::new(filepath).is_file()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFile,
+            code: crate::processor::ErrorCode::SourceFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: Some(filepath.to_string()),
         });
     }
@@ -26,20 +30,28 @@ pub fn hash(
 ) -> Result<(), crate::processor::SyncError> {
     if !(std::path::Path::new(path).exists() && std::path::Path::new(path).is_file()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFile,
+            code: crate::processor::ErrorCode::SourceFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: Some(path.to_string()),
         });
     }
 
     if hash_code != sha256::try_digest(std::path::Path::new(path)).unwrap() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+            code: crate::processor::ErrorCode::DiffFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(hash_code.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(path.to_string()),
         });
     }
@@ -73,20 +85,28 @@ pub fn hash_folder(source: &str, destination: &str) -> Result<(), crate::process
 
     if !(std::path::Path::new(source).exists() && std::path::Path::new(source).is_dir()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if std::path::Path::new(destination).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestFile,
+            code: crate::processor::ErrorCode::DestFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }

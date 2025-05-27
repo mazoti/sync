@@ -27,7 +27,7 @@ chrono = { version = "0.4.38", optional = true }
 sha256 = "1.5.0"
 
 [features]
-default  = ["i18n"]
+default  = []
 i18n     = ["dep:chrono"]
 colored  = ["i18n"]
 

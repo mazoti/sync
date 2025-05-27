@@ -12,20 +12,28 @@ pub fn create(
 
     if !std::path::Path::new(&source).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSameFileFolder,
+            code: crate::processor::ErrorCode::SameFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -33,10 +41,14 @@ pub fn create(
     if std::path::Path::new(&destination).exists() {
         if std::path::Path::new(&source).is_dir() && !std::path::Path::new(&destination).is_dir() {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorDestNotFolder,
+                code: crate::processor::ErrorCode::DestNotFolder,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: Some(source.to_string()),
+                #[cfg(feature = "i18n")]
                 destination: Some(destination.to_string()),
             });
         }
@@ -44,10 +56,14 @@ pub fn create(
         if std::path::Path::new(&source).is_file() && !std::path::Path::new(&destination).is_file()
         {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorDestNotFile,
+                code: crate::processor::ErrorCode::DestNotFile,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: Some(source.to_string()),
+                #[cfg(feature = "i18n")]
                 destination: Some(destination.to_string()),
             });
         }
@@ -56,20 +72,28 @@ pub fn create(
     // Config files must end with .config
     if !config.ends_with(".config") {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorConfigExtCode,
+            code: crate::processor::ErrorCode::ConfigExtCode,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if std::path::Path::new(&config).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorConfigFolderCode,
+            code: crate::processor::ErrorCode::ConfigFolderCode,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -78,7 +102,6 @@ pub fn create(
     if !std::path::Path::new(&config).is_file() {
         return Ok(writeln!(
             std::fs::OpenOptions::new()
-                .write(true)
                 .append(true)
                 .create(true)
                 .open(config)?,
@@ -99,10 +122,14 @@ pub fn create(
         let path: Vec<&str> = data.split('|').collect();
         if path.len() != 2 {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorParseLine,
+                code: crate::processor::ErrorCode::ParseLine,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: Some(source.to_string()),
+                #[cfg(feature = "i18n")]
                 destination: Some(destination.to_string()),
             });
         }
@@ -111,10 +138,14 @@ pub fn create(
             || path[0] == destination && path[1] == source
         {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorConfigDuplicated,
+                code: crate::processor::ErrorCode::ConfigDuplicated,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: Some(source.to_string()),
+                #[cfg(feature = "i18n")]
                 destination: Some(destination.to_string()),
             });
         }
@@ -142,10 +173,14 @@ pub fn process_file(
         let path: Vec<&str> = data.split('|').collect();
         if path.len() != 2 {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorParseLine,
+                code: crate::processor::ErrorCode::ParseLine,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: None,
+                #[cfg(feature = "i18n")]
                 destination: None,
             });
         }
@@ -212,10 +247,14 @@ pub fn process_folder(
 
     if thread_join_error {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorThreadJoin,
+            code: crate::processor::ErrorCode::ThreadJoin,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         });
     }
@@ -225,9 +264,13 @@ pub fn process_folder(
         if display_help {
             return Err(crate::processor::SyncError {
                 code: crate::processor::ErrorCode::Help,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: None,
+                #[cfg(feature = "i18n")]
                 destination: None,
             });
         }
@@ -236,9 +279,13 @@ pub fn process_folder(
 
     Err(crate::processor::SyncError {
         code: exit_code,
+        #[cfg(feature = "i18n")]
         file: file!(),
+        #[cfg(feature = "i18n")]
         line: line!(),
+        #[cfg(feature = "i18n")]
         source: None,
+        #[cfg(feature = "i18n")]
         destination: None,
     })
 }

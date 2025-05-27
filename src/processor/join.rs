@@ -18,10 +18,14 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
 
     if !std::fs::metadata(folderpath)?.is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(folderpath.to_string()),
+            #[cfg(feature = "i18n")]
             destination: None,
         });
     }
@@ -38,10 +42,14 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
     // First file not found
     if destination.is_empty() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFile,
+            code: crate::processor::ErrorCode::SourceFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: None,
         });
     }
@@ -55,10 +63,14 @@ pub fn join(folderpath: &str, buffer_size: u64) -> Result<(), crate::processor::
 
     if std::path::Path::new(&destination).exists() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestFile,
+            code: crate::processor::ErrorCode::DestFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: None,
+            #[cfg(feature = "i18n")]
             destination: Some(destination),
         });
     }

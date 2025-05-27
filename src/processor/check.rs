@@ -11,7 +11,7 @@ pub fn check(
 ) -> Result<(), crate::processor::SyncError> {
     #[cfg(feature = "i18n")]
     {
-        check_all(source, destination, buffer_size)?;
+        check_directories(source, destination, buffer_size)?;
         crate::processor::ok_msg(
             &std::fs::canonicalize(destination)?
                 .into_os_string()
@@ -21,32 +21,40 @@ pub fn check(
     }
 
     #[cfg(not(feature = "i18n"))]
-    check_all(source, destination, buffer_size)
+    check_directories(source, destination, buffer_size)
 }
 
 /// Compares every folder, file and byte using a buffer
 #[cfg(not(feature = "check-mt"))]
-pub fn check_all(
+pub fn check_directories(
     source: &str,
     destination: &str,
     buffer_size: u64,
 ) -> Result<(), crate::processor::SyncError> {
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSameFileFolder,
+            code: crate::processor::ErrorCode::SameFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -61,10 +69,14 @@ pub fn check_all(
 
         // source is a directory but destination not
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -72,10 +84,14 @@ pub fn check_all(
     // source is a file or symlink
     if Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFile,
+            code: crate::processor::ErrorCode::DestNotFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -85,7 +101,7 @@ pub fn check_all(
 
 /// Compares every folder, file and byte using a buffer and multithreads
 #[cfg(feature = "check-mt")]
-pub fn check_all(
+pub fn check_directories(
     source: &str,
     destination: &str,
     buffer_size: u64,
@@ -103,20 +119,28 @@ pub fn check_all(
 
     if source == destination {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSameFileFolder,
+            code: crate::processor::ErrorCode::SameFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     if !(Path::new(&source).exists() && Path::new(&destination).exists()) {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorSourceFolder,
+            code: crate::processor::ErrorCode::SourceFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -151,20 +175,28 @@ pub fn check_all(
 
             if thread_error {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::ErrorCode::ErrorThreadJoin,
+                    code: crate::processor::ErrorCode::ThreadJoin,
+                    #[cfg(feature = "i18n")]
                     file: file!(),
+                    #[cfg(feature = "i18n")]
                     line: line!(),
+                    #[cfg(feature = "i18n")]
                     source: None,
+                    #[cfg(feature = "i18n")]
                     destination: None,
                 });
             }
 
             if value_error {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+                    code: crate::processor::ErrorCode::DiffFileFolder,
+                    #[cfg(feature = "i18n")]
                     file: file!(),
+                    #[cfg(feature = "i18n")]
                     line: line!(),
+                    #[cfg(feature = "i18n")]
                     source: Some(source.to_string()),
+                    #[cfg(feature = "i18n")]
                     destination: Some(destination.to_string()),
                 });
             }
@@ -174,10 +206,14 @@ pub fn check_all(
 
         // source is a directory but destination is not
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFolder,
+            code: crate::processor::ErrorCode::DestNotFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -185,10 +221,14 @@ pub fn check_all(
     // source is a file or symlink
     if Path::new(&destination).is_dir() {
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDestNotFile,
+            code: crate::processor::ErrorCode::DestNotFile,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
@@ -219,10 +259,14 @@ fn check_file(
 
         if src_bytes != dest_bytes {
             return Err(crate::processor::SyncError {
-                code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+                code: crate::processor::ErrorCode::DiffFileFolder,
+                #[cfg(feature = "i18n")]
                 file: file!(),
+                #[cfg(feature = "i18n")]
                 line: line!(),
+                #[cfg(feature = "i18n")]
                 source: Some(source.to_string()),
+                #[cfg(feature = "i18n")]
                 destination: Some(destination.to_string()),
             });
         }
@@ -230,10 +274,14 @@ fn check_file(
         for i in 0..src_bytes {
             if src_buffer[i] != dest_buffer[i] {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+                    code: crate::processor::ErrorCode::DiffFileFolder,
+                    #[cfg(feature = "i18n")]
                     file: file!(),
+                    #[cfg(feature = "i18n")]
                     line: line!(),
+                    #[cfg(feature = "i18n")]
                     source: Some(source.to_string()),
+                    #[cfg(feature = "i18n")]
                     destination: Some(destination.to_string()),
                 });
             }
@@ -251,8 +299,6 @@ fn check_file_folder(
     destination: &str,
     buffer_size: u64,
 ) -> Result<(), crate::processor::SyncError> {
-    let mut fullpath: String;
-    let mut fullpath_destination: String;
 
     // Check for empty folder
     if std::fs::read_dir(source)?.next().is_none() {
@@ -260,17 +306,21 @@ fn check_file_folder(
             return Ok(());
         }
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+            code: crate::processor::ErrorCode::DiffFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     for path in std::fs::read_dir(source)? {
-        fullpath = path?.path().display().to_string();
-        fullpath_destination = fullpath.replace(source, destination);
+        let fullpath = path?.path().display().to_string();
+        let fullpath_destination = fullpath.replace(source, destination);
 
         // Check file or symlink
         if !Path::new(&fullpath).is_dir() {
@@ -287,8 +337,6 @@ fn check_file_folder_add_removed(
     source: &str,
     destination: &str,
 ) -> Result<(), crate::processor::SyncError> {
-    let mut fullpath: String;
-    let mut fullpath_destination: String;
 
     // Check for empty folder
     if std::fs::read_dir(source)?.next().is_none() {
@@ -296,26 +344,34 @@ fn check_file_folder_add_removed(
             return Ok(());
         }
         return Err(crate::processor::SyncError {
-            code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+            code: crate::processor::ErrorCode::DiffFileFolder,
+            #[cfg(feature = "i18n")]
             file: file!(),
+            #[cfg(feature = "i18n")]
             line: line!(),
+            #[cfg(feature = "i18n")]
             source: Some(source.to_string()),
+            #[cfg(feature = "i18n")]
             destination: Some(destination.to_string()),
         });
     }
 
     for path in std::fs::read_dir(source)? {
-        fullpath = path?.path().display().to_string();
-        fullpath_destination = fullpath.replace(source, destination);
+        let fullpath = path?.path().display().to_string();
+        let fullpath_destination = fullpath.replace(source, destination);
 
         // Check file or symlink
         if !Path::new(&fullpath).is_dir() {
             if !Path::new(&fullpath_destination).exists() {
                 return Err(crate::processor::SyncError {
-                    code: crate::processor::ErrorCode::ErrorDiffFileFolder,
+                    code: crate::processor::ErrorCode::DiffFileFolder,
+                    #[cfg(feature = "i18n")]
                     file: file!(),
+                    #[cfg(feature = "i18n")]
                     line: line!(),
+                    #[cfg(feature = "i18n")]
                     source: Some(source.to_string()),
+                    #[cfg(feature = "i18n")]
                     destination: Some(destination.to_string()),
                 });
             }
@@ -336,7 +392,7 @@ mod tests {
     #[test]
     fn src_inexistent_dest_inexistent() {
         match crate::processor::check("none", "nothing") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_inexistent_dest_inexistent"),
         }
     }
@@ -346,7 +402,7 @@ mod tests {
         let src_folder = Folder::new("src_folder_dest_folder_same");
 
         match crate::processor::check(&src_folder.path, &src_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SameFileFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_folder_same"),
         }
     }
@@ -358,7 +414,7 @@ mod tests {
             &src_folder.path,
             "src_folder_empty_dest_folder_inexistent_DESTINATION",
         ) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_folder_empty_dest_folder_inexistent"),
         }
     }
@@ -369,7 +425,7 @@ mod tests {
         let dest_file = TextFile::new("src_folder_dest_file/file.txt", b"data\n");
 
         match crate::processor::check(&src_folder.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_file"),
         }
     }
@@ -380,7 +436,7 @@ mod tests {
         let src_file = TextFile::new("src_file_dest_folder/file.txt", b"data\n");
 
         match crate::processor::check(&src_file.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_dest_not_file()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DestNotFile),
             Ok(_) => panic!("ERROR => src_file_dest_folder"),
         }
     }
@@ -389,7 +445,7 @@ mod tests {
     fn src_inexistent_dest_folder() {
         let dest_folder = Folder::new("src_inexistent_dest_folder");
         match crate::processor::check("none", &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_inexistent_dest_folder"),
         }
     }
@@ -408,7 +464,7 @@ mod tests {
         let dest_file = TextFile::new("src_file_dest_file_different_DESTINATION.txt", b"data\n");
 
         match crate::processor::check(&src_file.path, &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => panic!("ERROR => src_file_dest_file_different"),
         }
     }
@@ -426,7 +482,7 @@ mod tests {
         let src_folder = Folder::new("src_folder_dest_inexistent");
 
         match crate::processor::check(&src_folder.path, "none") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_folder_dest_inexistent"),
         }
     }
@@ -459,7 +515,7 @@ mod tests {
         );
 
         match crate::processor::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_folder_2_files"),
         }
     }
@@ -469,7 +525,7 @@ mod tests {
         let dest_file = TextFile::new("src_inexistent_dest_file.txt", b"data");
 
         match crate::processor::check("none", &dest_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_inexistent_dest_file"),
         }
     }
@@ -478,7 +534,7 @@ mod tests {
     fn src_file_dest_inexistent() {
         let src_file = TextFile::new("src_file_dest_inexistent.txt", b"data");
         match crate::processor::check(&src_file.path, "none") {
-            Err(err) => assert_eq!(err.code, crate::processor::error_source_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SourceFolder),
             Ok(_) => panic!("ERROR => src_file_dest_inexistent"),
         }
     }
@@ -487,7 +543,7 @@ mod tests {
     fn src_file_dest_file_same() {
         let src_file = TextFile::new("src_file_dest_file_same.txt", b"data");
         match crate::processor::check(&src_file.path, &src_file.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_same_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::SameFileFolder),
             Ok(_) => panic!("ERROR => src_file_dest_file_same"),
         }
     }
@@ -504,7 +560,7 @@ mod tests {
         );
 
         match crate::processor::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_folder_empty"),
         }
     }
@@ -518,7 +574,7 @@ mod tests {
             TextFile::new("src_empty_dest_folder_1_file_DESTINATION/file.txt", b"data");
 
         match crate::processor::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => panic!("ERROR => src_empty_dest_folder_1_file"),
         }
     }
@@ -538,7 +594,7 @@ mod tests {
         );
 
         match crate::processor::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => panic!("ERROR => src_folder_1_file_dest_1_file_different"),
         }
     }
@@ -593,7 +649,7 @@ mod tests {
         );
 
         match crate::processor::check(&src_folder.path, &dest_folder.path) {
-            Err(err) => assert_eq!(err.code, crate::processor::error_diff_file_folder()),
+            Err(err) => assert_eq!(err.code, crate::processor::ErrorCode::DiffFileFolder),
             Ok(_) => {
                 panic!("ERROR => src_2_folders_2_files_dest_2_folders_2_files_1_file_different")
             }

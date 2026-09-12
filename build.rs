@@ -1,7 +1,9 @@
 fn main() -> std::io::Result<()> {
-	#[cfg(windows)]
-	let mut res = winres::WindowsResource::new();
-	res.set("FileVersion", "1.0.0.0")
+	let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+	if target_os == "windows" {
+		let mut res = winres::WindowsResource::new();
+		res.set("FileVersion", "1.0.0.0")
 		.set("ProductVersion", "1.4.6.0")
 		.set("FileDescription", "Sync data tool")
 		.set("CompanyName", "Marcos Mazoti")
@@ -9,5 +11,7 @@ fn main() -> std::io::Result<()> {
 		.set_icon("icon.ico")
 		.set_language(0x0409)
 		.compile()?;
+	}
+
 	Ok(())
 }
